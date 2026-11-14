@@ -53,7 +53,7 @@ const economyDisplay = matchMedia('(pointer: coarse)').matches || navigator.devi
 let nextFrame = 0;
 let speaker, speakerOutput, audioCursor, audioEpoch, audioTime = 0;
 let audioFile, audioData, audioChanged = 0;
-let audioSources = new Set();
+let lastAudioPacket;
 let customApp = false;
 let runtimeLog='', halted=false, nextLog=0;
 const debug=new URLSearchParams(location.search).has('debug');
@@ -238,40 +238,44 @@ function renderAudio() {
     const epoch = view.getUint32(8, true);
     const first = end - (data.length - 12) / 2;
     const now = speaker.currentTime;
-    const delay = economyDisplay ? .65 : .5;
+    const delay = economyDisplay ? .25 : .12;
     if (!rate || first < 0) return;
     if (epoch !== audioEpoch) {
+      if (lastAudioPacket && audioCursor < lastAudioPacket.end) {
+        const tail = lastAudioPacket;
+        const start = Math.max(audioCursor, tail.first);
+        audioTime = scheduleAudio(tail, start, tail.end - start, Math.max(audioTime, now + .025));
+      }
       audioEpoch = epoch;
       audioCursor = undefined;
-      audioTime = 0;
-      for (const source of audioSources) source.stop();
-      audioSources = new Set();
     }
     if (end <= first) return;
+    lastAudioPacket = {view, rate, first, end};
     const slice = speakerSlice({first, end, cursor: audioCursor, rate, now,
       scheduledUntil: audioTime, delay, flush: performance.now() - audioChanged >= 140});
     if (!slice) return;
     const {start, length, when} = slice;
-    const buffer = speaker.createBuffer(1, length, rate);
-    const channel = buffer.getChannelData(0);
-    for (let i = 0; i < length; i++) {
-      channel[i] = view.getInt16(12 + (start - first + i) * 2, true) / 32768;
-    }
-    const source = speaker.createBufferSource();
-    source.buffer = buffer;
-    source.connect(speakerOutput);
-    const scheduled = audioSources;
-    scheduled.add(source);
-    source.onended = () => scheduled.delete(source);
-    source.start(when);
+    audioTime = scheduleAudio(lastAudioPacket, start, length, when);
     audioCursor = start + length;
-    audioTime = when + length / rate;
   } catch (error) {
     if (error.name !== 'ErrnoError') {
       sound.checked = false;
       speakerOutput.gain.value = 0;
     }
   }
+}
+
+function scheduleAudio({view, rate, first}, start, length, when) {
+  const buffer = speaker.createBuffer(1, length, rate);
+  const channel = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) {
+    channel[i] = view.getInt16(12 + (start - first + i) * 2, true) / 32768;
+  }
+  const source = speaker.createBufferSource();
+  source.buffer = buffer;
+  source.connect(speakerOutput);
+  source.start(when);
+  return when + length / rate;
 }
 setInterval(renderAudio, 20);
 function readLog(path,limit,start) {
@@ -1049,7 +1053,7 @@ $('start').onclick=async()=>{
     const scriptURL = new URL('qemu-system-arm.js', runtimeURL).href;
     const {default:createQemu} = await import(scriptURL);
     const clock = builtInPresets.has('bad-apple') && bootPreset.value === 'bad-apple'
-      ? 'shift=6,align=on' : 'shift=3,align=off';
+      ? 'shift=7,align=on' : 'shift=3,align=off';
     runtime=await createQemu({
       mainScriptUrlOrBlob:scriptURL,
       locateFile:name=>new URL(name, runtimeURL).href,
