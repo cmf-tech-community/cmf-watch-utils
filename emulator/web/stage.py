@@ -40,6 +40,10 @@ for path, name in ((nor, "nor.bin"), (nand, "nand-defaults.bin"), (nand_id, "nan
 (fixtures / "compat.bin").write_bytes(rom)
 (fixtures / "app.bin").write_bytes(profile.stock_app(nor.read_bytes()))
 files = ["nor.bin", "nand-defaults.bin", "nand-id.bin", "compat.bin", "app.bin"]
+stock_audio = args.fixtures / "stock-audio.bin"
+if stock_audio.is_file():
+    shutil.copyfile(stock_audio, fixtures / stock_audio.name)
+    files.append(stock_audio.name)
 if args.wfc_dir or args.stock_image:
     from fwkit import lz4, wfdl
     if args.stock_image:

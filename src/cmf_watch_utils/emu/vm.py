@@ -224,6 +224,9 @@ def run(args, profile):
     env = run_env(args, model, output, nor, nand)
     if texture_index.is_file():
         env[model.env_prefix + "WFC_INDEX"] = str(texture_index)
+    stock_audio = args.fixtures / "stock-audio.bin"
+    if stock and stock_audio.is_file():
+        env[model.env_prefix + "STOCK_AUDIO"] = str(stock_audio)
     audio = args.audio
     if audio == "auto":
         audio = audio_backend(executable(args.qemu, env), env) if not args.headless and not args.wav else None

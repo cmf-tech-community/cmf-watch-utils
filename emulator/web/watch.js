@@ -954,8 +954,9 @@ async function installFace(face, files) {
   }
 }
 
-async function loadFixtures(nandOverride) {
+async function loadFixtures(nandOverride, useStockAudio) {
   const textureIndex = 'wfc-index.txt';
+  const stockAudio = 'stock-audio.bin';
   const nandName = 'nand-defaults.bin';
   const selected = new Map();
   for (const file of $('advanced-boot-files').hidden ? [] : stockFiles.files) {
@@ -967,6 +968,7 @@ async function loadFixtures(nandOverride) {
   if (nandOverride) selected.set(nandName, nandOverride);
 
   let available = bundledStock ? [...requiredFixtures, textureIndex] : [];
+  if (document.body.hasAttribute('data-stock-audio')) available.push(stockAudio);
   if (!hosted) {
     const response = await fetch('./fixtures/manifest.json');
     if (!response.ok) throw Error('Prepare the local fixture manifest first.');
@@ -977,6 +979,7 @@ async function loadFixtures(nandOverride) {
 
   const names = [...requiredFixtures];
   if (available.includes(textureIndex) || selected.has(textureIndex)) names.push(textureIndex);
+  if (useStockAudio && available.includes(stockAudio)) names.push(stockAudio);
   return Promise.all(names.map(async name => {
     const override = selected.get(name);
     const compressed = bundledStock && name === nandName;
@@ -1018,7 +1021,7 @@ $('start').onclick=async()=>{
       status(bundledStock && !stockFiles.files.length && !overrides.app
         ? 'Loading stock firmware and virtual storage…'
         : 'Loading the runtime and virtual storage…', false, 'loading');
-      files = await loadFixtures(overrides.nand);
+      files = await loadFixtures(overrides.nand, !overrides.app);
       if (overrides.face || overrides.catalogFace) {
         status(overrides.catalogFace ? `Installing ${overrides.catalogFace.name}…` : 'Installing watch face…', false, 'loading');
         const face = overrides.face || await downloadCatalogFace(overrides.catalogFace);
@@ -1081,6 +1084,9 @@ $('start').onclick=async()=>{
         }
         if(economyDisplay)module.ENV.QEMU_WP2_ECONOMY_DISPLAY='1';
         if(module.FS.analyzePath('/watch/wfc-index.txt').exists&&!new URLSearchParams(location.search).has('no-textures'))module.ENV.QEMU_WP2_WFC_INDEX='/watch/wfc-index.txt';
+        if (!customApp && module.FS.analyzePath('/watch/stock-audio.bin').exists) {
+          module.ENV.QEMU_WP2_STOCK_AUDIO = '/watch/stock-audio.bin';
+        }
       }]
     });
     if (!halted) {

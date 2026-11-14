@@ -31,6 +31,7 @@
 #include "wp2_de.h"
 #include "wp2_jpeg.h"
 #include "wp2_vg_path.h"
+#include "wp2_dsp_audio.h"
 
 /* Stock's GPS init binds UART_1 (0x4003c000, IRQ 23). */
 #define GPS_UART_CTL 0x3c000
@@ -111,6 +112,9 @@ struct ActsState {
     qemu_irq dma_irq[10];
     qemu_irq dac_irq, dac_fifo_irq;
     QEMUTimer *dac_timer, *mic_timer;
+    Wp2DspAudio dsp_audio;
+    Wp2DspClip dsp_clips[WP2_DSP_CLIPS];
+    char *dsp_clip_storage;
     int mic_channel;
     uint32_t mic_buffer, mic_length;
     bool mic_host_enabled;
@@ -1420,6 +1424,201 @@ static void acts_dac_queue(ActsState *s, unsigned samples)
     acts_dac_irqs(s);
 }
 
+enum {
+    WP2_DSP_DECODER = 0,
+    WP2_DSP_POSTPROCESS = 5,
+    WP2_DSP_CONFIG_DECODER = 1,
+    WP2_DSP_CONFIG_STREAM_END = 20,
+    WP2_DSP_DECODER_RUNTIME = 40,
+    WP2_DSP_FUNCTION_TABLE = 0x1000,
+    WP2_DSP_DECODER_INFO = 0x1040,
+};
+
+static void acts_dsp_notify(ActsState *s, uint16_t id, uint32_t owner,
+                            uint32_t arg, uint32_t detail)
+{
+    uint8_t *mail = memory_region_get_ram_ptr(&s->shared) + WP2_DSP_GUEST_MAIL;
+    stl_le_p(mail + 4, owner);
+    stl_le_p(mail + 8, arg);
+    stl_le_p(mail + 12, detail);
+    stl_le_p(mail, id | WP2_DSP_BUSY);
+    qemu_irq_pulse(qdev_get_gpio_in(s->cpu, 20));
+}
+
+static void acts_dsp_reset(ActsState *s)
+{
+    Wp2DspAudio *dsp = &s->dsp_audio;
+    timer_del(dsp->timer);
+    *dsp = (Wp2DspAudio){ .timer = dsp->timer, .input = UINT32_MAX };
+}
+
+static void acts_dsp_command(ActsState *s, uint8_t *info, uint8_t *decoder,
+                             const uint8_t *command, uint32_t size)
+{
+    Wp2DspAudio *dsp = &s->dsp_audio;
+    unsigned id = lduw_le_p(command);
+    const uint8_t *data = command + 12;
+    unsigned function = size >= 4 ? ldl_le_p(data) : UINT32_MAX;
+    if (id == 1 && size >= 12) {
+        dsp->session = ldl_le_p(data + 4);
+    } else if (id == 288 && size >= 8 && function == WP2_DSP_DECODER) {
+        unsigned config = ldl_le_p(data + 4);
+        if (config == WP2_DSP_CONFIG_DECODER && size == 48) {
+            memcpy(decoder, data + 8, WP2_DSP_DECODER_RUNTIME);
+            memset(decoder + WP2_DSP_DECODER_RUNTIME, 0, 24);
+            dsp->input = UINT32_MAX;
+            dsp->bytes = dsp->offset = dsp->played = dsp->samples = 0;
+            dsp->stream_end = dsp->stream_done = false;
+            dsp->pcm = NULL;
+            dsp->candidates = (1u << WP2_DSP_CLIPS) - 1;
+            if (lduw_le_p(data + 10) == 8 && lduw_le_p(data + 12) == 1 &&
+                lduw_le_p(data + 14) == 16 && ldl_le_p(data + 16) == 16000) {
+                dsp->input = wp2_dsp_word_offset(ldl_le_p(data + 20));
+            }
+        } else if (config == WP2_DSP_CONFIG_STREAM_END) {
+            dsp->stream_end = true;
+        }
+    } else if (id == 289 || id == 290 || id == 292 || id == 293) {
+        bool enable = id == 289 || id == 293;
+        if (function == WP2_DSP_DECODER) {
+            dsp->decoder = enable;
+        } else if (function == WP2_DSP_POSTPROCESS) {
+            dsp->output = enable;
+        }
+    } else if (id == 34) {
+        dsp->decoder = dsp->output = false;
+    }
+    uint32_t active = (dsp->decoder << WP2_DSP_DECODER) |
+                      (dsp->output << WP2_DSP_POSTPROCESS);
+    stl_le_p(info + 8, active);
+    stl_le_p(info + 28, active);
+}
+
+static void acts_dsp_read_audio(ActsState *s, Wp2DspRing *ring)
+{
+    Wp2DspAudio *dsp = &s->dsp_audio;
+    uint8_t data[WP2_DSP_RING_MAX];
+    wp2_dsp_ring_copy(ring, data, ring->length);
+    for (unsigned i = 0; i < WP2_DSP_CLIPS; i++) {
+        unsigned bit = 1u << i;
+        const Wp2DspClip *clip = &s->dsp_clips[i];
+        if (!(dsp->candidates & bit)) {
+            continue;
+        }
+        if (dsp->bytes > clip->bytes || ring->length > clip->bytes - dsp->bytes ||
+            memcmp(data, clip->encoded + dsp->bytes, ring->length)) {
+            dsp->candidates &= ~bit;
+        } else if (dsp->bytes + ring->length == clip->bytes) {
+            dsp->pcm = clip->pcm;
+            dsp->samples = clip->samples;
+        }
+    }
+    dsp->bytes += ring->length;
+    wp2_dsp_ring_read(ring, ring->length);
+}
+
+static void acts_dsp_play_audio(ActsState *s, uint8_t *runtime)
+{
+    Wp2DspAudio *dsp = &s->dsp_audio;
+    if (!dsp->pcm || !dsp->candidates || dsp->stream_done ||
+        (s->regs[(DAC_BASE + 4) / 4] & 0x31) != 0x31) {
+        return;
+    }
+    unsigned count = MIN(128 - MIN(s->dac_queued, 128),
+                         dsp->samples - dsp->offset);
+    unsigned tail = s->dac_pcm_head + s->dac_queued;
+    for (unsigned i = 0; i < count; i++) {
+        s->dac_pcm[(tail + i) % DAC_PCM_CAPACITY] =
+            lduw_le_p(dsp->pcm + (dsp->offset + i) * 2);
+    }
+    if (count) {
+        acts_dac_queue(s, count);
+        dsp->offset += count;
+    }
+    dsp->played = dsp->offset - MIN(s->dac_queued, dsp->offset);
+    stl_le_p(runtime, 160);
+    stl_le_p(runtime + 4, 1);
+    stl_le_p(runtime + 8, dsp->played);
+    stl_le_p(runtime + 16, dsp->bytes);
+    uint8_t *mail = memory_region_get_ram_ptr(&s->shared) + WP2_DSP_GUEST_MAIL;
+    if (dsp->played == dsp->samples && dsp->stream_end &&
+        !(ldl_le_p(mail) & WP2_DSP_BUSY)) {
+        stw_le_p(runtime + 22, 2);
+        dsp->stream_done = true;
+        acts_dsp_notify(s, 7, dsp->session, 1, 0);
+    }
+}
+
+static void acts_dsp_tick(void *opaque)
+{
+    ActsState *s = opaque;
+    Wp2DspAudio *dsp = &s->dsp_audio;
+    uint8_t *shared = memory_region_get_ram_ptr(&s->shared);
+    uint8_t *info = shared + WP2_DSP_INFO;
+    uint8_t *dtcm = memory_region_get_ram_ptr(&s->dsp_dtcm);
+    uint8_t *decoder = dtcm + WP2_DSP_DECODER_INFO;
+    uint8_t *mail = shared + WP2_DSP_GUEST_MAIL;
+    unsigned delay = 1;
+    if (dsp->phase == 1 && (ldl_le_p(mail) & WP2_DSP_ACK)) {
+        dsp->phase = 2;
+        acts_dsp_notify(s, 1, 0, 0, 0);
+    } else if (dsp->phase == 2 && (ldl_le_p(mail) & WP2_DSP_REPLY)) {
+        uint32_t args = wp2_dsp_word_offset(ldl_le_p(mail + 8));
+        if (wp2_dsp_shared_range(args, 16)) {
+            dsp->command = wp2_dsp_word_offset(ldl_le_p(shared + args + 4));
+            dsp->phase = 3;
+        }
+    }
+    if (dsp->phase == 3 && wp2_dsp_shared_range(dsp->command, 12)) {
+        uint8_t *command = shared + dsp->command;
+        Wp2DspRing ring;
+        if (wp2_dsp_ring(shared, wp2_dsp_cpu_offset(ldl_le_p(command + 4)), &ring)
+            && ring.capacity <= 512) {
+            while (ring.length >= 12 && !dsp->fence) {
+                uint8_t header[512];
+                wp2_dsp_ring_copy(&ring, header, ring.length);
+                uint32_t size = ldl_le_p(header + 8);
+                if (size > ring.length - 12) {
+                    break;
+                }
+                acts_dsp_command(s, info, decoder, header, size);
+                wp2_dsp_ring_read(&ring, 12 + size);
+                stw_le_p(command, lduw_le_p(header + 2));
+                dsp->fence = ldl_le_p(header + 4);
+            }
+        }
+        if (dsp->fence && !(ldl_le_p(mail) & WP2_DSP_BUSY)) {
+            acts_dsp_notify(s, 7, dsp->session, 2, dsp->fence);
+            dsp->fence = 0;
+        }
+        if (dsp->decoder && wp2_dsp_ring(shared, dsp->input, &ring) &&
+            ring.length) {
+            acts_dsp_read_audio(s, &ring);
+        }
+        if (dsp->decoder && dsp->output) {
+            acts_dsp_play_audio(s, decoder + WP2_DSP_DECODER_RUNTIME);
+        } else {
+            delay = 4;
+        }
+    }
+    timer_mod(dsp->timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + delay * 1000000);
+}
+
+static void acts_dsp_start(ActsState *s)
+{
+    acts_dsp_reset(s);
+    s->dsp_audio.phase = 1;
+    uint8_t *info = memory_region_get_ram_ptr(&s->shared) + WP2_DSP_INFO;
+    uint8_t *dtcm = memory_region_get_ram_ptr(&s->dsp_dtcm);
+    memset(dtcm + WP2_DSP_FUNCTION_TABLE, 0, 6 * sizeof(uint32_t));
+    stl_le_p(dtcm + WP2_DSP_FUNCTION_TABLE, WP2_DSP_DECODER_INFO / 2);
+    stl_le_p(info, 0);
+    stl_le_p(info + 20, WP2_DSP_FUNCTION_TABLE / 2);
+    stl_le_p(info + 24, 6);
+    acts_dsp_notify(s, 2, 0, 0, 0);
+    timer_mod(s->dsp_audio.timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + 1000000);
+}
+
 static void acts_mic_host_read(void *opaque, int available)
 {
     ActsState *s = opaque;
@@ -1972,6 +2171,17 @@ static void acts_write(void *opaque, hwaddr addr, uint64_t value, unsigned size)
     if (addr == 0x3014) {
         return;
     }
+    if (addr == 0x3000 && (value & 1) && s->dsp_audio.phase) {
+        uint8_t *mail = memory_region_get_ram_ptr(&s->shared) + WP2_DSP_MCU_MAIL;
+        uint32_t msg = ldl_le_p(mail);
+        if (msg & WP2_DSP_BUSY) {
+            unsigned id = msg & 0xffff;
+            stl_le_p(mail, id | WP2_DSP_ACK |
+                      (id == 7 && ldl_le_p(mail + 8) <= 1 ?
+                       WP2_DSP_DONE : WP2_DSP_FAIL));
+        }
+        return;
+    }
     if (addr == 0x410c && value == 0) {
         info_report("Virtual watch powered off by guest");
         qemu_system_shutdown_request(SHUTDOWN_CAUSE_GUEST_SHUTDOWN);
@@ -2007,6 +2217,12 @@ static void acts_write(void *opaque, hwaddr addr, uint64_t value, unsigned size)
     if (addr == 4) {
         uint32_t old = s->regs[addr / 4];
         s->regs[addr / 4] = value;
+        if (!(value & 1)) {
+            acts_dsp_reset(s);
+        } else if (!(old & 1) && s->dsp_clip_storage &&
+                   (s->regs[0x1008 / 4] & 1) && s->regs[0x80 / 4] == 0x8e) {
+            acts_dsp_start(s);
+        }
         if (!(value & (1u << 24))) {
             s->bt.ready = false;
             s->bt.rx = s->bt.tx = 0;
@@ -2429,6 +2645,7 @@ static void acts_reset(void *opaque)
     memcpy(&s->regs[0xc030 / 4], rtc_remain, sizeof(rtc_remain));
     timer_del(s->dac_timer);
     timer_del(s->mic_timer);
+    acts_dsp_reset(s);
     acts_mic_host_stop(s);
     s->mic_channel = -1;
     s->dac_queued = s->dac_fraction = 0;
@@ -2771,6 +2988,12 @@ static void acts_init(MachineState *machine)
     s->dac_fifo_irq = qdev_get_gpio_in(s->cpu, 55);
     s->dac_timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, acts_dac_tick, s);
     s->mic_timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, acts_mic_tick, s);
+    s->dsp_audio.timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, acts_dsp_tick, s);
+    const char *dsp_clips = g_getenv("QEMU_WP2_STOCK_AUDIO");
+    if (dsp_clips && !wp2_dsp_load_clips(dsp_clips, s->dsp_clips,
+                                        &s->dsp_clip_storage)) {
+        warn_report("Invalid Watch Pro 2 stock audio fixture: %s", dsp_clips);
+    }
     const char *audiodev = g_getenv("QEMU_WP2_AUDIODEV");
     s->dac_stream_path = g_getenv("QEMU_WP2_PCM_STREAM");
     if (s->dac_stream_path) {

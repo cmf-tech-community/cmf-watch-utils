@@ -40,6 +40,9 @@ if args.stock:
     )] + [args.stock / "frames" / f"{color}.png" for color in (
         "dark-grey", "light-grey", "blue", "orange",
     )]
+    audio = args.stock / "fixtures" / "stock-audio.bin"
+    if audio.is_file():
+        stock_files.append(audio)
 for path in (
     *(web / name for name in scripts),
     *(args.runtime / name for name, _ in runtime_files),
@@ -62,6 +65,8 @@ html = (web / "index.html").read_text(encoding="utf-8")
 body = ["data-hosted"]
 if args.stock:
     body.append("data-stock-ready")
+    if audio.is_file():
+        body.append("data-stock-audio")
 if preset_files:
     body.append("data-demo-ready")
 if len(preset_files) == 3:
