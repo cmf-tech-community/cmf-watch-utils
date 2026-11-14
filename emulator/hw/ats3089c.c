@@ -1586,10 +1586,13 @@ static void acts_dsp_tick(void *opaque)
     uint8_t *decoder = dtcm + WP2_DSP_DECODER_INFO;
     uint8_t *mail = shared + WP2_DSP_GUEST_MAIL;
     unsigned delay = 1;
-    if (dsp->phase == 1 && (ldl_le_p(mail) & WP2_DSP_ACK)) {
+    uint32_t reply = ldl_le_p(mail);
+    if (dsp->phase == 1 && (reply & WP2_DSP_ACK) &&
+        (reply & 0xffff) == 2) {
         dsp->phase = 2;
         acts_dsp_notify(s, 1, 0, 0, 0);
-    } else if (dsp->phase == 2 && (ldl_le_p(mail) & WP2_DSP_REPLY)) {
+    } else if (dsp->phase == 2 && (reply & WP2_DSP_REPLY) &&
+               (reply & 0xffff) == 1) {
         uint32_t args = wp2_dsp_word_offset(ldl_le_p(mail + 8));
         if (wp2_dsp_shared_range(args, 16)) {
             dsp->command = wp2_dsp_word_offset(ldl_le_p(shared + args + 4));
@@ -1635,13 +1638,15 @@ static void acts_dsp_start(ActsState *s)
 {
     acts_dsp_reset(s);
     s->dsp_audio.phase = 1;
-    uint8_t *info = memory_region_get_ram_ptr(&s->shared) + WP2_DSP_INFO;
+    uint8_t *shared = memory_region_get_ram_ptr(&s->shared);
+    uint8_t *info = shared + WP2_DSP_INFO;
     uint8_t *dtcm = memory_region_get_ram_ptr(&s->dsp_dtcm);
     memset(dtcm + WP2_DSP_FUNCTION_TABLE, 0, 6 * sizeof(uint32_t));
     stl_le_p(dtcm + WP2_DSP_FUNCTION_TABLE, WP2_DSP_DECODER_INFO / 2);
     stl_le_p(info, 0);
     stl_le_p(info + 20, WP2_DSP_FUNCTION_TABLE / 2);
     stl_le_p(info + 24, 6);
+    stl_le_p(shared + WP2_DSP_GUEST_MAIL, 0);
     acts_dsp_notify(s, 2, 0, 0, 0);
     timer_mod(s->dsp_audio.timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + 1000000);
 }
