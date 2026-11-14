@@ -1590,7 +1590,10 @@ static void acts_dsp_tick(void *opaque)
     uint8_t *mail = shared + WP2_DSP_GUEST_MAIL;
     unsigned delay = 1;
     uint32_t reply = ldl_le_p(mail);
-    if (dsp->phase == 1 && (reply & WP2_DSP_ACK) &&
+    if (dsp->phase == 1 && !(reply & WP2_DSP_BUSY) &&
+        (!(reply & WP2_DSP_ACK) || (reply & 0xffff) != 2)) {
+        acts_dsp_notify(s, 2, 0, 0, 0);
+    } else if (dsp->phase == 1 && (reply & WP2_DSP_ACK) &&
         (reply & 0xffff) == 2) {
         dsp->phase = 2;
         acts_dsp_notify(s, 1, 0, 0, 0);
@@ -1650,7 +1653,6 @@ static void acts_dsp_start(ActsState *s)
     stl_le_p(info + 20, WP2_DSP_FUNCTION_TABLE / 2);
     stl_le_p(info + 24, 6);
     stl_le_p(shared + WP2_DSP_GUEST_MAIL, 0);
-    acts_dsp_notify(s, 2, 0, 0, 0);
     timer_mod(s->dsp_audio.timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + 1000000);
 }
 
