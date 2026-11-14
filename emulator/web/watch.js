@@ -1,6 +1,6 @@
 import {downloadCatalogFace, setupFaceCatalog} from './catalog.mjs';
 import {installWatchFace} from './face.mjs';
-import {speakerHop, speakerSegment} from './speaker.mjs';
+import {speakerSlice} from './speaker.mjs';
 
 const $ = (id) => document.getElementById(id);
 const panel = $('panel');
@@ -53,9 +53,7 @@ const economyDisplay = matchMedia('(pointer: coarse)').matches || navigator.devi
 let nextFrame = 0;
 let speaker, speakerOutput, audioCursor, audioEpoch, audioTime = 0;
 let audioFile, audioData, audioChanged = 0;
-let audioClockTime = 0, audioClockEnd = 0, audioSpeed = 1;
-let audioPaceReady = false;
-let audioOverlap;
+let audioSources = new Set();
 let customApp = false;
 let runtimeLog='', halted=false, nextLog=0;
 const debug=new URLSearchParams(location.search).has('debug');
@@ -213,7 +211,6 @@ function unlockSpeaker() {
 sound.onchange = () => {
   try { sessionStorage.setItem('wp2-watch-sound', sound.checked ? 'on' : 'off'); } catch {}
   if (sound.checked) {
-    audioCursor = undefined;
     unlockSpeaker();
   } else if (speakerOutput) {
     speakerOutput.gain.value = 0;
@@ -223,7 +220,7 @@ window.addEventListener('pointerup', unlockSpeaker, {capture: true, passive: tru
 window.addEventListener('keydown', unlockSpeaker, {capture: true, passive: true});
 prepareSpeaker();
 function renderAudio() {
-  if (!runtime || halted || !sound.checked || speaker?.state !== 'running') return;
+  if (!runtime || halted || speaker?.state !== 'running') return;
   try {
     const path = '/watch/speaker.pcm';
     const {ino, mtime} = runtime.FS.stat(path);
@@ -241,58 +238,33 @@ function renderAudio() {
     const epoch = view.getUint32(8, true);
     const first = end - (data.length - 12) / 2;
     const now = speaker.currentTime;
-    const delay = economyDisplay ? .28 : .18;
-    if (!rate || end <= first) return;
+    const delay = economyDisplay ? .65 : .5;
+    if (!rate || first < 0) return;
     if (epoch !== audioEpoch) {
-      audioClockTime = now;
-      audioClockEnd = end;
-      audioSpeed = 1;
-      audioPaceReady = false;
-    } else if (end !== audioClockEnd && now - audioClockTime >= .3) {
-      const pace = (end - audioClockEnd) / (rate * (now - audioClockTime));
-      if (pace > .12) {
-        const target = Math.abs(pace - 1) < .04 ? 1 : Math.min(1.12, Math.max(.25, pace * .99));
-        if (audioPaceReady) audioSpeed += (target - audioSpeed) * (target < audioSpeed ? .65 : .25);
-        else audioSpeed = target;
-        audioPaceReady = true;
-      }
-      audioClockTime = now;
-      audioClockEnd = end;
-    }
-    if (audioTime > now + delay) return;
-    if (epoch !== audioEpoch || audioCursor === undefined || audioCursor < first) {
-      audioCursor = Math.max(first, end - Math.round(rate * delay * audioSpeed));
       audioEpoch = epoch;
-      audioOverlap = undefined;
+      audioCursor = undefined;
+      audioTime = 0;
+      for (const source of audioSources) source.stop();
+      audioSources = new Set();
     }
-    const restarting = audioTime < now;
-    const backlog = (end - audioCursor) / rate + Math.max(0, audioTime - now) * audioSpeed;
-    const speed = Math.min(1.15, audioSpeed * (backlog > delay + .18 ? 1.07 : 1));
-    if (restarting && (!audioPaceReady || (end - audioCursor) / (rate * speed) < delay) &&
-        performance.now() - audioChanged < 140) return;
-    const when = restarting ? now + .02 : audioTime;
-    const hop = speakerHop(rate);
-    const count = Math.min(8, Math.ceil((delay - (when - now) + .04) * rate / hop));
-    const read = index => view.getInt16(12 + (index - first) * 2, true) / 32768;
-    const flush = performance.now() - audioChanged >= 140;
-    const segments = [];
-    if (restarting) audioOverlap = undefined;
-    for (let i = 0; i < count; i++) {
-      const segment = speakerSegment(read, first, end, audioCursor, audioOverlap, rate, flush);
-      if (!segment) break;
-      segments.push(segment.output);
-      audioOverlap = segment.tail;
-      audioCursor += hop * speed;
-    }
-    if (!segments.length) return;
-    const length = segments.length * hop;
+    if (end <= first) return;
+    const slice = speakerSlice({first, end, cursor: audioCursor, rate, now,
+      scheduledUntil: audioTime, delay, flush: performance.now() - audioChanged >= 140});
+    if (!slice) return;
+    const {start, length, when} = slice;
     const buffer = speaker.createBuffer(1, length, rate);
     const channel = buffer.getChannelData(0);
-    for (const [i, segment] of segments.entries()) channel.set(segment, i * hop);
+    for (let i = 0; i < length; i++) {
+      channel[i] = view.getInt16(12 + (start - first + i) * 2, true) / 32768;
+    }
     const source = speaker.createBufferSource();
     source.buffer = buffer;
     source.connect(speakerOutput);
+    const scheduled = audioSources;
+    scheduled.add(source);
+    source.onended = () => scheduled.delete(source);
     source.start(when);
+    audioCursor = start + length;
     audioTime = when + length / rate;
   } catch (error) {
     if (error.name !== 'ErrnoError') {
