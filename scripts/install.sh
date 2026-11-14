@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="${CMF_WATCH_UTILS_REPO:-${REPO_URL:-https://github.com/arnav-kr/cmf-watch-utils.git}}"
+REPO_URL="${CMF_WATCH_UTILS_REPO:-${REPO_URL:-https://github.com/cmf-tech-community/cmf-watch-utils.git}}"
 TARGET="${1:-cmf-watch-utils}"
 FIRMWARE="${2:-}"
 

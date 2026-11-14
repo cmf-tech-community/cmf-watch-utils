@@ -20,7 +20,7 @@ if ($Firmware) {
     if ($LASTEXITCODE -ne 0) { throw 'Install Git LFS to use -Firmware.' }
 }
 
-$RepoUrl = if ($env:CMF_WATCH_UTILS_REPO) { $env:CMF_WATCH_UTILS_REPO } else { 'https://github.com/arnav-kr/cmf-watch-utils.git' }
+$RepoUrl = if ($env:CMF_WATCH_UTILS_REPO) { $env:CMF_WATCH_UTILS_REPO } else { 'https://github.com/cmf-tech-community/cmf-watch-utils.git' }
 if (-not (Test-Path (Join-Path $Target '.git'))) {
     $PreviousSkipSmudge = $env:GIT_LFS_SKIP_SMUDGE
     try {

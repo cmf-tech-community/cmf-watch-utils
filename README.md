@@ -16,11 +16,11 @@
 <p align="center">
   <a href="https://cmf.arnv.dev/"><img alt="Docs" src="https://img.shields.io/badge/docs-cmf.arnv.dev-FB471F?style=for-the-badge&logo=readthedocs&logoColor=white" /></a>
   <a href="https://cmf.arnv.dev/devices/cmf-watch-pro-2/"><img alt="CMF Watch Pro 2" src="https://img.shields.io/badge/device-CMF%20Watch%20Pro%202-black?style=for-the-badge" /></a>
-  <a href="https://github.com/arnav-kr/cmf-watch-utils/actions"><img alt="CI" src="https://github.com/arnav-kr/cmf-watch-utils/actions/workflows/ci.yml/badge.svg" /></a>
-  <a href="https://github.com/arnav-kr/cmf-watch-utils/actions"><img alt="Pages" src="https://github.com/arnav-kr/cmf-watch-utils/actions/workflows/pages.yml/badge.svg" /></a>
+  <a href="https://github.com/cmf-tech-community/cmf-watch-utils/actions"><img alt="CI" src="https://github.com/cmf-tech-community/cmf-watch-utils/actions/workflows/ci.yml/badge.svg" /></a>
+  <a href="https://github.com/cmf-tech-community/cmf-watch-utils/actions"><img alt="Pages" src="https://github.com/cmf-tech-community/cmf-watch-utils/actions/workflows/pages.yml/badge.svg" /></a>
   <a href="LICENSE"><img alt="AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-blue?style=for-the-badge" /></a>
-  <a href="https://github.com/arnav-kr/cmf-watch-utils"><img alt="Stars" src="https://img.shields.io/github/stars/arnav-kr/cmf-watch-utils?style=for-the-badge" /></a>
-  <a href="https://github.com/arnav-kr/cmf-watch-utils"><img alt="Forks" src="https://img.shields.io/github/forks/arnav-kr/cmf-watch-utils?style=for-the-badge" /></a>
+  <a href="https://github.com/cmf-tech-community/cmf-watch-utils"><img alt="Stars" src="https://img.shields.io/github/stars/cmf-tech-community/cmf-watch-utils?style=for-the-badge" /></a>
+  <a href="https://github.com/cmf-tech-community/cmf-watch-utils"><img alt="Forks" src="https://img.shields.io/github/forks/cmf-tech-community/cmf-watch-utils?style=for-the-badge" /></a>
 </p>
 
 <p align="center">
@@ -139,11 +139,11 @@ individual files below.
 
 | File | Size | SHA-256 (first 16) | Description |
 |---|---:|---|---|
-| [`JX402_V1.0.0.73.bin`](https://media.githubusercontent.com/media/arnav-kr/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73.bin) | 56.9 MB | `30903fc8ce6db4f8` | Stock factory firmware, `1.0.0.73` |
-| [`JX402_V1.0.0.57.bin`](https://media.githubusercontent.com/media/arnav-kr/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.57.bin) | 56.1 MB | `cd4574f1f9fa3110` | Rollback target, `1.0.0.57` |
-| [`JX402_V1.0.0.73_badapple9.bin`](https://media.githubusercontent.com/media/arnav-kr/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73_badapple9.bin) | 54.1 MB | `4933e593d14bef6f` | Rebuilt image with the animation proof of concept |
-| [`app_073.bin`](https://media.githubusercontent.com/media/arnav-kr/cmf-watch-utils/main/dumps/binaries/app/app_073.bin) | 2.4 MB | `30e7978c39d8fb79` | `app.bin` from the `1.0.0.73` image |
-| [`app_057.bin`](https://media.githubusercontent.com/media/arnav-kr/cmf-watch-utils/main/dumps/binaries/app/app_057.bin) | 2.4 MB | `26fbe34c10343949` | `app.bin` from the `1.0.0.57` image |
+| [`JX402_V1.0.0.73.bin`](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73.bin) | 56.9 MB | `30903fc8ce6db4f8` | Stock factory firmware, `1.0.0.73` |
+| [`JX402_V1.0.0.57.bin`](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.57.bin) | 56.1 MB | `cd4574f1f9fa3110` | Rollback target, `1.0.0.57` |
+| [`JX402_V1.0.0.73_badapple9.bin`](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73_badapple9.bin) | 54.1 MB | `4933e593d14bef6f` | Rebuilt image with the animation proof of concept |
+| [`app_073.bin`](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/app/app_073.bin) | 2.4 MB | `30e7978c39d8fb79` | `app.bin` from the `1.0.0.73` image |
+| [`app_057.bin`](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/app/app_057.bin) | 2.4 MB | `26fbe34c10343949` | `app.bin` from the `1.0.0.57` image |
 
 Manifests with full hashes and per-entry CRC status:
 [`firmware-1.0.0.73.json`](dumps/manifests/firmware-1.0.0.73.json) ·
@@ -230,21 +230,21 @@ cd site && pnpm build
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=arnav-kr%2Fcmf-watch-utils&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=cmf-tech-community%2Fcmf-watch-utils&type=date&legend=top-left">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=arnav-kr/cmf-watch-utils&amp;type=date&amp;theme=dark&amp;legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=arnav-kr/cmf-watch-utils&amp;type=date&amp;legend=top-left" />
-    <img src="https://api.star-history.com/chart?repos=arnav-kr/cmf-watch-utils&amp;type=date&amp;legend=top-left" alt="Star History Chart" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=cmf-tech-community/cmf-watch-utils&amp;type=date&amp;theme=dark&amp;legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=cmf-tech-community/cmf-watch-utils&amp;type=date&amp;legend=top-left" />
+    <img src="https://api.star-history.com/chart?repos=cmf-tech-community/cmf-watch-utils&amp;type=date&amp;legend=top-left" alt="Star History Chart" />
   </picture>
 </a>
 
 ## Contributors
 
-<a href="https://github.com/arnav-kr/cmf-watch-utils/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=arnav-kr/cmf-watch-utils" alt="Contributors" />
+<a href="https://github.com/cmf-tech-community/cmf-watch-utils/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cmf-tech-community/cmf-watch-utils" alt="Contributors" />
 </a>
 
-See the [full contributor graph](https://github.com/arnav-kr/cmf-watch-utils/graphs/contributors).
+See the [full contributor graph](https://github.com/cmf-tech-community/cmf-watch-utils/graphs/contributors).
 
 ## Attribution
 

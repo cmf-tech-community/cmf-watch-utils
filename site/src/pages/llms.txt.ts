@@ -41,7 +41,7 @@ export const GET: APIRoute = async ({ site }) => {
   lines.push('## Optional',
     '',
     `- [Full text of all pages](${urlFor('llms-full', site)})`,
-    `- [Repository](${urlFor('repo', site)})`.replace(urlFor('repo', site), 'https://github.com/arnav-kr/cmf-watch-utils'),
+    `- [Repository](${urlFor('repo', site)})`.replace(urlFor('repo', site), 'https://github.com/cmf-tech-community/cmf-watch-utils'),
     `- [Author](https://github.com/arnav-kr) · [arnav.dev](https://arnv.dev)`,
     '');
 
