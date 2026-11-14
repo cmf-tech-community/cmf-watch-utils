@@ -106,7 +106,7 @@ function log(text) {
   $('log').textContent=runtimeLog;
   if (!halted && fatalGuestOutput.test(text)) {
     guestStopped('Guest firmware crashed. Save the watch log or boot stock.');
-  } else if (!halted && /stopped on unimplemented|Unsupported|Aborted|Invalid WFC|Cannot read WFC/.test(text)) {
+  } else if (!halted && /stopped on unimplemented|^Aborted\(|Invalid WFC|Cannot read WFC/.test(text)) {
     guestStopped('Emulator stopped. See the watch log.');
   }
 }
@@ -658,6 +658,15 @@ function sendGps() {
 for (const id of ['health-enabled', 'heart-rate', 'blood-oxygen']) $(id).onchange = sendHealth;
 for (const id of ['gps-enabled', 'gps-lat', 'gps-lon']) $(id).onchange = sendGps;
 
+function sendAmbientLight() {
+  const light = $('ambient-lux');
+  if (!customApp && light.validity.valid) input(`l ${light.valueAsNumber}`);
+}
+
+$('ambient-lux').addEventListener('change', () => {
+  if ($('ambient-lux').reportValidity()) sendAmbientLight();
+});
+
 function buildCylinder(element, radius, depth, facets, ridged) {
   const width = 2 * radius * Math.tan(Math.PI / facets) + 0.35;
   for (let index = 0; index < facets; index++) {
@@ -767,8 +776,10 @@ $('reset-simulation').onclick = () => {
   $('blood-oxygen').value = 98;
   $('gps-enabled').checked = false;
   $('gps-lat').value = $('gps-lon').value = 0;
+  $('ambient-lux').value = 0;
   sendHealth();
   sendGps();
+  sendAmbientLight();
   powerChanged = true;
   updateBattery();
   sendPower();
@@ -1035,6 +1046,7 @@ $('start').onclick=async()=>{
     bootedCatalogFace = overrides.catalogFace;
     customApp = Boolean(overrides.app);
     for (const field of $('health-controls').querySelectorAll('input')) field.disabled = customApp;
+    $('ambient-lux').disabled = customApp;
     $('firmware-label').textContent = customApp
       ? ({'bad-apple': 'BAD APPLE', 'display-demo': 'DISPLAY TEST'}[bootPreset.value] || 'CUSTOM APPLICATION')
       : 'FIRMWARE 1.0.0.73';
@@ -1062,7 +1074,7 @@ $('start').onclick=async()=>{
         ...(!customApp ? ['-kernel', '/watch/app.bin'] : []),
         ...(debug?['-d','unimp','-D','/watch/qemu.log']:[]),
         '-display','none','-monitor','none','-serial','file:/watch/uart.log','-serial','null','-serial','null',
-        '-icount',clock,'-no-reboot'],
+        '-icount',clock,...(customApp ? ['-no-reboot'] : [])],
       preRun:[module=>{
         module.FS.mkdir('/watch');
         for(const [name,data]of files)module.FS.writeFile(`/watch/${name}`,data,{canOwn:true});
@@ -1087,6 +1099,7 @@ $('start').onclick=async()=>{
       updateBrightness();
       if ($('health-enabled').checked) sendHealth();
       if ($('gps-enabled').checked) sendGps();
+      sendAmbientLight();
       input(`a ${gravity.join(' ')}`);
       status('Waiting for the guest display...', false, 'loading');
       setTimeout(() => {

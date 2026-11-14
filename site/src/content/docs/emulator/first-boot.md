@@ -60,6 +60,20 @@ Windowed runs select an available speaker backend automatically. Use
 `--audio none` for a silent window. To record the speaker output to
 `audio.wav` without opening a window, run with `--headless --wav`.
 
+Add `--host-mic` to a windowed run to let guest microphone capture use your
+computer's default audio input. Capture starts when the guest starts recording
+and stops when it stops or restarts. The host audio backend and microphone
+permissions determine whether input samples are available. The guest receives
+silence when host capture is disabled or there are no samples ready.
+
+Use `--allow-reboot` to follow the stock firmware through a restart. The
+factory menu's DUT confirmation and Exit Factory actions both restart the watch.
+
+In stock firmware, **Advanced → Ambient light (lux)** sets the simulated
+ambient light from 0 to 100,000 lux. In the browser, use **Simulation →
+Ambient light**. The factory light test displays the simulated value after you
+start the measurement.
+
 The vibration motor is not felt, but its drive is logged. Each change is a line in
 `motor.log` in the output folder: virtual milliseconds, duty in tenths of a percent and
 PWM frequency in hertz, with `0 0` meaning off. The window shows the current state

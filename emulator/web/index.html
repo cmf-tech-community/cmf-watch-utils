@@ -136,6 +136,14 @@
           <label>Longitude<input id="gps-lon" type="number" min="-180" max="180" step="0.000001" value="0" required></label>
         </div>
       </details>
+      <details class="settings-section" id="light-controls">
+        <summary>Ambient light</summary>
+        <div class="sensor-fields">
+          <label for="ambient-lux">Illuminance (lux)
+            <input id="ambient-lux" type="number" inputmode="numeric" min="0" max="100000" step="1" value="0" required>
+          </label>
+        </div>
+      </details>
       <div class="panel-actions"><button id="reset-simulation" type="button">Reset simulation</button></div>
     </section>
     <section id="boot-images" class="settings-group">

@@ -20,6 +20,7 @@
 #include "sysemu/reset.h"
 #include "chardev/char-fe.h"
 #include "qemu/log.h"
+#include "qemu/rcu.h"
 #include "qemu/timer.h"
 #include "qemu/guest-random.h"
 #include "qemu/error-report.h"
@@ -49,7 +50,7 @@ typedef struct ActsTimer {
 struct ActsState {
     MemoryRegion rom, flash, sram, shared, psram, psram_alias, mmio, nor, param;
     MemoryRegion trace_ram, psram_wt_alias, psram_uncached, provisioning, bt_ram;
-    MemoryRegion flash_uncached, jpeg_ram, usb_phy;
+    MemoryRegion flash_uncached, jpeg_ram, usb_phy, dsp_dtcm, dsp_ptcm, dsp_sram;
     const char *nand_export;
     const char *ota_nand_snapshot;
     DeviceState *cpu;
@@ -64,6 +65,7 @@ struct ActsState {
     uint32_t battery_percent;
     bool stk_enabled;
     bool health_hook;
+    unsigned ambient_lux;
     uint32_t health_readings;
     int64_t health_next_sample;
     int accel_mg[3];
@@ -108,7 +110,13 @@ struct ActsState {
     unsigned bt_rx_len;
     qemu_irq dma_irq[10];
     qemu_irq dac_irq, dac_fifo_irq;
-    QEMUTimer *dac_timer;
+    QEMUTimer *dac_timer, *mic_timer;
+    int mic_channel;
+    uint32_t mic_buffer, mic_length;
+    bool mic_host_enabled;
+    bool mic_host_received;
+    SWVoiceIn *mic_voice;
+    GByteArray *mic_host_pcm;
     unsigned dac_queued, dac_fraction;
     int16_t dac_pcm[1024];
     unsigned dac_pcm_head;
@@ -270,8 +278,10 @@ static void acts_stk_sample(ActsState *s, uint8_t sample[6])
 {
     unsigned range = s->stk_regs[0x0f] & 15;
     int scale = range == 5 ? 512 : range == 8 ? 256 : 1024;
+    /* Convert watch axes to the chip's mounting orientation. */
+    const int chip_mg[] = {s->accel_mg[1], s->accel_mg[0], -s->accel_mg[2]};
     for (unsigned axis = 0; axis < 3; axis++) {
-        int counts = CLAMP(s->accel_mg[axis] * scale / 1000, -2048, 2047);
+        int counts = CLAMP(chip_mg[axis] * scale / 1000, -2048, 2047);
         stw_le_p(sample + axis * 2, (uint16_t)(counts * 16));
     }
 }
@@ -299,13 +309,17 @@ static bool acts_stk_transfer(ActsState *s, uint32_t *task)
                                data, len) != MEMTX_OK) {
             return false;
         }
-        s->stk_reg = data[0];
-        for (unsigned i = 1; i < len; i++) {
+        bool address_in_buffer = task[0] & (1u << 28);
+        s->stk_reg = address_in_buffer ? data[0] : task[5] >> 8;
+        for (unsigned i = address_in_buffer; i < len; i++) {
             uint8_t reg = s->stk_reg++;
             if (reg == 0x14 && data[i] == 0xb6) {
                 memset(s->stk_regs, 0, sizeof(s->stk_regs));
                 s->stk_regs[0x0f] = 3;
             } else {
+                if (reg == 0x0f) {
+                    qemu_log_mask(LOG_UNIMP, "STK8321 range set to 0x%02x\n", data[i]);
+                }
                 s->stk_regs[reg] = data[i];
             }
         }
@@ -532,6 +546,8 @@ static void acts_input_tick(void *opaque)
         s->gps_gga = false;
         s->gps_next_sentence = now;
         acts_gps_irq(s);
+    } else if (s->health_hook && sscanf(line, "l %u", &x) == 1 && x <= 100000) {
+        s->ambient_lux = x;
     } else if (s->health_hook && sscanf(line, "h %u %u %u", &down, &x, &y) == 3 &&
                down <= 1 && x >= 30 && x <= 220 && y >= 70 && y <= 100) {
         s->health_readings = down ? x | (y << 8) : 0;
@@ -1048,9 +1064,65 @@ static void acts_sdma1_irq(ActsState *s)
     qemu_set_irq(s->sdma1_irq, !!(s->regs[0x78000 / 4] & s->regs[0x78004 / 4] & 2));
 }
 
+#define DE_RT_CTL 0x6c400
+#define DE_RT_IRQ_EN (1u << 4)
+#define DE_RT_COMPLETE (1u << 7)
+#define DE_RT_FILL_START (1u << 16)
+#define DE_RT_FILL_BURST_16 (1u << 17)
+#define DE_RT_ENABLE (1u << 31)
+
 static void acts_de_irq(ActsState *s)
 {
-    qemu_set_irq(s->de_irq, !!(s->regs[0x6c00c / 4] & s->regs[0x6c30c / 4]));
+    uint32_t rt = s->regs[DE_RT_CTL / 4];
+
+    qemu_set_irq(s->de_irq, (s->regs[0x6c00c / 4] & s->regs[0x6c30c / 4]) ||
+                 ((rt & DE_RT_IRQ_EN) && (rt & DE_RT_COMPLETE)));
+}
+
+static bool acts_writable_ram(hwaddr addr, hwaddr span)
+{
+    hwaddr offset, length = span;
+    MemoryRegion *region;
+
+    RCU_READ_LOCK_GUARD();
+    region = address_space_translate(&address_space_memory, addr, &offset,
+                                     &length, true, MEMTXATTRS_UNSPECIFIED);
+    return length >= span && memory_region_is_ram(region) &&
+           !memory_region_is_rom(region) && !memory_region_is_ram_device(region);
+}
+
+static bool acts_de_fast_fill(ActsState *s, uint32_t ctl)
+{
+    const uint32_t allowed = DE_RT_ENABLE | DE_RT_FILL_START |
+                             DE_RT_FILL_BURST_16 | DE_RT_IRQ_EN;
+    uint32_t size = s->regs[0x6c404 / 4];
+    unsigned width = size & 0x1ff, height = size >> 16;
+    uint32_t dst = s->regs[0x6c410 / 4], stride = s->regs[0x6c414 / 4];
+    uint16_t color = s->regs[0x6c438 / 4];
+    uint8_t row[0x1ff * 2];
+    hwaddr span;
+
+    if ((ctl & (DE_RT_ENABLE | DE_RT_FILL_START)) !=
+        (DE_RT_ENABLE | DE_RT_FILL_START) || (ctl & ~allowed) ||
+        !width || !height || height > 0x1ff || stride < width * 2) {
+        return false;
+    }
+    span = (hwaddr)(height - 1) * stride + width * 2;
+    if (!acts_writable_ram(dst, span)) {
+        return false;
+    }
+    for (unsigned x = 0; x < width; x++) {
+        stw_le_p(row + x * 2, color);
+    }
+    for (unsigned y = 0; y < height; y++) {
+        if (address_space_write(&address_space_memory, dst + (hwaddr)y * stride,
+                                MEMTXATTRS_UNSPECIFIED, row, width * 2) != MEMTX_OK) {
+            return false;
+        }
+    }
+    s->regs[DE_RT_CTL / 4] = (ctl & DE_RT_IRQ_EN) | DE_RT_COMPLETE;
+    acts_de_irq(s);
+    return true;
 }
 
 static bool acts_de_overlay(ActsState *s)
@@ -1343,11 +1415,117 @@ static void acts_dac_queue(ActsState *s, unsigned samples)
     acts_dac_irqs(s);
 }
 
+static void acts_mic_host_read(void *opaque, int available)
+{
+    ActsState *s = opaque;
+    uint8_t samples[1024];
+
+    while (available >= 2) {
+        size_t count = AUD_read(s->mic_voice, samples,
+                                MIN(available & ~1, sizeof(samples)));
+        if (!count) {
+            break;
+        }
+        if (!s->mic_host_received) {
+            info_report("Receiving PCM from the host microphone");
+            s->mic_host_received = true;
+        }
+        g_byte_array_append(s->mic_host_pcm, samples, count);
+        if (s->mic_host_pcm->len > 4096) {
+            g_byte_array_remove_range(s->mic_host_pcm, 0,
+                                      s->mic_host_pcm->len - 4096);
+        }
+        available -= count;
+    }
+}
+
+static void acts_mic_host_stop(ActsState *s)
+{
+    s->mic_host_received = false;
+    if (s->mic_voice) {
+        AUD_set_active_in(s->mic_voice, 0);
+        g_byte_array_set_size(s->mic_host_pcm, 0);
+    }
+}
+
+static void acts_mic_host_start(ActsState *s)
+{
+    if (!s->mic_host_enabled) {
+        return;
+    }
+    if (!s->mic_voice) {
+        struct audsettings format = {16000, 1, AUDIO_FORMAT_S16, 0};
+        s->mic_voice = AUD_open_in(&s->dac_card, NULL, "WP2 microphone", s,
+                                   acts_mic_host_read, &format);
+        if (!s->mic_voice) {
+            error_report("Host microphone unavailable; using silent samples");
+            s->mic_host_enabled = false;
+            return;
+        }
+    }
+    AUD_set_active_in(s->mic_voice, 1);
+}
+
+static void acts_mic_schedule(ActsState *s, unsigned bytes)
+{
+    timer_mod(s->mic_timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
+              (int64_t)bytes * 1000000000 / (16000 * 2));
+}
+
+static void acts_mic_tick(void *opaque)
+{
+    ActsState *s = opaque;
+    unsigned ch = s->mic_channel;
+    uint32_t *r = &s->regs[(0x1c100 + ch * 0x100) / 4];
+    if (!(r[1] & 1)) {
+        return;
+    }
+    unsigned len = s->mic_length;
+    bool half = r[7] == len;
+    uint32_t dst = s->mic_buffer + (half ? 0 : len / 2);
+    g_autofree uint8_t *samples = g_malloc0(len / 2);
+    if (s->mic_host_pcm && s->mic_host_pcm->len) {
+        unsigned count = MIN(len / 2, s->mic_host_pcm->len);
+        memcpy(samples, s->mic_host_pcm->data, count);
+        g_byte_array_remove_range(s->mic_host_pcm, 0, count);
+    }
+    if (address_space_write(&address_space_memory, dst, MEMTXATTRS_UNSPECIFIED,
+                            samples, len / 2) != MEMTX_OK) {
+        error_report("Cannot write PCM for microphone DMA%u", ch);
+        qemu_system_shutdown_request(SHUTDOWN_CAUSE_GUEST_SHUTDOWN);
+        return;
+    }
+    r[7] = half ? len / 2 : len;
+    s->regs[0x1c000 / 4] |= 1u << (half ? ch + 16 : ch);
+    acts_mic_schedule(s, len / 2);
+    acts_dma_irqs(s);
+}
+
 static void acts_dma_run(ActsState *s, unsigned ch)
 {
     uint32_t *r=&s->regs[(0x1c100+ch*0x100)/4];
-    if(!(r[1]&1)) return;
+    if (!(r[1] & 1)) {
+        if (s->mic_channel == ch) {
+            timer_del(s->mic_timer);
+            acts_mic_host_stop(s);
+            s->mic_channel = -1;
+        }
+        return;
+    }
     uint32_t src=r[2],dst=r[4],len=r[6]&0x7ffff;
+    if (r[0] == 0x0016008b && src == 0 && len && len % 4 == 0 &&
+        dst % 2 == 0 && acts_writable_ram(dst, len) &&
+        (s->mic_channel == -1 || s->mic_channel == ch)) {
+        if (s->mic_channel == -1) {
+            s->mic_channel = ch;
+            s->mic_buffer = dst;
+            s->mic_length = len;
+            acts_mic_host_start(s);
+            r[7] = len;
+            acts_mic_schedule(s, len / 2);
+        }
+        return;
+    }
     if (((r[0] >> 8) & 31) == 11 && (r[0] & 31) == 0 &&
         !(r[0] & (1u << 18))) {
         unsigned bytes = (r[0] & (1u << 20)) ? 2 : 4;
@@ -1502,7 +1680,9 @@ static bool acts_storage_reg(hwaddr addr)
 {
     /* Clock enables/dividers and reset registers retain written state. Effects
      * on peripherals and analog oscillator settling are not implemented yet. */
-    return addr < 8 || (addr >= 0x100 && addr <= 0x174) ||
+    return addr < 8 || addr == 0x80 || addr == 0x84 ||
+           (addr >= 0x100 && addr <= 0x174) || addr == 0x3004 ||
+           addr == 0x10000 || (addr >= 0x10080 && addr <= 0x1008c) ||
            addr == 0x2c03c || addr == 0x2c040 || /* PSRAM PHY delay taps */
            (addr >= 0x1000 && addr <= 0x1114) ||
            addr == 0x4030 ||
@@ -1573,6 +1753,9 @@ static void acts_motor_update(ActsState *s)
 static uint64_t acts_read(void *opaque, hwaddr addr, unsigned size)
 {
     ActsState *s = opaque;
+    if (addr == 0x3014) {
+        return 0;
+    }
     if (addr == 0x64020 && (s->regs[0x6402c / 4] & (1u << 28)) &&
         (s->regs[0x64034 / 4] >> 24) == 0x03) {
         /* CO5300 QSPI status registers used by the stock panel check. */
@@ -1590,6 +1773,9 @@ static uint64_t acts_read(void *opaque, hwaddr addr, unsigned size)
     }
     if (addr == 0xfffe4 && s->health_hook) {
         return s->battery_percent;
+    }
+    if (addr == 0xfffe8 && s->health_hook) {
+        return s->ambient_lux;
     }
     if ((addr >= 0x94000 && addr <= 0x9405c) ||
         (addr >= 0x780a0 && addr <= 0x780b4) ||
@@ -1778,6 +1964,14 @@ static uint64_t acts_read(void *opaque, hwaddr addr, unsigned size)
 static void acts_write(void *opaque, hwaddr addr, uint64_t value, unsigned size)
 {
     ActsState *s = opaque;
+    if (addr == 0x3014) {
+        return;
+    }
+    if (addr == 0x410c && value == 0) {
+        info_report("Virtual watch powered off by guest");
+        qemu_system_shutdown_request(SHUTDOWN_CAUSE_GUEST_SHUTDOWN);
+        return;
+    }
     if (addr == 0 && !(value & (1u << 10))) { /* RMU USB controller reset */
         s->usb_idvbus = 0;
         s->usb_dpdm = 1u << 4; /* LSDETEN reset default */
@@ -1928,9 +2122,15 @@ static void acts_write(void *opaque, hwaddr addr, uint64_t value, unsigned size)
         s->regs[addr / 4] = value & ~1u;
         return;
     }
-    if (addr == 0x6c400 && value == 0x80) {
-        s->regs[addr / 4] &= ~0x80u; /* RT_STAT_COMPLETE, W1C */
-        return;
+    if (addr == DE_RT_CTL) {
+        if (value == DE_RT_COMPLETE) {
+            s->regs[addr / 4] = 0;
+            acts_de_irq(s);
+            return;
+        }
+        if (acts_de_fast_fill(s, value)) {
+            return;
+        }
     }
     if (addr == 0x6c338) {
         s->de_palette_index = value & 255;
@@ -1944,7 +2144,7 @@ static void acts_write(void *opaque, hwaddr addr, uint64_t value, unsigned size)
         s->regs[addr / 4] = value;
         return;
     }
-    if((addr==0x6c020 && (value&1)) || (addr==0x6c400 && value)) {
+    if((addr==0x6c020 && (value&1)) || (addr==DE_RT_CTL && value)) {
         for (unsigned i = 0; i < 0x800; i += 4) {
             uint32_t word = s->regs[(0x6c000 + i) / 4];
             if (word) {
@@ -2223,6 +2423,9 @@ static void acts_reset(void *opaque)
     acts_motor_update(s);
     memcpy(&s->regs[0xc030 / 4], rtc_remain, sizeof(rtc_remain));
     timer_del(s->dac_timer);
+    timer_del(s->mic_timer);
+    acts_mic_host_stop(s);
+    s->mic_channel = -1;
     s->dac_queued = s->dac_fraction = 0;
     s->dac_pcm_head = 0;
     acts_dac_audio_stop(s);
@@ -2367,6 +2570,21 @@ static bool acts_install_stock_power_hooks(void)
                                    sizeof(notify_entry), notify_code, sizeof(notify_code));
 }
 
+static bool acts_install_stock_lux_hook(void)
+{
+    /* Stock's lux getter loads the final integer reading through this literal.
+     * Keep the original getter and route its load to the simulated reading. */
+    const uint8_t getter[] = {0x01, 0x4b, 0x18, 0x68, 0x70, 0x47, 0x00, 0xbf,
+                              0xb0, 0xd0, 0x01, 0x38};
+    uint8_t *entry = rom_ptr(0x100ec79c, sizeof(getter));
+
+    if (!entry || memcmp(entry, getter, sizeof(getter))) {
+        return false;
+    }
+    stl_le_p(entry + 8, 0x400fffe8);
+    return true;
+}
+
 static void acts_init(MachineState *machine)
 {
     ActsState *s = g_new0(ActsState, 1);
@@ -2465,6 +2683,9 @@ static void acts_init(MachineState *machine)
     acts_ram(machine, &s->jpeg_ram, "acts.jpeg.tables.fifo", 0x2ff17800, 0x800, false);
     acts_ram(machine, &s->shared, "acts.shared", 0x2ff18000, 0x8000, false);
     acts_ram(machine, &s->bt_ram, "acts.bt.ram", 0x2ff20000, 0x10000, false);
+    acts_ram(machine, &s->dsp_dtcm, "acts.dsp.dtcm", 0x2ff30000, 0x18000, false);
+    acts_ram(machine, &s->dsp_ptcm, "acts.dsp.ptcm", 0x30058000, 0x4000, false);
+    acts_ram(machine, &s->dsp_sram, "acts.dsp.sram", 0x30044000, 0x14000, false);
     acts_ram(machine, &s->trace_ram, "acts.trace.ram",0x31000000,1024,false);
     const char *nand_path = g_getenv("QEMU_WP2_NAND");
     if (nand_path) {
@@ -2544,6 +2765,7 @@ static void acts_init(MachineState *machine)
     s->dac_irq = qdev_get_gpio_in(s->cpu, 40);
     s->dac_fifo_irq = qdev_get_gpio_in(s->cpu, 55);
     s->dac_timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, acts_dac_tick, s);
+    s->mic_timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, acts_mic_tick, s);
     const char *audiodev = g_getenv("QEMU_WP2_AUDIODEV");
     s->dac_stream_path = g_getenv("QEMU_WP2_PCM_STREAM");
     if (s->dac_stream_path) {
@@ -2552,6 +2774,10 @@ static void acts_init(MachineState *machine)
         s->dac_card.state = audio_state_by_name(audiodev, &error_fatal);
         if (AUD_register_card("Watch Pro 2", &s->dac_card, &error_fatal)) {
             s->dac_host_pcm = g_byte_array_new();
+            if (g_getenv("QEMU_WP2_HOST_MIC")) {
+                s->mic_host_enabled = true;
+                s->mic_host_pcm = g_byte_array_new();
+            }
         }
     }
     s->jpeg_irq = qdev_get_gpio_in(s->cpu, 57);
@@ -2596,6 +2822,10 @@ static void acts_init(MachineState *machine)
         memcpy(entry, jump, sizeof(jump));
         if (!acts_install_stock_power_hooks()) {
             error_report("Virtual power controls require stock 1.0.0.73 and a compatible ROM");
+            exit(1);
+        }
+        if (!acts_install_stock_lux_hook()) {
+            error_report("Virtual ambient light requires stock 1.0.0.73");
             exit(1);
         }
     }

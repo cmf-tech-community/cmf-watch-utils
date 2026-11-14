@@ -254,6 +254,7 @@ def parser():
     run.add_argument("--audio", choices=("auto", "none", "dsound", "coreaudio", "pa", "alsa"),
                      default="auto", help="Speaker backend (auto for windowed runs)")
     run.add_argument("--wav", action="store_true")
+    run.add_argument("--host-mic", action="store_true", help="Use the PC microphone for stock guest capture")
     run.add_argument("--charger-connected", action="store_true")
     run.add_argument("--allow-reboot", action="store_true")
     run.add_argument("--hci-port", type=port)

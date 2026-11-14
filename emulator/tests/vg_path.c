@@ -47,6 +47,12 @@ int main(void) {
     r[0xa00] = 0x10000002; r[0xa02] = 0x000000ff;
     assert(wp2_vg_solid_path(r, &path));
     assert(lduw_le_p(memory + 10) == 0xf800);
+    uint32_t fp_words[] = {2,0x3fc00000,0x3fc00000,4,0x40200000,0x3fc00000,0};
+    r[0xa34] = 0x03300203;
+    assert(wp2_vg_decode_path(r, (uint8_t *)fp_words, ARRAY_SIZE(fp_words), &path));
+    assert(path.edges[0].a.x == 1.5f && path.edges[0].b.x == 2.5f);
+    fp_words[1] = 0x7fc00000;
+    assert(!wp2_vg_decode_path(r, (uint8_t *)fp_words, ARRAY_SIZE(fp_words), &path));
     r[0xa12] = 1;
     assert(!wp2_vg_solid_path(r, &path));
     puts("VG path alpha, opaque fill, coverage and bounds passed");
