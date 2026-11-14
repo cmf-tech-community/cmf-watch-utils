@@ -835,6 +835,7 @@ static bool acts_vg_blit(ActsState *s, uint32_t origin, uint32_t size,
     unsigned pitch = state[0xa12], spitch = state[0xa2b];
     uint32_t src = state[0xa29], dst = state[0xa11];
     bool fade = state[0xa00] == 0xa101;
+    bool opaque = state[0xa00] == 0x10001001 || state[0xa00] == 0x1101;
     bool pattern = path && state[0xa00] == 0x10001002 &&
                    state[0xa27] == 0xff000000;
     bool linear_rgb565 = state[0xa25] == 0x01020105;
@@ -846,7 +847,7 @@ static bool acts_vg_blit(ActsState *s, uint32_t origin, uint32_t size,
     qemu_log_mask(LOG_UNIMP,
                   "VG blit cfg=%08x fmt=%08x src=%08x %ux%u/%u dst=%08x (%u,%u %ux%u)\n",
                   state[0xa00], state[0xa25], src, sw, sh, spitch, dst, x, y, width, height);
-    if ((!argb && ((!fade && !pattern && state[0xa00] != 0x10001001) ||
+    if ((!argb && ((!fade && !pattern && !opaque) ||
                    (state[0xa25] != 0x01000105 && !linear_rgb565))) ||
         state[0xa10] != 0x101 ||
         (state[0xa27] && !pattern) || state[0xa2d] ||
