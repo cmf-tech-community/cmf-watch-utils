@@ -20,7 +20,7 @@ export default defineConfig({
         {
           icon: 'github',
           label: 'GitHub',
-          href: 'https://github.com/arnav-kr/cmf-watch-utils',
+          href: 'https://github.com/cmf-tech-community/cmf-watch-utils',
         },
         {
           icon: 'external',
@@ -29,7 +29,7 @@ export default defineConfig({
         },
       ],
       editLink: {
-        baseUrl: 'https://github.com/arnav-kr/cmf-watch-utils/edit/main/site/',
+        baseUrl: 'https://github.com/cmf-tech-community/cmf-watch-utils/edit/main/site/',
       },
       components: {
         SocialIcons: './src/components/SocialIcons.astro',

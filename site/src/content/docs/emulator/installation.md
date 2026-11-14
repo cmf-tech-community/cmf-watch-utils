@@ -24,7 +24,7 @@ at first-time setup.
 
 ## Runtime archives
 
-Download **two** archives from the same [preview release](https://github.com/arnav-kr/cmf-watch-utils/releases):
+Download **two** archives from the same [preview release](https://github.com/cmf-tech-community/cmf-watch-utils/releases):
 
 - The archive named `cmf-emulator-windows-x64.tar.gz`, `cmf-emulator-linux-x64.tar.gz`,
   or `cmf-emulator-macos-arm64.tar.gz` for your computer. It contains the project's
@@ -45,7 +45,7 @@ Get-ChildItem runtime
 Check that you see `qemu-system-arm.exe`, `compat.bin` and `provision-nand.elf`.
 On Linux or macOS, use `mkdir -p runtime` and substitute your host's archive in
 the first `tar` command. The QEMU executable on those hosts has no `.exe` suffix.
-If a release archive is unavailable, see the [source build instructions](https://github.com/arnav-kr/cmf-watch-utils/blob/main/emulator/README.md).
+If a release archive is unavailable, see the [source build instructions](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/emulator/README.md).
 
 ## Host dependencies
 
@@ -93,7 +93,7 @@ running PulseAudio server or PipeWire's PulseAudio compatibility service.
 
 The Linux archive is built and smoke-tested on Ubuntu 22.04. Arch has not
 had an end-to-end firmware boot test. If a rolling library update prevents
-the archive from loading, follow the [Arch source build instructions](https://github.com/arnav-kr/cmf-watch-utils/blob/main/emulator/README.md#arch-linux).
+the archive from loading, follow the [Arch source build instructions](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/emulator/README.md#arch-linux).
 The distribution's standard QEMU package does not include this watch model.
 
 ### Ubuntu and macOS

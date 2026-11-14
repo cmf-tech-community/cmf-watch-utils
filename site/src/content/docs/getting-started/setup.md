@@ -18,7 +18,7 @@ The emulator's additional libraries are listed under
 
 ```powershell
 $env:GIT_LFS_SKIP_SMUDGE = '1'
-git clone https://github.com/arnav-kr/cmf-watch-utils.git
+git clone https://github.com/cmf-tech-community/cmf-watch-utils.git
 Remove-Item Env:GIT_LFS_SKIP_SMUDGE
 cd cmf-watch-utils
 uv sync --locked
@@ -27,7 +27,7 @@ uv sync --locked
 **Linux or macOS**
 
 ```bash
-GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/arnav-kr/cmf-watch-utils.git
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/cmf-tech-community/cmf-watch-utils.git
 cd cmf-watch-utils
 uv sync --locked
 ```
