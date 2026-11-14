@@ -55,7 +55,7 @@ def command(args, model, output, env, audio, *, media_clock=False):
     require(args.rom.is_file(), f"Compatibility ROM not found: {args.rom}")
     clock = "shift=3,align=on" if not args.headless and audio else "shift=3,align=off"
     if media_clock:
-        clock = "shift=7,align=on"
+        clock = "shift=6,align=on"
     argv = [executable(args.qemu, env), "-M", model.machine, "-bios", str(args.rom),
             "-display", "none", "-monitor", "none", "-serial", f"file:{output / 'uart0.log'}",
             "-serial", "null", "-serial", "null", "-icount", clock]
@@ -233,6 +233,8 @@ def run(args, profile):
         require(audio, "--host-mic requires a windowed run with a host audio backend")
         env[model.env_prefix + "HOST_MIC"] = "1"
     media_clock = not stock and (audio or args.wav) and bool(re.fullmatch(rb"badapple\d+_\d{6}", stamp))
+    if media_clock:
+        env[model.env_prefix + "MEDIA_CLOCK"] = "1"
     argv = command(args, model, output, env, audio, media_clock=media_clock)
     if not args.headless:
         env[model.env_prefix + "LIVE_FRAME"] = "1"

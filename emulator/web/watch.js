@@ -1052,8 +1052,8 @@ $('start').onclick=async()=>{
     const runtimeURL = new URL('./runtime/', import.meta.url);
     const scriptURL = new URL('qemu-system-arm.js', runtimeURL).href;
     const {default:createQemu} = await import(scriptURL);
-    const clock = builtInPresets.has('bad-apple') && bootPreset.value === 'bad-apple'
-      ? 'shift=7,align=on' : 'shift=3,align=off';
+    const mediaClock = builtInPresets.has('bad-apple') && bootPreset.value === 'bad-apple';
+    const clock = mediaClock ? 'shift=6,align=on' : 'shift=3,align=off';
     runtime=await createQemu({
       mainScriptUrlOrBlob:scriptURL,
       locateFile:name=>new URL(name, runtimeURL).href,
@@ -1074,6 +1074,7 @@ $('start').onclick=async()=>{
           QEMU_WP2_PCM_STREAM:'/watch/speaker.pcm',
           QEMU_WP2_MOTOR:motorPath,
           QEMU_WP2_LIVE_SENSORS:'1',QEMU_WP2_HOST_RTC:'1',QEMU_WP2_UNPLUGGED:'1'});
+        if (mediaClock) module.ENV.QEMU_WP2_MEDIA_CLOCK = '1';
         if (!customApp) {
           module.ENV.QEMU_WP2_LIVE_HEALTH = '1';
           module.ENV.QEMU_WP2_STOCK_AWAKE = '1';
