@@ -351,6 +351,8 @@ details[open] > summary::after { transform: rotate(90deg); }
 .settings-group > h2 { margin: 0; font-size: 13px; font-weight: 550; }
 
 #power, #motion, .brightness-control { display: grid; gap: 9px; margin-top: 6px; font-size: 12px; }
+#brightness { --level: 100%; }
+#battery { --level: 69%; }
 .settings-group input[type=range] {
   appearance: none;
   width: 100%;
@@ -361,7 +363,7 @@ details[open] > summary::after { transform: rotate(90deg); }
 }
 .settings-group input[type=range]::-webkit-slider-runnable-track {
   height: 4px;
-  background: linear-gradient(to right, #eee var(--level, 69%), #343434 var(--level, 69%));
+  background: linear-gradient(to right, #eee var(--level, 0%), #343434 var(--level, 0%));
   border-radius: 2px;
 }
 .settings-group input[type=range]::-webkit-slider-thumb {
@@ -377,6 +379,24 @@ details[open] > summary::after { transform: rotate(90deg); }
 .settings-group input[type=range]::-moz-range-track { height: 4px; background: #343434; border-radius: 2px; }
 .settings-group input[type=range]::-moz-range-progress { height: 4px; background: #eee; }
 .settings-group input[type=range]::-moz-range-thumb { width: 9px; height: 9px; background: #f4f4f4; border: 2px solid #111; border-radius: 50%; box-shadow: 0 0 0 1px #f4f4f4; }
+.settings-group input[type=range]:disabled { opacity: .35; cursor: default; }
+
+.ambient-light-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 11ch;
+  align-items: center;
+  gap: 6px 8px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.ambient-light-control input[type=number] {
+  min-width: 0;
+  padding: 4px;
+  border: 1px solid var(--line);
+  background: #121212;
+  color: var(--text);
+}
+.ambient-light-control input[type=range] { grid-column: 1 / -1; }
 
 #orientation-pad {
   display: grid;

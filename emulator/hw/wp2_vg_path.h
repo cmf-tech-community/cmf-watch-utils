@@ -8,7 +8,19 @@ typedef struct {
     bool even_odd;
 } Wp2Path;
 
-/* Inline S32 VG Lite paths, with curves flattened into line segments. */
+static float wp2_vg_path_coord(const uint8_t *word, bool fp32)
+{
+    uint32_t bits = ldl_le_p(word);
+    float coord;
+
+    if (!fp32) {
+        return (int32_t)bits;
+    }
+    memcpy(&coord, &bits, sizeof(coord));
+    return coord;
+}
+
+/* Inline S32 and FP32 VG Lite paths, with curves flattened into line segments. */
 static bool wp2_vg_decode_path(const uint32_t *r, const uint8_t *words,
                                unsigned count, Wp2Path *path)
 {
@@ -20,6 +32,7 @@ static bool wp2_vg_decode_path(const uint32_t *r, const uint8_t *words,
     Wp2PathEdge *edges = path->edges;
     Wp2PathPoint current = {0}, first = {0};
     unsigned n = 0;
+    bool fp32 = (r[0xa34] & 0x00300000) == 0x00300000;
     bool open = false, ended = false;
     for (unsigned i = 0; i < count;) {
         unsigned op = ldl_le_p(words + i++ * 4);
@@ -41,13 +54,13 @@ static bool wp2_vg_decode_path(const uint32_t *r, const uint8_t *words,
         if (i + 2 * points > count || (op >= 4 && !open)) return false;
         Wp2PathPoint p[3];
         for (unsigned j = 0; j < points; j++) {
-            p[j].x = (int32_t)ldl_le_p(words + i++ * 4);
-            p[j].y = (int32_t)ldl_le_p(words + i++ * 4);
+            p[j].x = wp2_vg_path_coord(words + i++ * 4, fp32);
+            p[j].y = wp2_vg_path_coord(words + i++ * 4, fp32);
             if (op & 1) {
                 p[j].x += current.x;
                 p[j].y += current.y;
             }
-            if (fabsf(p[j].x) > 4096 || fabsf(p[j].y) > 4096) return false;
+            if (!(fabsf(p[j].x) <= 4096 && fabsf(p[j].y) <= 4096)) return false;
         }
         if (op <= 3) {
             first = current = p[0];

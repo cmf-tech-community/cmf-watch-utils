@@ -227,6 +227,9 @@ def run(args, profile):
         audio = audio_backend(executable(args.qemu, env), env) if not args.headless and not args.wav else None
     if audio == "none":
         audio = None
+    if args.host_mic:
+        require(audio, "--host-mic requires a windowed run with a host audio backend")
+        env[model.env_prefix + "HOST_MIC"] = "1"
     argv = command(args, model, output, env, audio)
     if not args.headless:
         env[model.env_prefix + "LIVE_FRAME"] = "1"

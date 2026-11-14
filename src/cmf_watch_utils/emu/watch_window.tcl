@@ -288,6 +288,7 @@ set virtualGps 0
 set gpsLatitude 0
 set gpsLongitude 0
 set brightness 100
+set ambientLux 0
 
 proc apply_sensors {} {
     global accelX accelY accelZ battery charging virtualHealth heartRate spo2 stock
@@ -337,6 +338,8 @@ proc open_sensors {} {
         slider .advanced.health.spo2 "Blood oxygen (%)" spo2 70 100 1
         pack .advanced.health.enabled .advanced.health.hr .advanced.health.spo2 -fill x -pady 3
         pack .advanced.health -fill x -pady 6
+        slider .advanced.light "Ambient light (lux)" ambientLux 0 100000 1 send_ambient_light
+        pack .advanced.light -fill x -pady 5
     }
     group .advanced.gps "GPS"
     check .advanced.gps.enabled "Simulate a GPS fix" virtualGps
@@ -359,6 +362,10 @@ proc open_sensors {} {
 
 proc send_brightness {value} {
     send_event "b $value"
+}
+
+proc send_ambient_light {value} {
+    send_event "l $value"
 }
 
 proc crown {state} {

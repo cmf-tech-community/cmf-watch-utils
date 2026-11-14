@@ -106,7 +106,7 @@ function log(text) {
   $('log').textContent=runtimeLog;
   if (!halted && fatalGuestOutput.test(text)) {
     guestStopped('Guest firmware crashed. Save the watch log or boot stock.');
-  } else if (!halted && /stopped on unimplemented|Unsupported|Aborted|Invalid WFC|Cannot read WFC/.test(text)) {
+  } else if (!halted && /stopped on unimplemented|^Aborted\(|Invalid WFC|Cannot read WFC/.test(text)) {
     guestStopped('Emulator stopped. See the watch log.');
   }
 }
@@ -600,9 +600,8 @@ function sendPower() {
   input(customApp ? `p ${Math.round(voltage)} ${charger}` : `p 4000 ${charger} ${percent}`);
 }
 function updateBattery() {
-  const percent = $('battery').value + '%';
+  const percent = syncSliderFill($('battery'));
   $('battery-level').value = percent;
-  $('battery').style.setProperty('--level', percent);
 }
 $('battery').oninput = () => {
   powerChanged = true;
@@ -620,11 +619,16 @@ $('charger').onchange = () => {
 };
 updateBattery();
 
+function syncSliderFill(slider) {
+  const min = Number(slider.min);
+  const percent = (slider.valueAsNumber - min) * 100 / (Number(slider.max) - min) + '%';
+  slider.style.setProperty('--level', percent);
+  return percent;
+}
+
 function updateBrightness() {
   const brightness = $('brightness');
-  const percent = brightness.value + '%';
-  $('brightness-level').value = percent;
-  brightness.style.setProperty('--level', percent);
+  $('brightness-level').value = syncSliderFill(brightness);
   input(`b ${brightness.value}`);
 }
 $('brightness').oninput = updateBrightness;
@@ -657,6 +661,24 @@ function sendGps() {
 
 for (const id of ['health-enabled', 'heart-rate', 'blood-oxygen']) $(id).onchange = sendHealth;
 for (const id of ['gps-enabled', 'gps-lat', 'gps-lon']) $(id).onchange = sendGps;
+
+const ambientLight = $('ambient-lux');
+const ambientLightSlider = $('ambient-lux-slider');
+
+function updateAmbientLight() {
+  ambientLight.value = ambientLightSlider.value;
+  ambientLightSlider.setAttribute('aria-valuetext', `${ambientLightSlider.value} lux`);
+  syncSliderFill(ambientLightSlider);
+  if (!customApp) input(`l ${ambientLightSlider.value}`);
+}
+
+ambientLightSlider.addEventListener('input', updateAmbientLight);
+ambientLight.addEventListener('change', () => {
+  if (!ambientLight.reportValidity()) return;
+  ambientLightSlider.value = ambientLight.valueAsNumber;
+  updateAmbientLight();
+});
+updateAmbientLight();
 
 function buildCylinder(element, radius, depth, facets, ridged) {
   const width = 2 * radius * Math.tan(Math.PI / facets) + 0.35;
@@ -767,8 +789,10 @@ $('reset-simulation').onclick = () => {
   $('blood-oxygen').value = 98;
   $('gps-enabled').checked = false;
   $('gps-lat').value = $('gps-lon').value = 0;
+  ambientLightSlider.value = 0;
   sendHealth();
   sendGps();
+  updateAmbientLight();
   powerChanged = true;
   updateBattery();
   sendPower();
@@ -1035,6 +1059,7 @@ $('start').onclick=async()=>{
     bootedCatalogFace = overrides.catalogFace;
     customApp = Boolean(overrides.app);
     for (const field of $('health-controls').querySelectorAll('input')) field.disabled = customApp;
+    ambientLight.disabled = ambientLightSlider.disabled = customApp;
     $('firmware-label').textContent = customApp
       ? ({'bad-apple': 'BAD APPLE', 'display-demo': 'DISPLAY TEST'}[bootPreset.value] || 'CUSTOM APPLICATION')
       : 'FIRMWARE 1.0.0.73';
@@ -1087,6 +1112,7 @@ $('start').onclick=async()=>{
       updateBrightness();
       if ($('health-enabled').checked) sendHealth();
       if ($('gps-enabled').checked) sendGps();
+      updateAmbientLight();
       input(`a ${gravity.join(' ')}`);
       status('Waiting for the guest display...', false, 'loading');
       setTimeout(() => {
