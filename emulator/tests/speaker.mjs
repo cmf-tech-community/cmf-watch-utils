@@ -1,39 +1,29 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {speakerHop, speakerSegment} from '../web/speaker.mjs';
+import {speakerSlice} from '../web/speaker.mjs';
 
-const rate = 16000;
-const hop = speakerHop(rate);
-const tone = index => Math.sin(2 * Math.PI * 500 * index / rate);
+const defaults = {first: 0, end: 7000, rate: 16000, now: 1,
+  scheduledUntil: 0, delay: .3, flush: false};
 
-test('a slower guest lengthens playback without lowering the note', () => {
-  const speed = .56;
-  let cursor = 0, tail;
-  const output = [];
-  while (cursor < rate * speed) {
-    const segment = speakerSegment(tone, 0, rate, cursor, tail, rate, false);
-    output.push(...segment.output);
-    tail = segment.tail;
-    cursor += hop * speed;
-  }
-  assert.ok(Math.abs(output.length - rate) <= hop);
-  let crossings = 0;
-  for (let i = hop + 1; i < output.length; i++) {
-    if (output[i - 1] <= 0 && output[i] > 0) crossings++;
-    assert.ok(Math.abs(output[i] - output[i - 1]) < .3);
-  }
-  const measuredPitch = crossings * rate / (output.length - hop);
-  assert.ok(Math.abs(measuredPitch - 500) <= 5, `Measured ${measuredPitch} Hz`);
+test('preserves the first available sample and schedules consecutive slices', () => {
+  const first = speakerSlice(defaults);
+  assert.equal(first.start, 0);
+  assert.ok(first.length > 0);
+  const endTime = first.when + first.length / defaults.rate;
+  const next = speakerSlice({...defaults, now: 1.1, cursor: first.length, scheduledUntil: endTime});
+  assert.equal(next.start, first.length);
+  assert.equal(next.when, endTime);
 });
 
-test('short sounds can flush without reading beyond the PCM file', () => {
-  const end = 70;
-  const read = index => {
-    assert.ok(index >= 0 && index < end);
-    return tone(index);
-  };
-  assert.equal(speakerSegment(read, 0, end, 0, undefined, rate, false), undefined);
-  const {output} = speakerSegment(read, 0, end, 0, undefined, rate, true);
-  assert.ok(output.some(sample => Math.abs(sample) > .1));
-  assert.equal(output[output.length - 1], 0);
+test('waits for refill after a stall and resumes at the same sample', () => {
+  assert.equal(speakerSlice({...defaults, cursor: 5000}), undefined);
+  const resumed = speakerSlice({...defaults, cursor: 5000, end: 12000});
+  assert.equal(resumed.start, 5000);
+  assert.ok(resumed.when > defaults.now);
+});
+
+test('flushes short clips without padding and skips only overwritten samples', () => {
+  assert.equal(speakerSlice({...defaults, end: 70}), undefined);
+  assert.equal(speakerSlice({...defaults, end: 70, flush: true}).length, 70);
+  assert.equal(speakerSlice({...defaults, first: 400, cursor: 30}).start, 400);
 });
