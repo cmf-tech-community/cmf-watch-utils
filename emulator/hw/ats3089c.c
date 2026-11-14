@@ -1306,9 +1306,8 @@ static void acts_dac_audio_stop(ActsState *s)
 
 static void acts_dac_fifo_stop(ActsState *s)
 {
-    if (s->dac_stream_path &&
-        (s->regs[(DAC_BASE + 4) / 4] & 0x31) == 0x31) {
-        if (s->dac_stream_pending) {
+    if ((s->regs[(DAC_BASE + 4) / 4] & 0x31) == 0x31) {
+        if (s->dac_stream_path && s->dac_stream_pending) {
             acts_dac_stream_publish(s);
         }
         return;
