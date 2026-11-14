@@ -1467,7 +1467,8 @@ static void acts_dsp_notify(ActsState *s, uint16_t id, uint32_t owner,
     stl_le_p(mail + 8, arg);
     stl_le_p(mail + 12, detail);
     stl_le_p(mail, id | WP2_DSP_BUSY);
-    qemu_irq_pulse(qdev_get_gpio_in(s->cpu, 20));
+    s->regs[0x3014 / 4] |= 1;
+    qemu_set_irq(qdev_get_gpio_in(s->cpu, 20), 1);
 }
 
 static void acts_dsp_reset(ActsState *s)
@@ -1475,6 +1476,8 @@ static void acts_dsp_reset(ActsState *s)
     Wp2DspAudio *dsp = &s->dsp_audio;
     timer_del(dsp->timer);
     *dsp = (Wp2DspAudio){ .timer = dsp->timer, .input = UINT32_MAX };
+    s->regs[0x3014 / 4] &= ~1u;
+    qemu_set_irq(qdev_get_gpio_in(s->cpu, 20), 0);
 }
 
 static void acts_dsp_command(ActsState *s, uint8_t *info, uint8_t *decoder,
@@ -1990,7 +1993,7 @@ static uint64_t acts_read(void *opaque, hwaddr addr, unsigned size)
 {
     ActsState *s = opaque;
     if (addr == 0x3014) {
-        return 0;
+        return s->regs[0x3014 / 4];
     }
     if (addr == 0x64020 && (s->regs[0x6402c / 4] & (1u << 28)) &&
         (s->regs[0x64034 / 4] >> 24) == 0x03) {
@@ -2201,6 +2204,8 @@ static void acts_write(void *opaque, hwaddr addr, uint64_t value, unsigned size)
 {
     ActsState *s = opaque;
     if (addr == 0x3014) {
+        s->regs[0x3014 / 4] &= ~value;
+        qemu_set_irq(qdev_get_gpio_in(s->cpu, 20), !!s->regs[0x3014 / 4]);
         return;
     }
     if (addr == 0x3000 && (value & 1) && s->dsp_audio.phase) {
