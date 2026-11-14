@@ -251,8 +251,10 @@ function renderAudio() {
     }
     if (end <= first) return;
     lastAudioPacket = {view, rate, first, end};
+    const stockSound = !customApp && rate === 16000;
     const slice = speakerSlice({first, end, cursor: audioCursor, rate, now,
-      scheduledUntil: audioTime, delay, flush: performance.now() - audioChanged >= 140});
+      scheduledUntil: audioTime, delay: stockSound ? .72 : delay,
+      flush: performance.now() - audioChanged >= (stockSound ? 750 : 140)});
     if (!slice) return;
     const {start, length, when} = slice;
     audioTime = scheduleAudio(lastAudioPacket, start, length, when);
