@@ -124,6 +124,7 @@ struct ActsState {
     unsigned dac_queued, dac_fraction;
     int16_t dac_pcm[1024];
     unsigned dac_pcm_head;
+    int64_t dac_deadline;
     unsigned dac_host_rate;
     QEMUSoundCard dac_card;
     SWVoiceOut *dac_voice;
@@ -1259,6 +1260,7 @@ enum {
 };
 
 static void acts_dma_run(ActsState *s, unsigned ch);
+static void acts_dsp_play_audio(ActsState *s);
 
 static void acts_dac_audio_write(void *opaque, int available)
 {
@@ -1300,6 +1302,18 @@ static void acts_dac_audio_stop(ActsState *s)
         s->dac_stream_epoch++;
         acts_dac_stream_publish(s);
     }
+}
+
+static void acts_dac_fifo_stop(ActsState *s)
+{
+    if (s->dac_stream_path &&
+        (s->regs[(DAC_BASE + 4) / 4] & 0x31) == 0x31) {
+        if (s->dac_stream_pending) {
+            acts_dac_stream_publish(s);
+        }
+        return;
+    }
+    acts_dac_audio_stop(s);
 }
 
 static void acts_dac_audio_play(ActsState *s, unsigned rate, unsigned played)
@@ -1371,13 +1385,23 @@ static void acts_dac_tick(void *opaque)
     if (rate >= ARRAY_SIZE(rates) || !s->dac_queued) {
         return;
     }
-    unsigned budget = rates[rate] + s->dac_fraction;
     unsigned old = s->dac_queued;
-    unsigned played = MIN(old, budget / 1000);
-    acts_dac_audio_play(s, rates[rate], played);
-    s->dac_pcm_head = (s->dac_pcm_head + played) % DAC_PCM_CAPACITY;
-    s->dac_fraction = budget % 1000;
-    s->dac_queued -= played;
+    int64_t now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+    bool dsp = s->dsp_audio.output && (s->regs[(DAC_BASE + 4) / 4] & 0x31) == 0x31;
+    unsigned ticks = dsp ? CLAMP(1 + (now - s->dac_deadline) / 1000000, 1, 256) : 1;
+    unsigned played = 0;
+    for (unsigned i = 0; i < ticks && s->dac_queued; i++) {
+        unsigned budget = rates[rate] + s->dac_fraction;
+        unsigned step = MIN(s->dac_queued, budget / 1000);
+        acts_dac_audio_play(s, rates[rate], step);
+        s->dac_pcm_head = (s->dac_pcm_head + step) % DAC_PCM_CAPACITY;
+        s->dac_fraction = budget % 1000;
+        s->dac_queued -= step;
+        played += step;
+        if (dsp) {
+            acts_dsp_play_audio(s);
+        }
+    }
     unsigned half_empty = s->regs[DAC_PCM_HE / 4] & 0xfff;
     if (old > half_empty && s->dac_queued <= half_empty) {
         s->regs[DAC_PCM_STAT / 4] |= 1u << 17;
@@ -1394,7 +1418,8 @@ static void acts_dac_tick(void *opaque)
         }
     }
     if (s->dac_queued) {
-        timer_mod(s->dac_timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + 1000000);
+        s->dac_deadline = dsp ? s->dac_deadline + ticks * 1000000LL : now + 1000000;
+        timer_mod(s->dac_timer, s->dac_deadline);
     } else if (s->dac_stream_path && s->dac_stream_pending) {
         acts_dac_stream_publish(s);
     }
@@ -1419,7 +1444,8 @@ static void acts_dac_queue(ActsState *s, unsigned samples)
         s->regs[DAC_PCM_STAT / 4] |= 1u << 18;
     }
     if (!old) {
-        timer_mod(s->dac_timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + 1000000);
+        s->dac_deadline = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + 1000000;
+        timer_mod(s->dac_timer, s->dac_deadline);
     }
     acts_dac_irqs(s);
 }
@@ -1517,7 +1543,7 @@ static void acts_dsp_read_audio(ActsState *s, Wp2DspRing *ring)
     wp2_dsp_ring_read(ring, ring->length);
 }
 
-static void acts_dsp_play_audio(ActsState *s, uint8_t *runtime)
+static void acts_dsp_play_audio(ActsState *s)
 {
     Wp2DspAudio *dsp = &s->dsp_audio;
     if (!dsp->pcm || !dsp->candidates || dsp->stream_done ||
@@ -1536,6 +1562,8 @@ static void acts_dsp_play_audio(ActsState *s, uint8_t *runtime)
         dsp->offset += count;
     }
     dsp->played = dsp->offset - MIN(s->dac_queued, dsp->offset);
+    uint8_t *runtime = memory_region_get_ram_ptr(&s->dsp_dtcm) +
+                       WP2_DSP_DECODER_INFO + WP2_DSP_DECODER_RUNTIME;
     stl_le_p(runtime, 160);
     stl_le_p(runtime + 4, 1);
     stl_le_p(runtime + 8, dsp->played);
@@ -1596,7 +1624,7 @@ static void acts_dsp_tick(void *opaque)
             acts_dsp_read_audio(s, &ring);
         }
         if (dsp->decoder && dsp->output) {
-            acts_dsp_play_audio(s, decoder + WP2_DSP_DECODER_RUNTIME);
+            acts_dsp_play_audio(s);
         } else {
             delay = 4;
         }
@@ -2402,7 +2430,7 @@ static void acts_write(void *opaque, hwaddr addr, uint64_t value, unsigned size)
     if (addr == DAC_BASE + 4 && !(value & 1)) {
         s->dac_queued = s->dac_fraction = 0;
         timer_del(s->dac_timer);
-        acts_dac_audio_stop(s);
+        acts_dac_fifo_stop(s);
     }
     if (addr == DAC_BASE + 8) return; /* DAC FIFO status W1C */
     if(addr==0x1c000 || addr==0x1c004) {
