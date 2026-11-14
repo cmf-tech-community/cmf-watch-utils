@@ -1495,7 +1495,7 @@ static void acts_dsp_command(ActsState *s, uint8_t *info, uint8_t *decoder,
             memcpy(decoder, data + 8, WP2_DSP_DECODER_RUNTIME);
             memset(decoder + WP2_DSP_DECODER_RUNTIME, 0, 24);
             dsp->input = UINT32_MAX;
-            dsp->bytes = dsp->offset = dsp->played = dsp->samples = 0;
+            dsp->bytes = dsp->consumed = dsp->offset = dsp->played = dsp->samples = 0;
             dsp->stream_end = dsp->stream_done = false;
             dsp->pcm = NULL;
             dsp->candidates = (1u << WP2_DSP_CLIPS) - 1;
@@ -1525,24 +1525,39 @@ static void acts_dsp_command(ActsState *s, uint8_t *info, uint8_t *decoder,
 static void acts_dsp_read_audio(ActsState *s, Wp2DspRing *ring)
 {
     Wp2DspAudio *dsp = &s->dsp_audio;
+    uint32_t inspected = dsp->bytes - dsp->consumed;
+    if (inspected > ring->length) {
+        return;
+    }
     uint8_t data[WP2_DSP_RING_MAX];
     wp2_dsp_ring_copy(ring, data, ring->length);
+    uint32_t fresh = ring->length - inspected;
     for (unsigned i = 0; i < WP2_DSP_CLIPS; i++) {
         unsigned bit = 1u << i;
         const Wp2DspClip *clip = &s->dsp_clips[i];
         if (!(dsp->candidates & bit)) {
             continue;
         }
-        if (dsp->bytes > clip->bytes || ring->length > clip->bytes - dsp->bytes ||
-            memcmp(data, clip->encoded + dsp->bytes, ring->length)) {
+        if (dsp->bytes > clip->bytes || fresh > clip->bytes - dsp->bytes ||
+            memcmp(data + inspected, clip->encoded + dsp->bytes, fresh)) {
             dsp->candidates &= ~bit;
-        } else if (dsp->bytes + ring->length == clip->bytes) {
-            dsp->pcm = clip->pcm;
-            dsp->samples = clip->samples;
         }
     }
-    dsp->bytes += ring->length;
-    wp2_dsp_ring_read(ring, ring->length);
+    dsp->bytes += fresh;
+    if (dsp->bytes >= 32 && dsp->candidates &&
+        !(dsp->candidates & (dsp->candidates - 1))) {
+        const Wp2DspClip *clip = &s->dsp_clips[ctz32(dsp->candidates)];
+        dsp->pcm = clip->pcm;
+        dsp->samples = clip->samples;
+        uint32_t played = dsp->played * (uint64_t)clip->bytes / clip->samples;
+        uint32_t consume = MAX(dsp->consumed, MIN(dsp->bytes, played)) -
+                           dsp->consumed;
+        wp2_dsp_ring_read(ring, consume);
+        dsp->consumed += consume;
+    } else if (!dsp->candidates) {
+        wp2_dsp_ring_read(ring, ring->length);
+        dsp->consumed = dsp->bytes;
+    }
 }
 
 static void acts_dsp_play_audio(ActsState *s)
@@ -1552,8 +1567,10 @@ static void acts_dsp_play_audio(ActsState *s)
         (s->regs[(DAC_BASE + 4) / 4] & 0x31) != 0x31) {
         return;
     }
+    const Wp2DspClip *clip = &s->dsp_clips[ctz32(dsp->candidates)];
+    uint32_t available = dsp->bytes * (uint64_t)clip->samples / clip->bytes;
     unsigned count = MIN(128 - MIN(s->dac_queued, 128),
-                         dsp->samples - dsp->offset);
+                         MAX(available, dsp->offset) - dsp->offset);
     unsigned tail = s->dac_pcm_head + s->dac_queued;
     for (unsigned i = 0; i < count; i++) {
         s->dac_pcm[(tail + i) % DAC_PCM_CAPACITY] =
@@ -1571,7 +1588,8 @@ static void acts_dsp_play_audio(ActsState *s)
     stl_le_p(runtime + 8, dsp->played);
     stl_le_p(runtime + 16, dsp->bytes);
     uint8_t *mail = memory_region_get_ram_ptr(&s->shared) + WP2_DSP_GUEST_MAIL;
-    if (dsp->played == dsp->samples && dsp->stream_end &&
+    if (dsp->played == dsp->samples && dsp->consumed == dsp->bytes &&
+        dsp->stream_end &&
         !(ldl_le_p(mail) & WP2_DSP_BUSY)) {
         stw_le_p(runtime + 22, 2);
         dsp->stream_done = true;

@@ -42,7 +42,7 @@ typedef struct Wp2DspAudio {
     const uint8_t *pcm;
     uint32_t command, input, offset, samples, played, session;
     uint32_t fence;
-    uint32_t bytes;
+    uint32_t bytes, consumed;
     unsigned candidates;
     unsigned phase;
     bool decoder, output, stream_end, stream_done;
