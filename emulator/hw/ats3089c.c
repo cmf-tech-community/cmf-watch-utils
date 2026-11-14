@@ -795,6 +795,10 @@ static uint16_t acts_vg_linear(const uint8_t *image, unsigned pitch,
     for (unsigned i = 0; i < ARRAY_SIZE(pixels); i++) {
         pixels[i] = acts_vg_color(samples[i], bytes);
     }
+    if (bytes == 2 && pixels[0] == pixels[1] && pixels[0] == pixels[2] &&
+        pixels[0] == pixels[3]) {
+        return pixels[0];
+    }
     if (bytes > 2) {
         /* Transparent texels contribute coverage, without leaking their RGB. */
         float coverage = 0;

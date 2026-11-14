@@ -47,7 +47,7 @@ separately under **Raw application files**.
 
 Select **Bad Apple** from **Boot preset** to run the bundled demo.
 For an example of a custom Zephyr application, see the
-[Bad Apple source](https://github.com/arnav-kr/firmware-wp2-badapple) and
+[Bad Apple source](https://github.com/cmf-tech-community/firmware-wp2-badapple) and
 [case study](/devices/cmf-watch-pro-2/guides/bad-apple/).
 For Bluetooth OTA and recovery tests, use desktop QEMU.
 
