@@ -24,6 +24,9 @@ The virtual speaker is on by default. If your browser blocks autoplay, tap or
 click the emulator to start audio. Use **Watch sound** under **Simulation →
 Display** to mute it. If the virtual watch runs slowly, audio stretches to
 keep pace while preserving pitch.
+The stock preview plays the built-in ACT sounds through the virtual speaker.
+You can preview a ringtone by changing the volume in the watch’s **Sounds**
+settings. Bluetooth call audio requires additional DSP support.
 **Battery level** sets the reported percentage in stock firmware. With a
 custom app, the slider changes the simulated battery voltage and the app
 decides how to report it.
@@ -47,7 +50,7 @@ separately under **Raw application files**.
 
 Select **Bad Apple** from **Boot preset** to run the bundled demo.
 For an example of a custom Zephyr application, see the
-[Bad Apple source](https://github.com/arnav-kr/firmware-wp2-badapple) and
+[Bad Apple source](https://github.com/cmf-tech-community/firmware-wp2-badapple) and
 [case study](/devices/cmf-watch-pro-2/guides/bad-apple/).
 For Bluetooth OTA and recovery tests, use desktop QEMU.
 
@@ -71,6 +74,7 @@ its bundled version for each file you leave out.
 | `compat.bin` | The emulator's compatibility ROM, which provides the services the watch app expects at boot. |
 | `nand-id.bin` | The chip identification table used by the NAND driver. |
 | `wfc-index.txt` | Texture information used to render stock watch faces. |
+| `stock-audio.bin` | Prepared stock ringtone, alarm and prompt samples for the virtual speaker. |
 
 ## Desktop emulator
 

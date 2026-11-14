@@ -51,12 +51,14 @@ def run_env(args, model, output, nor, nand):
                        UNPLUGGED=int(not args.charger_connected), HOST_RTC=1, EXPLORATORY=0)
 
 
-def command(args, model, output, env, audio):
+def command(args, model, output, env, audio, *, media_clock=False):
     require(args.rom.is_file(), f"Compatibility ROM not found: {args.rom}")
+    clock = "shift=3,align=on" if not args.headless and audio else "shift=3,align=off"
+    if media_clock:
+        clock = "shift=6,align=on"
     argv = [executable(args.qemu, env), "-M", model.machine, "-bios", str(args.rom),
             "-display", "none", "-monitor", "none", "-serial", f"file:{output / 'uart0.log'}",
-            "-serial", "null", "-serial", "null", "-icount",
-            "shift=3,align=on" if not args.headless and audio else "shift=3,align=off"]
+            "-serial", "null", "-serial", "null", "-icount", clock]
     if args.hci_port:
         argv += ["-chardev", f"socket,id=wp2-hci,host=127.0.0.1,port={args.hci_port}"]
     if not args.allow_reboot:
@@ -222,6 +224,9 @@ def run(args, profile):
     env = run_env(args, model, output, nor, nand)
     if texture_index.is_file():
         env[model.env_prefix + "WFC_INDEX"] = str(texture_index)
+    stock_audio = args.fixtures / "stock-audio.bin"
+    if stock and stock_audio.is_file():
+        env[model.env_prefix + "STOCK_AUDIO"] = str(stock_audio)
     audio = args.audio
     if audio == "auto":
         audio = audio_backend(executable(args.qemu, env), env) if not args.headless and not args.wav else None
@@ -230,7 +235,10 @@ def run(args, profile):
     if args.host_mic:
         require(audio, "--host-mic requires a windowed run with a host audio backend")
         env[model.env_prefix + "HOST_MIC"] = "1"
-    argv = command(args, model, output, env, audio)
+    media_clock = not stock and (audio or args.wav) and bool(re.fullmatch(rb"badapple\d+_\d{6}", stamp))
+    if media_clock:
+        env[model.env_prefix + "MEDIA_CLOCK"] = "1"
+    argv = command(args, model, output, env, audio, media_clock=media_clock)
     if not args.headless:
         env[model.env_prefix + "LIVE_FRAME"] = "1"
         env[model.env_prefix + "LIVE_SENSORS"] = "1"

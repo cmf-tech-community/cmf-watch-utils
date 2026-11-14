@@ -52,7 +52,7 @@
 | Custom animation flashed and played | verified on hardware, 202-frame proof of concept |
 | Firmware `1.0.0.57` rollback image | published, rebuilt from extracted parts, all CRCs verify |
 
-[Bad Apple firmware](https://github.com/arnav-kr/firmware-wp2-badapple)
+[Bad Apple firmware](https://github.com/cmf-tech-community/firmware-wp2-badapple)
 is an example of building a custom Zephyr app for this watch. The
 [Bad Apple case study](https://cmf.arnv.dev/devices/cmf-watch-pro-2/guides/bad-apple/)
 explains how the player fits the watch's storage and memory.

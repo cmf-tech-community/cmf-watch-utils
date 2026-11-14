@@ -81,7 +81,7 @@ jobs:
           args=()
           [[ "$BAD_APPLE_TAG" =~ ^[A-Za-z0-9._-]+$ && "$BAD_APPLE_SHA256" =~ ^[a-f0-9]{64}$ ]]
           http_status=$(curl -LsS --retry 3 -o browser-stock/bad-apple.bin -w '%{http_code}' \
-            "https://github.com/arnav-kr/firmware-wp2-badapple/releases/download/$BAD_APPLE_TAG/wp2-badapple-ota.bin")
+            "https://github.com/cmf-tech-community/firmware-wp2-badapple/releases/download/$BAD_APPLE_TAG/wp2-badapple-ota.bin")
           if [[ "$http_status" == 200 ]]; then
             printf '%s  %s\n' "$BAD_APPLE_SHA256" browser-stock/bad-apple.bin | sha256sum -c
             args+=(--bad-apple browser-stock/bad-apple.bin)

@@ -15,6 +15,24 @@ the exact stock package, pinned NAND ID and Arm-capable GDB. The interactive vie
 loopback OTA uses an isolated H4 controller. The recovery supervisor models
 installation and rescue. It does not run the physical bootloader.
 
+Stock 1.0.0.73 uses an audio DSP for its built-in sounds. The emulator plays
+their decoded samples through the virtual DAC when the guest submits the
+matching ACT stream. The hosted browser build prepares those samples
+automatically. For a local desktop or browser setup, place `stock-audio.bin`
+alongside the other fixtures:
+
+```bash
+uv run --locked --with unicorn==2.1.4 python emulator/prepare-stock-audio.py \
+  --stock /path/to/JX402_V1.0.0.73.bin \
+  --decoder /path/to/CMF-Ringtone-Tool/act_emu \
+  --output /path/to/fixtures/stock-audio.bin
+```
+
+The generator uses [CMF Ringtone Tool](https://github.com/tirodz/CMF-Ringtone-Tool/tree/6e867e18f7984df694a2a0e75a08c78c5c06603c/act_emu)
+and validates the resulting samples. Fixture preparation needs the decoder and
+Unicorn. Playback uses the virtual DAC alone. Bluetooth call audio and arbitrary
+DSP programs are outside this model.
+
 Build from the repository root with Python 3.12 or later.
 
 ```text

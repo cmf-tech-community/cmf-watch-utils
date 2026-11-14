@@ -31,6 +31,19 @@ uv run --locked cmf-watch-utils emu prepare-fixtures \
     --fixtures "$work/fixtures" --stock "$work/stock.bin" --nand-id "$work/nand-id.bin" \
     --qemu "$work/runtime/qemu-system-arm" --rom "$work/runtime/compat.bin" \
     --provisioner "$work/runtime" --gdb gdb-multiarch
+decoder=https://raw.githubusercontent.com/tirodz/CMF-Ringtone-Tool/6e867e18f7984df694a2a0e75a08c78c5c06603c/act_emu
+mkdir -p "$work/decoder"
+for file in act_decode.py linked.json; do
+    curl -fLsS --retry 3 "$decoder/$file" -o "$work/decoder/$file"
+done
+(cd "$work/decoder" && sha256sum -c <<'SUMS'
+19d70503398070df8757cd9a88ef81cd6d198c2dcb976255c1a4f4b04ac1aae8  act_decode.py
+1d11e80ce787bb59ccd71656f560c2f50034f95cdc4b47dd9cc63480775755e3  linked.json
+SUMS
+)
+uv run --locked --with unicorn==2.1.4 python emulator/prepare-stock-audio.py \
+    --stock "$work/stock.bin" --decoder "$work/decoder" \
+    --output "$work/fixtures/stock-audio.bin"
 uv run --locked python emulator/web/stage.py \
     --fixtures "$work/fixtures" --rom "$work/runtime/compat.bin" --stock-image "$work/stock.bin" \
     --frames-dir "$work/frames" --output "$work/staged"

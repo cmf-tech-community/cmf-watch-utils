@@ -95,6 +95,37 @@ def write_if_changed(path, contents):
         path.write_bytes(contents)
 
 
+def integrate_wp2_clock(source):
+    path = source / "accel/tcg/icount-common.c"
+    code = path.read_text(encoding="utf-8")
+    if "static bool wp2_media_clock;" in code:
+        return
+    changes = {
+        "int64_t icount_to_ns(int64_t icount)":
+            "static bool wp2_media_clock;\n\n#define WP2_MEDIA_INSN_NS 72\n\n"
+            "int64_t icount_to_ns(int64_t icount)",
+        "    return icount << qatomic_read(&timers_state.icount_time_shift);":
+            "    if (wp2_media_clock) {\n"
+            "        return icount * WP2_MEDIA_INSN_NS;\n"
+            "    }\n"
+            "    return icount << qatomic_read(&timers_state.icount_time_shift);",
+        "    return (count + (1 << shift) - 1) >> shift;":
+            "    if (wp2_media_clock) {\n"
+            "        return DIV_ROUND_UP(count, WP2_MEDIA_INSN_NS);\n"
+            "    }\n"
+            "    return (count + (1 << shift) - 1) >> shift;",
+        "        timers_state.icount_time_shift = time_shift;":
+            "        wp2_media_clock = align && time_shift == 6 &&\n"
+            "                          g_strcmp0(g_getenv(\"QEMU_WP2_MEDIA_CLOCK\"), \"1\") == 0;\n"
+            "        timers_state.icount_time_shift = time_shift;",
+    }
+    for original, replacement in changes.items():
+        if code.count(original) != 1:
+            raise ValueError(f"Unexpected QEMU clock code in {path}")
+        code = code.replace(original, replacement)
+    path.write_bytes(code.encode("utf-8"))
+
+
 def texture_index(faces):
     if faces is None:
         return b"/* No optional WFC fixture index. */\n"
@@ -115,6 +146,7 @@ def texture_index(faces):
 
 
 def integrate(source, sdk, faces):
+    integrate_wp2_clock(source)
     arm = source / "hw/arm"
     mkvenv = source / "python/scripts/mkvenv.py"
     original = mkvenv.read_bytes()

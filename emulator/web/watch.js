@@ -1,6 +1,6 @@
 import {downloadCatalogFace, setupFaceCatalog} from './catalog.mjs';
 import {installWatchFace} from './face.mjs';
-import {speakerHop, speakerSegment} from './speaker.mjs';
+import {speakerSlice} from './speaker.mjs';
 
 const $ = (id) => document.getElementById(id);
 const panel = $('panel');
@@ -53,9 +53,7 @@ const economyDisplay = matchMedia('(pointer: coarse)').matches || navigator.devi
 let nextFrame = 0;
 let speaker, speakerOutput, audioCursor, audioEpoch, audioTime = 0;
 let audioFile, audioData, audioChanged = 0;
-let audioClockTime = 0, audioClockEnd = 0, audioSpeed = 1;
-let audioPaceReady = false;
-let audioOverlap;
+let lastAudioPacket;
 let customApp = false;
 let runtimeLog='', halted=false, nextLog=0;
 const debug=new URLSearchParams(location.search).has('debug');
@@ -213,7 +211,6 @@ function unlockSpeaker() {
 sound.onchange = () => {
   try { sessionStorage.setItem('wp2-watch-sound', sound.checked ? 'on' : 'off'); } catch {}
   if (sound.checked) {
-    audioCursor = undefined;
     unlockSpeaker();
   } else if (speakerOutput) {
     speakerOutput.gain.value = 0;
@@ -223,7 +220,7 @@ window.addEventListener('pointerup', unlockSpeaker, {capture: true, passive: tru
 window.addEventListener('keydown', unlockSpeaker, {capture: true, passive: true});
 prepareSpeaker();
 function renderAudio() {
-  if (!runtime || halted || !sound.checked || speaker?.state !== 'running') return;
+  if (!runtime || halted || speaker?.state !== 'running') return;
   try {
     const path = '/watch/speaker.pcm';
     const {ino, mtime} = runtime.FS.stat(path);
@@ -241,65 +238,46 @@ function renderAudio() {
     const epoch = view.getUint32(8, true);
     const first = end - (data.length - 12) / 2;
     const now = speaker.currentTime;
-    const delay = economyDisplay ? .28 : .18;
-    if (!rate || end <= first) return;
+    const delay = economyDisplay ? .25 : .12;
+    if (!rate || first < 0) return;
     if (epoch !== audioEpoch) {
-      audioClockTime = now;
-      audioClockEnd = end;
-      audioSpeed = 1;
-      audioPaceReady = false;
-    } else if (end !== audioClockEnd && now - audioClockTime >= .3) {
-      const pace = (end - audioClockEnd) / (rate * (now - audioClockTime));
-      if (pace > .12) {
-        const target = Math.abs(pace - 1) < .04 ? 1 : Math.min(1.12, Math.max(.25, pace * .99));
-        if (audioPaceReady) audioSpeed += (target - audioSpeed) * (target < audioSpeed ? .65 : .25);
-        else audioSpeed = target;
-        audioPaceReady = true;
+      if (lastAudioPacket && audioCursor < lastAudioPacket.end) {
+        const tail = lastAudioPacket;
+        const start = Math.max(audioCursor, tail.first);
+        audioTime = scheduleAudio(tail, start, tail.end - start, Math.max(audioTime, now + .025));
       }
-      audioClockTime = now;
-      audioClockEnd = end;
-    }
-    if (audioTime > now + delay) return;
-    if (epoch !== audioEpoch || audioCursor === undefined || audioCursor < first) {
-      audioCursor = Math.max(first, end - Math.round(rate * delay * audioSpeed));
       audioEpoch = epoch;
-      audioOverlap = undefined;
+      audioCursor = undefined;
     }
-    const restarting = audioTime < now;
-    const backlog = (end - audioCursor) / rate + Math.max(0, audioTime - now) * audioSpeed;
-    const speed = Math.min(1.15, audioSpeed * (backlog > delay + .18 ? 1.07 : 1));
-    if (restarting && (!audioPaceReady || (end - audioCursor) / (rate * speed) < delay) &&
-        performance.now() - audioChanged < 140) return;
-    const when = restarting ? now + .02 : audioTime;
-    const hop = speakerHop(rate);
-    const count = Math.min(8, Math.ceil((delay - (when - now) + .04) * rate / hop));
-    const read = index => view.getInt16(12 + (index - first) * 2, true) / 32768;
-    const flush = performance.now() - audioChanged >= 140;
-    const segments = [];
-    if (restarting) audioOverlap = undefined;
-    for (let i = 0; i < count; i++) {
-      const segment = speakerSegment(read, first, end, audioCursor, audioOverlap, rate, flush);
-      if (!segment) break;
-      segments.push(segment.output);
-      audioOverlap = segment.tail;
-      audioCursor += hop * speed;
-    }
-    if (!segments.length) return;
-    const length = segments.length * hop;
-    const buffer = speaker.createBuffer(1, length, rate);
-    const channel = buffer.getChannelData(0);
-    for (const [i, segment] of segments.entries()) channel.set(segment, i * hop);
-    const source = speaker.createBufferSource();
-    source.buffer = buffer;
-    source.connect(speakerOutput);
-    source.start(when);
-    audioTime = when + length / rate;
+    if (end <= first) return;
+    lastAudioPacket = {view, rate, first, end};
+    const stockSound = !customApp && rate === 16000;
+    const slice = speakerSlice({first, end, cursor: audioCursor, rate, now,
+      scheduledUntil: audioTime, delay: stockSound ? .72 : delay,
+      flush: performance.now() - audioChanged >= (stockSound ? 750 : 140)});
+    if (!slice) return;
+    const {start, length, when} = slice;
+    audioTime = scheduleAudio(lastAudioPacket, start, length, when);
+    audioCursor = start + length;
   } catch (error) {
     if (error.name !== 'ErrnoError') {
       sound.checked = false;
       speakerOutput.gain.value = 0;
     }
   }
+}
+
+function scheduleAudio({view, rate, first}, start, length, when) {
+  const buffer = speaker.createBuffer(1, length, rate);
+  const channel = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) {
+    channel[i] = view.getInt16(12 + (start - first + i) * 2, true) / 32768;
+  }
+  const source = speaker.createBufferSource();
+  source.buffer = buffer;
+  source.connect(speakerOutput);
+  source.start(when);
+  return when + length / rate;
 }
 setInterval(renderAudio, 20);
 function readLog(path,limit,start) {
@@ -978,8 +956,9 @@ async function installFace(face, files) {
   }
 }
 
-async function loadFixtures(nandOverride) {
+async function loadFixtures(nandOverride, useStockAudio) {
   const textureIndex = 'wfc-index.txt';
+  const stockAudio = 'stock-audio.bin';
   const nandName = 'nand-defaults.bin';
   const selected = new Map();
   for (const file of $('advanced-boot-files').hidden ? [] : stockFiles.files) {
@@ -991,6 +970,7 @@ async function loadFixtures(nandOverride) {
   if (nandOverride) selected.set(nandName, nandOverride);
 
   let available = bundledStock ? [...requiredFixtures, textureIndex] : [];
+  if (document.body.hasAttribute('data-stock-audio')) available.push(stockAudio);
   if (!hosted) {
     const response = await fetch('./fixtures/manifest.json');
     if (!response.ok) throw Error('Prepare the local fixture manifest first.');
@@ -1001,6 +981,7 @@ async function loadFixtures(nandOverride) {
 
   const names = [...requiredFixtures];
   if (available.includes(textureIndex) || selected.has(textureIndex)) names.push(textureIndex);
+  if (useStockAudio && available.includes(stockAudio)) names.push(stockAudio);
   return Promise.all(names.map(async name => {
     const override = selected.get(name);
     const compressed = bundledStock && name === nandName;
@@ -1042,7 +1023,7 @@ $('start').onclick=async()=>{
       status(bundledStock && !stockFiles.files.length && !overrides.app
         ? 'Loading stock firmware and virtual storage…'
         : 'Loading the runtime and virtual storage…', false, 'loading');
-      files = await loadFixtures(overrides.nand);
+      files = await loadFixtures(overrides.nand, !overrides.app);
       if (overrides.face || overrides.catalogFace) {
         status(overrides.catalogFace ? `Installing ${overrides.catalogFace.name}…` : 'Installing watch face…', false, 'loading');
         const face = overrides.face || await downloadCatalogFace(overrides.catalogFace);
@@ -1076,8 +1057,8 @@ $('start').onclick=async()=>{
     const runtimeURL = new URL('./runtime/', import.meta.url);
     const scriptURL = new URL('qemu-system-arm.js', runtimeURL).href;
     const {default:createQemu} = await import(scriptURL);
-    const clock = builtInPresets.has('bad-apple') && bootPreset.value === 'bad-apple'
-      ? 'shift=6,align=on' : 'shift=3,align=off';
+    const mediaClock = builtInPresets.has('bad-apple') && bootPreset.value === 'bad-apple';
+    const clock = mediaClock ? 'shift=6,align=on' : 'shift=3,align=off';
     runtime=await createQemu({
       mainScriptUrlOrBlob:scriptURL,
       locateFile:name=>new URL(name, runtimeURL).href,
@@ -1098,12 +1079,16 @@ $('start').onclick=async()=>{
           QEMU_WP2_PCM_STREAM:'/watch/speaker.pcm',
           QEMU_WP2_MOTOR:motorPath,
           QEMU_WP2_LIVE_SENSORS:'1',QEMU_WP2_HOST_RTC:'1',QEMU_WP2_UNPLUGGED:'1'});
+        if (mediaClock) module.ENV.QEMU_WP2_MEDIA_CLOCK = '1';
         if (!customApp) {
           module.ENV.QEMU_WP2_LIVE_HEALTH = '1';
           module.ENV.QEMU_WP2_STOCK_AWAKE = '1';
         }
         if(economyDisplay)module.ENV.QEMU_WP2_ECONOMY_DISPLAY='1';
         if(module.FS.analyzePath('/watch/wfc-index.txt').exists&&!new URLSearchParams(location.search).has('no-textures'))module.ENV.QEMU_WP2_WFC_INDEX='/watch/wfc-index.txt';
+        if (!customApp && module.FS.analyzePath('/watch/stock-audio.bin').exists) {
+          module.ENV.QEMU_WP2_STOCK_AUDIO = '/watch/stock-audio.bin';
+        }
       }]
     });
     if (!halted) {

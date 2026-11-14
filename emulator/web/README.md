@@ -101,8 +101,9 @@ recovery, electrical behavior or freedom from crashes. TCI execution is slower
 than native QEMU and does not reproduce device performance or power consumption.
 
 Sound is enabled by default. If Chromium blocks autoplay, click or tap the
-emulator. Audio follows guest speed while preserving pitch. The bundled Bad
-Apple preset uses playback timing. Use desktop QEMU for virtual Bluetooth OTA
+emulator. The browser plays samples from the emulated DAC at their declared
+rate. The bundled Bad Apple preset uses an aligned QEMU clock to keep the DAC
+supplied at real-time speed. Use desktop QEMU for virtual Bluetooth OTA
 and recovery. Browser sessions use temporary storage and support Watch Pro 2.
 The Pages build generates stock files from the public firmware package.
 
