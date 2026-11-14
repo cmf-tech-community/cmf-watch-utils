@@ -138,10 +138,10 @@
       </details>
       <details class="settings-section" id="light-controls">
         <summary>Ambient light</summary>
-        <div class="sensor-fields">
-          <label for="ambient-lux">Illuminance (lux)
-            <input id="ambient-lux" type="number" inputmode="numeric" min="0" max="100000" step="1" value="0" required>
-          </label>
+        <div class="ambient-light-control">
+          <label for="ambient-lux-slider">Illuminance (lux)</label>
+          <input id="ambient-lux" type="number" aria-label="Illuminance in lux, exact value" inputmode="numeric" min="0" max="100000" step="1" value="0" required>
+          <input id="ambient-lux-slider" type="range" min="0" max="100000" step="1" value="0" aria-valuetext="0 lux">
         </div>
       </details>
       <div class="panel-actions"><button id="reset-simulation" type="button">Reset simulation</button></div>
