@@ -2,7 +2,7 @@
 set -euo pipefail
 
 work="$PWD/browser-stock"
-release=https://github.com/arnav-kr/cmf-watch-utils/releases/download/emulator-v0.1.0-preview.6
+release=https://github.com/cmf-tech-community/cmf-watch-utils/releases/download/emulator-v0.1.0-preview.6
 frames=https://platform-watch-test.s3.ap-northeast-1.amazonaws.com/device_sku
 mkdir -p "$work/runtime" "$work/frames"
 cd "$work"
@@ -14,7 +14,7 @@ sha256sum -c <<'SUMS'
 SUMS
 tar -xf qemu.tar.gz -C runtime --strip-components 1
 tar -xf rom.tar.gz -C runtime --strip-components 1
-curl -fLsS --retry 3 https://media.githubusercontent.com/media/arnav-kr/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73.bin -o stock.bin
+curl -fLsS --retry 3 https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73.bin -o stock.bin
 curl -fLsS --retry 3 https://raw.githubusercontent.com/lvgl/lv_port_actions_technology/26f51e584940d5b141cd1d09d2629d69b595f579/action_technology_sdk/zephyr/tools/prebuilt/leopard/common/bin/nand_id_all.bin -o nand-id.bin
 curl -fLsS --retry 3 "$frames/1735641575331_1731313327985_cmf-watch-pro-2-dark-grey.png" -o frames/dark-grey.png
 curl -fLsS --retry 3 "$frames/1731313406463_cmf-watch-pro-2-light-grey.png" -o frames/light-grey.png
