@@ -17,6 +17,8 @@ def render_page(profile, attributes=(), *, model_selector=False):
         html = html.replace("/emulator/watch-pro-2/", "/emulator/watch-pro-3/")
         html = html.replace('<option value="blue">Blue</option>',
                             '<option value="light-green" data-format="webp">Light Green</option>')
+        html = html.replace('<option value="orange">Orange</option>',
+                            '<option value="orange" selected>Orange</option>')
         html = html.replace('          <option value="bad-apple">Bad Apple</option>\n', '')
         html = html.replace("Watch 3 Pro AOTA package.", "Watch 3 Pro AOTA package with application and SDFS resources.")
         html = html.replace("Explore stock, try Bad Apple and watch faces, or load your own firmware.",

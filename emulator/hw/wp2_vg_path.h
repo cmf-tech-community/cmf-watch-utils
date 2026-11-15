@@ -8,6 +8,11 @@ typedef struct {
     bool even_odd;
 } Wp2Path;
 
+static bool wp2_vg_rgb565_path(uint32_t config)
+{
+    return config == 0x9102 || config == 0x1102;
+}
+
 static float wp2_vg_path_coord(const uint8_t *word, bool fp32)
 {
     uint32_t bits = ldl_le_p(word);
@@ -24,9 +29,16 @@ static float wp2_vg_path_coord(const uint8_t *word, bool fp32)
 static bool wp2_vg_decode_path(const uint32_t *r, const uint8_t *words,
                                unsigned count, Wp2Path *path)
 {
-    if (r[0xa10] != 0x101 || (r[0xa34] & 3) != 3 ||
+    unsigned mode = r[0xa34] & 3;
+    bool rgb565 = wp2_vg_rgb565_path(r[0xa00]);
+    float tx, ty;
+    memcpy(&tx, &r[0xa42], sizeof(tx));
+    memcpy(&ty, &r[0xa45], sizeof(ty));
+    if (r[0xa10] != 0x101 || (mode != 3 && !(mode == 1 && rgb565)) ||
         r[0xa3b] != 0x3f800000 || r[0xa40] != 0x3f800000 || r[0xa44] != 0x3f800000 ||
-        r[0xa3c] || r[0xa41] || r[0xa42] || r[0xa43] || r[0xa45] || count > 512) {
+        r[0xa3c] || r[0xa41] || r[0xa43] || count > 512 ||
+        (!rgb565 && (r[0xa42] || r[0xa45])) ||
+        !(fabsf(tx) <= 4096 && fabsf(ty) <= 4096)) {
         return false;
     }
     Wp2PathEdge *edges = path->edges;
@@ -35,7 +47,7 @@ static bool wp2_vg_decode_path(const uint32_t *r, const uint8_t *words,
     bool fp32 = (r[0xa34] & 0x00300000) == 0x00300000;
     bool open = false, ended = false;
     for (unsigned i = 0; i < count;) {
-        unsigned op = ldl_le_p(words + i++ * 4);
+        unsigned op = words[i++ * 4];
         if (op <= 3 && open) {
             if (n == ARRAY_SIZE(path->edges)) return false;
             edges[n++] = (Wp2PathEdge){current, first};
@@ -84,6 +96,14 @@ static bool wp2_vg_decode_path(const uint32_t *r, const uint8_t *words,
             last = next;
         }
         current = p[points - 1];
+    }
+    if (tx || ty) {
+        for (unsigned j = 0; j < n; j++) {
+            edges[j].a.x += tx;
+            edges[j].a.y += ty;
+            edges[j].b.x += tx;
+            edges[j].b.y += ty;
+        }
     }
     path->count = n;
     path->even_odd = r[0xa34] & 0x10;

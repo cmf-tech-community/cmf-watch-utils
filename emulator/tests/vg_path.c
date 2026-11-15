@@ -51,6 +51,17 @@ int main(void) {
     r[0xa34] = 0x03300203;
     assert(wp2_vg_decode_path(r, (uint8_t *)fp_words, ARRAY_SIZE(fp_words), &path));
     assert(path.edges[0].a.x == 1.5f && path.edges[0].b.x == 2.5f);
+    fp_words[0] = 0x00660002;
+    fp_words[3] = 0x7f120004;
+    r[0xa00] = 0x9102;
+    r[0xa34] = 0x03300011;
+    assert(wp2_vg_decode_path(r, (uint8_t *)fp_words, ARRAY_SIZE(fp_words), &path));
+    assert(path.even_odd && path.edges[0].a.x == 1.5f && path.edges[0].b.x == 2.5f);
+    r[0xa00] = 0x1102;
+    r[0xa45] = 0xc3db8000;
+    assert(wp2_vg_decode_path(r, (uint8_t *)fp_words, ARRAY_SIZE(fp_words), &path));
+    assert(path.edges[0].a.y == -437.5f && path.edges[0].b.y == -437.5f);
+    r[0xa45] = 0;
     fp_words[1] = 0x7fc00000;
     assert(!wp2_vg_decode_path(r, (uint8_t *)fp_words, ARRAY_SIZE(fp_words), &path));
     r[0xa12] = 1;
