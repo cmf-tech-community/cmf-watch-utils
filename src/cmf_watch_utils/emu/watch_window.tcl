@@ -1,6 +1,8 @@
 set run [lindex $argv 0]
 set stock [expr {[lindex $argv 1] ne "custom"}]
 set version [lindex $argv 2]
+set watchModel [lindex $argv 4]
+set virtualHealthControls [expr {[llength $argv] > 5 ? [lindex $argv 5] : $stock}]
 set frame [file join $run frame.ppm]
 set motorLog [file join $run motor.log]
 set motorText {Motor: off}
@@ -280,7 +282,7 @@ set accelX 0
 set accelY 0
 set accelZ 1000
 set battery 4000
-set charging 0
+set charging [expr {[llength $argv] > 6 ? [lindex $argv 6] : 0}]
 set virtualHealth 0
 set heartRate 72
 set spo2 98
@@ -293,6 +295,7 @@ set ambientLux 0
 proc apply_sensors {} {
     global accelX accelY accelZ battery charging virtualHealth heartRate spo2 stock
     global virtualGps gpsLatitude gpsLongitude
+    global virtualHealthControls
     set latitude 0
     set longitude 0
     if {$virtualGps} {
@@ -306,14 +309,14 @@ proc apply_sensors {} {
     }
     send_event "a $accelX $accelY $accelZ"
     send_event "p $battery $charging"
-    if {$stock} {
+    if {$virtualHealthControls} {
         send_event "h $virtualHealth $heartRate $spo2"
     }
     send_event "g $virtualGps $latitude $longitude"
 }
 
 proc open_sensors {} {
-    global stock
+    global virtualHealthControls watchModel
     if {[winfo exists .advanced]} {
         raise .advanced
         return
@@ -331,14 +334,17 @@ proc open_sensors {} {
     pack .advanced.brightness .advanced.accelX .advanced.accelY .advanced.accelZ .advanced.battery \
         -fill x -pady 5
     pack .advanced.charger -fill x -pady {4 8}
-    if {$stock} {
+    if {$virtualHealthControls} {
         group .advanced.health "Simulated optical results"
         check .advanced.health.enabled "Enable simulated readings" virtualHealth
         slider .advanced.health.hr "Heart rate (bpm)" heartRate 30 220 1
         slider .advanced.health.spo2 "Blood oxygen (%)" spo2 70 100 1
         pack .advanced.health.enabled .advanced.health.hr .advanced.health.spo2 -fill x -pady 3
         pack .advanced.health -fill x -pady 6
-        slider .advanced.light "Ambient light (lux)" ambientLux 0 100000 1 send_ambient_light
+    }
+    if {$virtualHealthControls || $watchModel eq "wp3"} {
+        set maxLux [expr {$watchModel eq "wp3" ? 19267 : 100000}]
+        slider .advanced.light "Ambient light (lux)" ambientLux 0 $maxLux 1 send_ambient_light
         pack .advanced.light -fill x -pady 5
     }
     group .advanced.gps "GPS"
@@ -411,6 +417,8 @@ proc motor_status {} {
         lassign [lindex $lines end] ms duty freq
         if {$duty eq {} || $duty == 0} {
             set text {Motor: off}
+        } elseif {$freq == 0} {
+            set text {Motor: on}
         } else {
             set text [format {Motor: %d%% %d Hz} [expr {$duty / 10}] $freq]
         }

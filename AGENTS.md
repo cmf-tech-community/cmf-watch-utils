@@ -97,8 +97,10 @@ are re-derived rather than assumed, and are documented in their own section.
 - The browser page has its own HTML head in `emulator/web/index.html`.
   Verify its metadata and assets in the published build as well as the Astro site.
 - Start with `uv run cmf-watch-utils emu profiles` and `emu preflight --image FILE`.
-  The only profiles are `wp2-stock` and `wp2-onboarding`, both for JX402 stock
-  `1.0.0.73`. For a boot, provide the project-built ATS3089C QEMU, the matching
+  `wp2-stock` and `wp2-onboarding` use JX402 stock `1.0.0.73`.
+  The experimental desktop `wp3-stock` profile uses `jx402_08` stock `1.0.1.77`
+  and a synthetic storage layout, with a separate verified WP2 package as the
+  virtual NAND writer. For a boot, provide the project-built ATS3089C QEMU, the matching
   compatibility ROM and local virtual flash. Use `emu prepare-fixtures` to create flash
   from the reference AOTA, pinned NAND ID file and Arm GDB, or import existing fixtures.
 - `emu ota` uses loopback H4 with an isolated controller. Use synthetic pairing

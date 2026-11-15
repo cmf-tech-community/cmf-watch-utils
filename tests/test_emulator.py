@@ -142,6 +142,18 @@ class ProfileTests(unittest.TestCase):
         self.assertIs(normal.model, onboarding.model)
         self.assertNotEqual(normal.nand_filename, onboarding.nand_filename)
 
+    def test_wp3_fixture_has_exclusive_resource_slots(self):
+        profile = PROFILES["wp3-stock"]
+        self.assertEqual(profile.model.board, "jx402_08")
+        self.assertFalse(profile.live_health)
+        table = prepare.partition_table(prepare.WP3_PARTITIONS)
+        self.assertEqual(struct.unpack_from("<I", table, len(table) - 4)[0], aota.crc32(table[:-4]))
+        slots = sorted((offset, offset + length, name)
+                       for name, _, _, flags, offset, length in prepare.WP3_PARTITIONS if flags == 32)
+        self.assertIn((0x5480000, 0x5780000, "res_d"), slots)
+        for first, second in zip(slots, slots[1:]):
+            self.assertLessEqual(first[1], second[0], (first[2], second[2]))
+
     def test_lzma_checks_size_and_erased_tail(self):
         payload = b"emulator payload" * 3
         packed = aota.pack_chunks(payload)

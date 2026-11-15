@@ -5,9 +5,11 @@ from pathlib import Path
 import shutil
 
 from cmf_watch_utils.emu.profiles import PROFILES
+from page import ROUTES, render_page
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--profile", choices=ROUTES, default="wp2-stock")
 parser.add_argument("--fixtures", type=Path, required=True)
 parser.add_argument("--rom", type=Path, required=True)
 parser.add_argument("--output", type=Path, required=True)
@@ -16,7 +18,9 @@ texture_source.add_argument("--wfc-dir", type=Path)
 texture_source.add_argument("--stock-image", type=Path, help="Generate the texture index from the published stock image")
 parser.add_argument("--frames-dir", type=Path, help="Directory with the four Nothing X front renders")
 args = parser.parse_args()
-profile = PROFILES["wp2-stock"]
+profile = PROFILES[args.profile]
+if args.profile == "wp3-stock" and (args.stock_image or args.wfc_dir):
+    parser.error("The Watch 3 Pro texture index comes from its prepared fixtures")
 nor, nand, nand_id = profile.fixtures(args.fixtures)
 rom = args.rom.read_bytes()
 if len(rom) != 65536:
@@ -31,8 +35,9 @@ if args.frames_dir:
     for name in frame_names:
         shutil.copyfile(args.frames_dir / name, frames / name)
 web = Path(__file__).resolve().parent
-for name in ("index.html", "watch.js", "style.css", "face.mjs", "catalog.mjs", "speaker.mjs", "favicon.svg"):
+for name in ("watch.js", "style.css", "face.mjs", "catalog.mjs", "speaker.mjs", "favicon.svg"):
     shutil.copyfile(web / name, args.output / name)
+(args.output / "index.html").write_text(render_page(args.profile), encoding="utf-8")
 fixtures = args.output / "fixtures"
 fixtures.mkdir()
 for path, name in ((nor, "nor.bin"), (nand, "nand-defaults.bin"), (nand_id, "nand-id.bin")):
@@ -44,7 +49,10 @@ stock_audio = args.fixtures / "stock-audio.bin"
 if stock_audio.is_file():
     shutil.copyfile(stock_audio, fixtures / stock_audio.name)
     files.append(stock_audio.name)
-if args.wfc_dir or args.stock_image:
+if args.profile == "wp3-stock":
+    shutil.copyfile(args.fixtures / "wfc-index.txt", fixtures / "wfc-index.txt")
+    files.append("wfc-index.txt")
+elif args.wfc_dir or args.stock_image:
     from fwkit import lz4, wfdl
     if args.stock_image:
         from cmf_watch_utils.emu.prepare import STOCK_SHA256
@@ -70,5 +78,5 @@ if args.wfc_dir or args.stock_image:
         raise ValueError("No packed WFC textures found")
     (fixtures / "wfc-index.txt").write_text("\n".join(sorted(textures)) + "\n", encoding="ascii", newline="\n")
     files.append("wfc-index.txt")
-(fixtures / "manifest.json").write_text(json.dumps({"files": files}), encoding="utf-8")
+(fixtures / "manifest.json").write_text(json.dumps({"profile": args.profile, "files": files}), encoding="utf-8")
 print(args.output.resolve())

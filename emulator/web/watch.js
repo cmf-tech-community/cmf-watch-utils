@@ -8,6 +8,27 @@ const context = panel.getContext('2d', {alpha:false});
 const pixels = context.createImageData(466,466);
 const hosted = document.body.hasAttribute('data-hosted');
 const bundledStock = document.body.hasAttribute('data-stock-ready');
+const watch3 = document.body.dataset.model === 'wp3';
+const modelSlug = watch3 ? 'watch-pro-3' : 'watch-pro-2';
+const modelToggle = $('model-toggle');
+if (modelToggle) {
+  const list = $('model-list');
+  function showModels(open) {
+    list.hidden = !open;
+    modelToggle.setAttribute('aria-expanded', String(open));
+  }
+  modelToggle.addEventListener('click', () => showModels(list.hidden));
+  const picker = modelToggle.closest('.model-picker');
+  picker.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !list.hidden) {
+      showModels(false);
+      modelToggle.focus();
+    }
+  });
+  document.addEventListener('click', event => {
+    if (!picker.contains(event.target)) showModels(false);
+  });
+}
 const stockFiles = $('stock-files');
 const frameFile = $('frame-file');
 const frameOverrides = new Map();
@@ -24,7 +45,7 @@ const needsBaseFiles = hosted && !bundledStock;
 let bootInProgress = false;
 let bootedCatalogFace;
 let nextFace;
-if (crossOriginIsolated) {
+if (crossOriginIsolated && !watch3) {
   try {
     nextFace = JSON.parse(sessionStorage.getItem('wp2-next-face'));
     sessionStorage.removeItem('wp2-next-face');
@@ -144,6 +165,11 @@ panel.addEventListener('pointermove',event=>{
 for(const name of ['pointerup','pointercancel','lostpointercapture']) panel.addEventListener(name,release);
 $('crown').addEventListener('pointerdown',event=>{event.preventDefault();$('crown').setPointerCapture(event.pointerId);crown(true);});
 for(const name of ['pointerup','pointercancel','lostpointercapture']) $('crown').addEventListener(name,()=>crown(false));
+$('crown').addEventListener('click', event => {
+  if (event.detail !== 0) return;
+  crown(true);
+  crown(false);
+});
 const rotateCrown = steps => input(`r ${Math.max(-320, Math.min(320, steps * 40))}`);
 $('up').onclick=()=>rotateCrown(-2);$('down').onclick=()=>rotateCrown(2);
 panel.addEventListener('wheel',event=>{if(runtime&&event.deltaY){event.preventDefault();rotateCrown(event.deltaY>0?2:-2);}},{passive:false});
@@ -364,7 +390,7 @@ function pollMotor(now) {
       const events = lines.map(line => /^(\d+) (\d+) (\d+)\s*$/.exec(line)?.slice(1).map(Number)).filter(Boolean);
       if (events.length) {
         const [, duty, hz] = events.at(-1);
-        $('motor-status').textContent = duty ? `${duty / 10}% · ${hz} Hz` : 'Off';
+        $('motor-status').textContent = !duty ? 'Off' : hz ? `${duty / 10}% · ${hz} Hz` : 'On';
         const log = $('motor-log');
         log.textContent = 'Virtual ms | Duty ‰ | Hz\n' + readLog(motorPath, 8192).trimEnd();
         if (canVibrate && vibration.checked && !skipMotorPlayback && !document.hidden && navigator.userActivation?.hasBeenActive !== false) {
@@ -426,7 +452,7 @@ function loadFrame() {
   label.title = file?.name || '';
   frameFile.closest('.file-row').querySelector('.clear-file').hidden = !file;
   frameUrl = file ? URL.createObjectURL(file) : undefined;
-  if (hosted && !bundledStock && !frameUrl) {
+  if ((watch3 || (hosted && !bundledStock)) && !frameUrl) {
     delete frameCase.dataset.frame;
     return;
   }
@@ -454,15 +480,22 @@ function updateBootOptions() {
   $('firmware-package').hidden = !uploads;
   $('raw-applications').hidden = !uploads;
   $('advanced-boot-files').hidden = !uploads && !needsBaseFiles;
-  $('face-catalog').hidden = !stock;
-  $('watch-face-upload').hidden = !stock;
+  $('face-catalog').hidden = watch3 || !stock;
+  $('watch-face-upload').hidden = watch3 || !stock;
   $('display-demo-guide').hidden = preset !== 'display-demo';
   $('bad-apple-guide').hidden = preset !== 'bad-apple' || !uploads;
 }
 {
   $('advanced-boot-files').open = needsBaseFiles;
   $('hosted-frames').hidden = false;
-  $('boot-presets').hidden = false;
+  $('boot-presets').hidden = watch3;
+  if (watch3) {
+    document.querySelector('.advanced .panel-actions').append($('hard-reset'));
+    $('boot-images').hidden = true;
+    $('health-controls').hidden = true;
+    $('charger').checked = true;
+    $('firmware-label').textContent = 'Firmware 1.0.1.77';
+  }
   if (needsBaseFiles) $('stock-file-hint').firstElementChild.textContent =
     'Select app.bin, compat.bin, nor.bin, nand-defaults.bin and nand-id.bin. The texture index is optional.';
   if (hosted) document.querySelector('.wordmark').href = '../';
@@ -518,7 +551,7 @@ $('save-log').onclick=()=>{
     }
   }
   const url = URL.createObjectURL(new Blob(parts, {type:'text/plain'}));
-  const link=document.createElement('a');link.href=url;link.download='wp2-browser.log';link.click();
+  const link=document.createElement('a');link.href=url;link.download=watch3?'wp3-browser.log':'wp2-browser.log';link.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 const roller = document.querySelector('.knurls');
@@ -575,7 +608,7 @@ function sendPower() {
     ? 3300 + 700 * percent / 69
     : 4000 + 350 * (percent - 69) / 31;
   const charger = Number($('charger').checked);
-  input(customApp ? `p ${Math.round(voltage)} ${charger}` : `p 4000 ${charger} ${percent}`);
+  input(customApp || watch3 ? `p ${Math.round(voltage)} ${charger}` : `p 4000 ${charger} ${percent}`);
 }
 function updateBattery() {
   const percent = syncSliderFill($('battery'));
@@ -642,6 +675,7 @@ for (const id of ['gps-enabled', 'gps-lat', 'gps-lon']) $(id).onchange = sendGps
 
 const ambientLight = $('ambient-lux');
 const ambientLightSlider = $('ambient-lux-slider');
+if (watch3) ambientLight.max = ambientLightSlider.max = '19267';
 
 function updateAmbientLight() {
   ambientLight.value = ambientLightSlider.value;
@@ -761,7 +795,7 @@ $('reset-simulation').onclick = () => {
   $('brightness').value = 100;
   updateBrightness();
   $('battery').value = 69;
-  $('charger').checked = false;
+  $('charger').checked = watch3;
   $('health-enabled').checked = false;
   $('heart-rate').value = 72;
   $('blood-oxygen').value = 98;
@@ -821,7 +855,7 @@ $('capture').onclick = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = includeFrame ? 'watch-pro-2-framed.png' : 'watch-pro-2.png';
+    link.download = `${modelSlug}${includeFrame ? '-framed' : ''}.png`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
@@ -842,6 +876,7 @@ function validateHostedFirmware(bytes) {
 }
 
 async function readBootOverrides() {
+  if (watch3) return {};
   const preset = bootPreset.value;
   const stock = preset === 'stock';
   const builtIn = builtInPresets.get(preset);
@@ -1033,7 +1068,8 @@ $('start').onclick=async()=>{
       $('image-error').textContent = error.message;
       for (const picker of pickers) picker.disabled = false;
       bootInProgress = false;
-      status('Ready');
+      if (watch3) status(error.message, true);
+      else status('Ready');
       $('start').disabled = false;
       return;
     }
@@ -1043,7 +1079,7 @@ $('start').onclick=async()=>{
     ambientLight.disabled = ambientLightSlider.disabled = customApp;
     $('firmware-label').textContent = customApp
       ? ({'bad-apple': 'BAD APPLE', 'display-demo': 'DISPLAY TEST'}[bootPreset.value] || 'CUSTOM APPLICATION')
-      : 'FIRMWARE 1.0.0.73';
+      : `FIRMWARE ${watch3 ? '1.0.1.77' : '1.0.0.73'}`;
     $('stop').disabled=false;
     if (customApp) {
       const nor = files.find(([name]) => name === 'nor.bin')[1];
@@ -1065,10 +1101,10 @@ $('start').onclick=async()=>{
       print:log,printErr:log,onAbort:reason=>guestStopped(reason ? `Runtime aborted: ${reason}` : 'Runtime aborted. See the watch log.'),
       onExit:code=>guestStopped(`Emulator exited (${code}). See the watch log.`),
       arguments:['-M','ats3089c-wp2','-bios','/watch/compat.bin',
-        ...(!customApp ? ['-kernel', '/watch/app.bin'] : []),
+        ...(!customApp && !watch3 ? ['-kernel', '/watch/app.bin'] : []),
         ...(debug?['-d','unimp','-D','/watch/qemu.log']:[]),
         '-display','none','-monitor','none','-serial','file:/watch/uart.log','-serial','null','-serial','null',
-        '-icount',clock,'-no-reboot'],
+        '-icount',clock,...(watch3 ? [] : ['-no-reboot'])],
       preRun:[module=>{
         module.FS.mkdir('/watch');
         for(const [name,data]of files)module.FS.writeFile(`/watch/${name}`,data,{canOwn:true});
@@ -1078,9 +1114,10 @@ $('start').onclick=async()=>{
           QEMU_WP2_FRAME:'/watch/frame.ppm',QEMU_WP2_INPUT:'/watch/input.txt',QEMU_WP2_LIVE_FRAME:'1',
           QEMU_WP2_PCM_STREAM:'/watch/speaker.pcm',
           QEMU_WP2_MOTOR:motorPath,
-          QEMU_WP2_LIVE_SENSORS:'1',QEMU_WP2_HOST_RTC:'1',QEMU_WP2_UNPLUGGED:'1'});
+          QEMU_WP2_LIVE_SENSORS:'1',QEMU_WP2_HOST_RTC:'1',QEMU_WP2_UNPLUGGED:watch3?'0':'1'});
+        if (watch3) module.ENV.QEMU_WP2_MODEL = 'wp3';
         if (mediaClock) module.ENV.QEMU_WP2_MEDIA_CLOCK = '1';
-        if (!customApp) {
+        if (!customApp && !watch3) {
           module.ENV.QEMU_WP2_LIVE_HEALTH = '1';
           module.ENV.QEMU_WP2_STOCK_AWAKE = '1';
         }
@@ -1139,9 +1176,9 @@ if (crossOriginIsolated && (idle || requestedPreset)) {
   bootUrl.searchParams.delete('preset');
   history.replaceState(null, '', bootUrl);
 }
-if (builtInPresets.has(requestedPreset)) {
+if (!watch3 && builtInPresets.has(requestedPreset)) {
   bootPreset.value = requestedPreset;
-} else if (requestedPreset === 'bad-apple' || requestedPreset === 'custom') {
+} else if (!watch3 && (requestedPreset === 'bad-apple' || requestedPreset === 'custom')) {
   bootPreset.value = requestedPreset;
 }
 updateBootOptions();

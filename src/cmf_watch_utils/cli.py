@@ -51,7 +51,8 @@ def emit(result, output=None, display=None):
 def cmd_profiles(args):
     emit([{"profile": profile.name, "model": profile.model.name, "title": profile.model.title,
            "board": profile.model.board, "machine": profile.model.machine,
-           "stock_version": profile.stock_version, "nand_fixture": profile.nand_filename}
+           "stock_version": profile.stock_version, "nand_fixture": profile.nand_filename,
+           "experimental": profile.experimental}
           for profile in PROFILES.values()])
 
 
@@ -61,8 +62,14 @@ def cmd_fixtures(args):
                          (args.nand_id, profile.model.nand_id_bytes)):
         image.require(source.is_file() and source.stat().st_size == size, f"Expected {size} bytes at {source}")
     profile.stock_app(args.nor.read_bytes())
+    wfc_index = getattr(args, "wfc_index", None)
+    if profile.model.name == "wp3":
+        image.require(wfc_index and wfc_index.is_file(),
+                      "Watch 3 Pro fixture import requires --wfc-index")
     args.fixtures.mkdir(parents=True, exist_ok=True)
     targets = [(args.nor, "nor.bin"), (args.nand_id, "nand-id.bin"), (args.nand, profile.nand_filename)]
+    if wfc_index:
+        targets.append((wfc_index, "wfc-index.txt"))
     for source, name in targets:
         target = args.fixtures / name
         if target.exists():
@@ -108,7 +115,9 @@ def cmd_prepare(args):
 def cmd_pair_fixture(args):
     from .emu.pairing import pair_fixture
 
-    emit(pair_fixture(args, PROFILES[args.profile]))
+    profile = PROFILES[args.profile]
+    image.require(not profile.experimental, "Pairing fixture export is unverified for this profile")
+    emit(pair_fixture(args, profile))
 
 
 def cmd_preflight(args):
@@ -126,7 +135,9 @@ def cmd_faces(args):
 
 
 def cmd_recover(args):
-    result = recovery.recover(args, PROFILES[args.profile])
+    profile = PROFILES[args.profile]
+    image.require(not profile.experimental, "Virtual recovery is unverified for this profile")
+    result = recovery.recover(args, profile)
     emit(result, args.output / "recovery.json")
 
 
@@ -211,11 +222,14 @@ def parser():
     setup.add_argument("--nor", type=absolute, required=True)
     setup.add_argument("--nand", type=absolute, required=True)
     setup.add_argument("--nand-id", type=absolute, required=True)
+    setup.add_argument("--wfc-index", type=absolute, help="Local watch-face texture index")
     setup.set_defaults(handler=cmd_fixtures)
     provision = emu_commands.add_parser("prepare-fixtures", help="Create local virtual flash from stock firmware")
     fixtures(provision)
     runtime(provision)
     provision.add_argument("--stock", type=absolute, required=True)
+    provision.add_argument("--provisioning-stock", type=absolute,
+                           help="Watch Pro 2 stock package used as the Watch 3 Pro virtual NAND writer")
     provision.add_argument("--nand-id", type=absolute, required=True)
     provision.add_argument("--provisioner", type=absolute, required=True, help="Directory containing provision-nand.elf and .bin")
     provision.add_argument("--gdb", default="arm-none-eabi-gdb", help="Arm-capable GDB executable")
@@ -259,6 +273,8 @@ def parser():
     run.add_argument("--allow-reboot", action="store_true")
     run.add_argument("--hci-port", type=port)
     run.add_argument("--qmp-port", type=port)
+    run.add_argument("--gdb-port", type=port, help="Expose the virtual CPU debugger on loopback")
+    run.add_argument("--trace-mmio", action="store_true", help="Record emulator device diagnostics in mmio.log")
     run.add_argument("--nand-export", action="store_true")
     run.add_argument("--ota-snapshot", action="store_true", help="Save virtual NAND on an OTA reboot")
     run.set_defaults(handler=cmd_run)

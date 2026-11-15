@@ -4,13 +4,13 @@ from pathlib import Path
 import struct
 import sys
 
-from cmf_watch_utils.emu.prepare import STOCK_SHA256
+from cmf_watch_utils.emu.prepare import STOCK_SHA256, WP3_STOCK_SHA256
 from fwkit import Image, sdfs
 
 
 def stock_audio(stock, decode, deobfuscate):
-    if sha256(stock).hexdigest() != STOCK_SHA256:
-        raise ValueError("Expected the published JX402 Watch Pro 2 1.0.0.73 image")
+    if sha256(stock).hexdigest() not in (STOCK_SHA256, WP3_STOCK_SHA256):
+        raise ValueError("Expected Watch Pro 2 1.0.0.73 or Watch 3 Pro 1.0.1.77 stock firmware")
     files = sdfs.unpack(Image(stock).decompressed("sdfs_k.bin"))
     tones = [(name, data) for name, data in files.items() if name.endswith(".act")]
     if len(tones) != 11:
@@ -28,7 +28,7 @@ def stock_audio(stock, decode, deobfuscate):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Prepare Watch Pro 2 stock sounds for QEMU")
+    parser = argparse.ArgumentParser(description="Prepare verified CMF watch stock sounds for QEMU")
     parser.add_argument("--stock", type=Path, required=True)
     parser.add_argument("--decoder", type=Path, required=True, help="CMF Ringtone Tool act_emu directory")
     parser.add_argument("--output", type=Path, required=True, help="Path to stock-audio.bin in the fixtures folder")

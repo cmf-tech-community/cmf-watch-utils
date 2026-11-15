@@ -8,13 +8,15 @@ import tempfile
 import time
 import xml.etree.ElementTree as ET
 
-from fwkit import aota
+from fwkit import aota, lz4, sdfs, wfdl
 from fwkit.image import Image
 
 from .image import require
+from .profiles import PROFILES
 from .vm import child, executable, runtime_env
 
 STOCK_SHA256 = "30903fc8ce6db4f8860bb554366635db3d2bcbb2d43827b3b50fbbac22b59353"
+WP3_STOCK_SHA256 = "cf381188eb5fe26a14047a03697e68b58785bdcd01c4baf8703d4624650c6352"
 NAND_ID_SHA256 = "ed98cb6473039a637cb86ebd6261d4e270f261e1ec214f5d7c2e1954721b1e9d"
 STAGING = 0x20010000
 PARTITIONS = (
@@ -43,13 +45,19 @@ PARTITIONS = (
 )
 RESOURCES = {"sdfs_k": "sdfs_k.bin", "font": "fonts.bin", "res_a": "res.bin",
              "res_e": "res_e.bin", "res_b": None}
+WP3_SLOTS = {"res_a": (0x1280000, 0x1000000), "res_b": (0x2280000, 0x200000),
+             "res_e": (0x2480000, 0x3000000)}
+WP3_PARTITIONS = tuple((name, kind, fid, flags, *WP3_SLOTS.get(name, (offset, size)))
+                       for name, kind, fid, flags, offset, size in PARTITIONS) + (
+                           ("res_d", 4, 13, 32, 0x5480000, 0x300000),)
+WP3_RESOURCES = dict(RESOURCES, res_b="res_b.bin", res_d="res_d.bin")
 
 
-def partition_table():
-    header = struct.pack("<4sBBHHH4x", b"ACPT", 1, 1, 744, len(PARTITIONS), 24)
+def partition_table(partitions=PARTITIONS):
+    header = struct.pack("<4sBBHHH4x", b"ACPT", 1, 1, 744, len(partitions), 24)
     entries = b"".join(struct.pack("<8sBBBBIII", name.encode("ascii"), kind, file_id, flags,
                                    0, offset, size, offset)
-                       for name, kind, file_id, flags, offset, size in PARTITIONS)
+                       for name, kind, file_id, flags, offset, size in partitions)
     table = (header + entries).ljust(740, b"\0")
     return table + struct.pack("<I", aota.crc32(table))
 
@@ -63,7 +71,8 @@ def build_nor(stock, profile):
                        int(version.findtext("version_res"), 0), 0,
                        version.findtext("version_name").encode("ascii"),
                        version.findtext("board_name").encode("ascii"))
-    params = partition_table() + data + struct.pack("<I", aota.crc32(data))
+    layout = WP3_PARTITIONS if profile.model.name == "wp3" else PARTITIONS
+    params = partition_table(layout) + data + struct.pack("<I", aota.crc32(data))
     model = profile.model
     nor = bytearray(b"\xff" * model.nor_bytes)
     model.app.stage(nor, files["app.bin"])
@@ -75,12 +84,15 @@ def build_nor(stock, profile):
 
 
 def stage_resources(stock, profile, target):
-    layout = {name: (offset, size) for name, _, _, _, offset, size in PARTITIONS}
+    wp3 = profile.model.name == "wp3"
+    partitions = WP3_PARTITIONS if wp3 else PARTITIONS
+    resources = WP3_RESOURCES if wp3 else RESOURCES
+    layout = {name: (offset, size) for name, _, _, _, offset, size in partitions}
     header = bytearray(512)
-    struct.pack_into("<I", header, 508, 1 if profile.name == "wp2-onboarding" else 3)
+    struct.pack_into("<I", header, 508, 0 if wp3 else 1 if profile.name == "wp2-onboarding" else 3)
     with target.open("wb") as staging:
         staging.write(header)
-        for index, (name, filename) in enumerate(RESOURCES.items()):
+        for index, (name, filename) in enumerate(resources.items()):
             payload = stock.decompressed(filename) if filename else struct.pack("<8sIII44x", b"sdfs.bin", 0, 0, 64)
             padded = payload.ljust((len(payload) + 2047) & ~2047, b"\xff")
             offset, size = layout[name]
@@ -89,6 +101,17 @@ def stage_resources(stock, profile, target):
             staging.write(padded)
         staging.seek(0)
         staging.write(header)
+
+
+def write_wp3_texture_index(stock, target):
+    textures = set()
+    for name, face in sdfs.unpack(stock.decompressed("res_d.bin")).items():
+        if name.endswith(".wfc"):
+            for entry in wfdl.parse(face).resources:
+                if entry.cf == 5:
+                    pixels = lz4.decompress(entry.data, entry.raw_size)
+                    textures.add(f"{entry.w}:{entry.h}:{hashlib.sha256(pixels).hexdigest()}")
+    target.write_text("\n".join(sorted(textures)) + "\n", encoding="ascii")
 
 
 def provision_nand(args, profile, work, env, qemu, debugger, elf, pending):
@@ -120,8 +143,15 @@ def provision_nand(args, profile, work, env, qemu, debugger, elf, pending):
 
 def prepare(args, profile):
     stock_bytes = args.stock.read_bytes()
-    require(hashlib.sha256(stock_bytes).hexdigest() == STOCK_SHA256,
-            "Expected the published JX402_V1.0.0.73.bin stock package. If this is a Git LFS pointer, fetch the file first.")
+    wp3 = profile.model.name == "wp3"
+    require(hashlib.sha256(stock_bytes).hexdigest() == (WP3_STOCK_SHA256 if wp3 else STOCK_SHA256),
+            f"Expected the verified {profile.model.title} {profile.stock_version} stock package")
+    provisioning_image = getattr(args, "provisioning_stock", None)
+    require(not wp3 or provisioning_image is not None,
+            "Watch 3 Pro preparation requires --provisioning-stock with Watch Pro 2 stock 1.0.0.73 for the virtual NAND writer")
+    provisioning_stock = provisioning_image.read_bytes() if wp3 else stock_bytes
+    require(hashlib.sha256(provisioning_stock).hexdigest() == STOCK_SHA256,
+            "Expected Watch Pro 2 stock 1.0.0.73 as the virtual NAND writer")
     nand_id = args.nand_id.read_bytes()
     require(hashlib.sha256(nand_id).hexdigest() == NAND_ID_SHA256,
             "Expected the pinned Actions SDK nand_id_all.bin")
@@ -142,14 +172,23 @@ def prepare(args, profile):
     nor, app = build_nor(stock, profile)
     (work / "nor.bin").write_bytes(nor)
     (work / "nand-id.bin").write_bytes(nand_id)
+    provisioning_nor = work / "nor.bin"
+    if wp3:
+        legacy_nor, app = build_nor(Image(provisioning_stock), PROFILES["wp2-stock"])
+        provisioning_nor = work / "provisioning-nor.bin"
+        provisioning_nor.write_bytes(legacy_nor)
+        write_wp3_texture_index(stock, work / "wfc-index.txt")
     (work / "app.bin").write_bytes(app)
-    for name, data in (("nor.bin", nor), ("nand-id.bin", nand_id)):
+    outputs = {"nor.bin": nor, "nand-id.bin": nand_id}
+    if wp3:
+        outputs["wfc-index.txt"] = (work / "wfc-index.txt").read_bytes()
+    for name, data in outputs.items():
         existing = args.fixtures / name
         if existing.exists():
             require(existing.read_bytes() == data, f"Existing fixture differs: {existing}")
     staging = work / "resources.bin"
     pending = work / "nand.pending"
-    env = runtime_env(args, profile.model, NOR=work / "nor.bin", NAND_EXPORT=pending,
+    env = runtime_env(args, profile.model, NOR=provisioning_nor, NAND_EXPORT=pending,
                       NAND_PROGRAM=program, NAND_STAGING=staging)
     try:
         stage_resources(stock, profile, staging)
@@ -160,7 +199,9 @@ def prepare(args, profile):
     finally:
         staging.unlink(missing_ok=True)
         (work / "app.bin").unlink(missing_ok=True)
-    for name in ("nor.bin", "nand-id.bin"):
+        if wp3:
+            provisioning_nor.unlink(missing_ok=True)
+    for name in outputs:
         destination = args.fixtures / name
         if destination.exists():
             (work / name).unlink()

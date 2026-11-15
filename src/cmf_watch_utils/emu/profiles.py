@@ -55,6 +55,7 @@ class Profile:
     stock_app_sha256: str
     nand_filename: str
     live_health: bool
+    experimental: bool = False
 
     def stock_app(self, nor):
         app = self.model.app.read(nor)[:self.stock_app_bytes]
@@ -69,6 +70,8 @@ class Profile:
             if not path.is_file() or path.stat().st_size != size:
                 raise ValueError(f"Expected {size} bytes at {path}")
         self.stock_app(nor.read_bytes())
+        if self.model.name == "wp3" and not (directory / "wfc-index.txt").is_file():
+            raise ValueError(f"Missing Watch 3 Pro texture index at {directory / 'wfc-index.txt'}")
         return nor, nand, nand_id
 
 
@@ -76,8 +79,14 @@ WP2 = Model("wp2", "CMF Watch Pro 2", "jx402_01_3089c", "ats3089c-wp2",
             "QEMU_WP2_", 0x400000, 2112 * 65536, 790,
             Partition(4, 0x24000, 0x34b000), Partition(5, 0x3d3000, 0x10000),
             Partition(254, 0, 0x380000), 0x200, 0x10000000, 0x2ff00000, 0x30000000)
+WP3 = Model("wp3", "CMF Watch 3 Pro", "jx402_08", "ats3089c-wp2",
+            "QEMU_WP2_", 0x400000, 2112 * 65536, 790,
+            WP2.app, WP2.sdfs, WP2.temp, 0x200, 0x10000000, 0x2ff00000, 0x30000000)
 _STOCK = ("1.0.0.73", 2465920, "30e7978c39d8fb79b825c7ebf69b4377d214e9cc6739a52f06dbb5ff7f13b490")
 PROFILES = {
     "wp2-stock": Profile("wp2-stock", WP2, *_STOCK, "nand-defaults.bin", True),
     "wp2-onboarding": Profile("wp2-onboarding", WP2, *_STOCK, "nand-onboarding.bin", True),
+    "wp3-stock": Profile("wp3-stock", WP3, "1.0.1.77", 2871936,
+                         "815a21fc80aa39411d9911a65a6ee09be45498c5482712bf306bc7af908a9a3f",
+                         "nand-defaults.bin", False, experimental=True),
 }

@@ -96,7 +96,8 @@ static void nor_command(void *s,unsigned char cmd)
 {
     (void)s;
     /* Synchronous NOR operations cannot be busy when suspend/resume arrives. */
-    if(cmd==0x75 || cmd==0x7a || cmd==0x06 || cmd==0x04) return;
+    if(cmd==0x75 || cmd==0x7a || cmd==0x06 || cmd==0x04 ||
+       cmd==0xb9 || cmd==0xab) return;
     unsupported();
 }
 /* A synthetic W25Q32-class identity, not a recovered chip identity. */
@@ -125,6 +126,35 @@ const uintptr_t misc_api[] = {FN(LZ4_decompress_safe)};
 
 /* Leopard GUI slot 2, called by the stock software drawing fallback.
  * Both pitches are in bytes, and alpha is interleaved after each RGB565 word. */
+static unsigned blend_rgb565(unsigned fg, const uint8_t *out, unsigned alpha)
+{
+    if (alpha == 255) return fg;
+    unsigned bg = out[0] | (out[1] << 8);
+    unsigned inverse = 255 - alpha;
+    unsigned red = (fg >> 11) * alpha + (bg >> 11) * inverse;
+    unsigned green = (fg & 0x07e0) * alpha + (bg & 0x07e0) * inverse;
+    unsigned blue = (fg & 0x001f) * alpha + (bg & 0x001f) * inverse;
+    return ((red >> 8) << 11) | ((green >> 8) & 0x07e0) | (blue >> 8);
+}
+
+static void blend_a8(uint8_t *dst, const uint8_t *src, uint32_t color,
+                     uint16_t dst_pitch, uint16_t src_pitch,
+                     uint16_t width, uint16_t height)
+{
+    unsigned fg = ((color >> 8) & 0xf800) | ((color >> 5) & 0x07e0) | ((color >> 3) & 31);
+    for (unsigned y = 0; y < height; y++) {
+        uint8_t *out = dst + y * (unsigned)dst_pitch;
+        const uint8_t *in = src + y * (unsigned)src_pitch;
+        for (unsigned x = 0; x < width; x++, out += 2) {
+            if (in[x]) {
+                unsigned pixel = blend_rgb565(fg, out, in[x]);
+                out[0] = pixel & 255;
+                out[1] = pixel >> 8;
+            }
+        }
+    }
+}
+
 static void blend_argb8565(uint8_t *dst, const uint8_t *src,
                            uint16_t dst_pitch, uint16_t src_pitch,
                            uint16_t width, uint16_t height)
@@ -137,15 +167,7 @@ static void blend_argb8565(uint8_t *dst, const uint8_t *src,
             if (!alpha) {
                 continue;
             }
-            unsigned fg = in[0] | (in[1] << 8);
-            if (alpha != 255) {
-                unsigned bg = out[0] | (out[1] << 8);
-                unsigned inverse = 255 - alpha;
-                unsigned red = (fg >> 11) * alpha + (bg >> 11) * inverse;
-                unsigned green = (fg & 0x07e0) * alpha + (bg & 0x07e0) * inverse;
-                unsigned blue = (fg & 0x001f) * alpha + (bg & 0x001f) * inverse;
-                fg = ((red >> 8) << 11) | ((green >> 8) & 0x07e0) | (blue >> 8);
-            }
+            unsigned fg = blend_rgb565(in[0] | (in[1] << 8), out, alpha);
             out[0] = fg & 0xff;
             out[1] = fg >> 8;
         }
@@ -154,7 +176,8 @@ static void blend_argb8565(uint8_t *dst, const uint8_t *src,
 
 __attribute__((section(".gui_api"),used))
 const uintptr_t gui_api[22] = {
-    [0 ... 1] = FN(unsupported),
+    [0] = FN(blend_a8),
+    [1] = FN(unsupported),
     [2] = FN(blend_argb8565),
     [3 ... 7] = FN(unsupported),
     FN(sw_cos30), FN(sw_sin30), FN(sw_transform_point32), FN(sw_transform_area16),

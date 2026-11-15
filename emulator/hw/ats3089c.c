@@ -20,6 +20,7 @@
 #include "sysemu/reset.h"
 #include "chardev/char-fe.h"
 #include "qemu/log.h"
+#include "qemu/host-utils.h"
 #include "qemu/rcu.h"
 #include "qemu/timer.h"
 #include "qemu/guest-random.h"
@@ -32,6 +33,9 @@
 #include "wp2_jpeg.h"
 #include "wp2_vg_path.h"
 #include "wp2_dsp_audio.h"
+#define ETCDECDEF static inline
+#define ETCDEC_IMPLEMENTATION
+#include "etcdec.h"
 
 /* Stock's GPS init binds UART_1 (0x4003c000, IRQ 23). */
 #define GPS_UART_CTL 0x3c000
@@ -39,12 +43,22 @@
 #define GPS_UART_STATUS 0x3c00c
 #define GPS_UART_RX_IRQ (1u << 18)
 
+enum {
+    WP3_SPI2_CTL = 0x30000,
+    WP3_SPI2_STAT = 0x30004,
+    WP3_SPI2_TX = 0x30008,
+    WP3_SPI2_RX = 0x3000c,
+    WP3_SPI2_COUNT = 0x30010,
+    WP3_GNSS_READY_PIN = 62,
+};
+
 typedef struct ActsState ActsState;
 typedef struct ActsTimer {
     ActsState *soc;
     QEMUTimer *timer;
     qemu_irq irq;
     uint32_t ctl, value, count;
+    uint32_t hz;
     int64_t started;
 } ActsTimer;
 
@@ -65,11 +79,24 @@ struct ActsState {
     unsigned battery_mv;
     uint32_t battery_percent;
     bool stk_enabled;
+    bool watch3;
+    uint8_t imu_reg, imu_regs[256];
+    uint8_t optical_page, optical_reg, optical_regs[4][256];
+    uint8_t haptic_regs[256];
+    uint8_t psram_mode_regs[16];
+    unsigned psram_mode_pos;
+    uint32_t spi2_pending;
+    bool spi2_ready, spi2_gnss_booted;
+    uint8_t spi2_read_command;
+    uint8_t spi2_reply[96];
+    unsigned spi2_reply_len, spi2_reply_pos, spi2_patch_block;
     bool health_hook;
     unsigned ambient_lux;
+    uint8_t als_regs[256];
     uint32_t health_readings;
     int64_t health_next_sample;
     int accel_mg[3];
+    int gyro_mdps[3];
     qemu_irq gps_irq;
     bool gps_enabled, gps_gga;
     int gps_lat_e6, gps_lon_e6;
@@ -86,7 +113,7 @@ struct ActsState {
     QEMUTimer *tap_timer;
     unsigned tap_x, tap_y, tap_ms, touch_x, touch_y;
     bool auto_touch;
-    uint8_t i2c_tx[4][16], i2c_tx_len[4], i2c_rx[4][8];
+    uint8_t i2c_tx[4][16], i2c_tx_len[4], i2c_rx[4][64];
     unsigned i2c_left[4], i2c_index[4];
     bool touch_down;
     uint8_t touch_reg;
@@ -104,6 +131,7 @@ struct ActsState {
     Wp2Nand nand;
     Wp2Bt bt;
     qemu_irq bt_irq;
+    QEMUTimer *bt_sleep_timer;
     CharBackend bt_backend;
     bool bt_external;
     QEMUTimer *bt_rx_timer;
@@ -247,7 +275,7 @@ static bool acts_cst820_transfer(ActsState *s, const uint8_t *tx, unsigned count
         return true;
     }
     if (tx[0] == 0x2a && count == 3 && len == 2 &&
-        (tx[1] == 0xfa || tx[1] == 0xfe)) {
+        (tx[1] == 0xe5 || tx[1] == 0xfa || tx[1] == 0xfe)) {
         return true; /* report mode / sleep */
     }
     if (tx[0] == 0x2a && count == 3 && tx[2] == 0x2b) {
@@ -261,7 +289,8 @@ static bool acts_cst820_transfer(ActsState *s, const uint8_t *tx, unsigned count
         (s->touch_x >> 8) | (s->touch_down ? 0 : 0x40), s->touch_x,
         s->touch_y >> 8, s->touch_y,
     };
-    if (s->touch_reg == 0xa7 && len == 1) {
+    if (s->touch_reg == 0xa7 && (len == 1 || len == 4)) {
+        memset(rx, 0, len);
         rx[0] = 0xb7; /* CST820 chip ID read on the physical watch */
     } else if (len && s->touch_reg + len <= sizeof(report)) {
         memcpy(rx, report + s->touch_reg, len);
@@ -296,6 +325,95 @@ static void acts_i2cmt_irq(ActsState *s, unsigned bus)
     uint32_t *r = &s->regs[(bus ? 0x8c000 : 0x88000) / 4];
     qemu_set_irq(s->i2cmt_irq[bus], !!((r[4] & r[5]) ||
                 ((r[0] & 0x10) && (r[1] & 8))));
+}
+
+static void acts_wp3_imu_sample(const ActsState *s, uint8_t sample[12])
+{
+    static const unsigned sensitivity[] = {61, 488, 122, 244};
+    const uint8_t gyro_control = s->imu_regs[0x11];
+    const int udps_per_bit = gyro_control & 2 ? 4375 : 8750 << ((gyro_control >> 2) & 3);
+    unsigned ug_per_bit = sensitivity[(s->imu_regs[0x10] >> 2) & 3];
+    for (unsigned axis = 0; axis < 3; axis++) {
+        int gyro = s->gyro_mdps[axis] * 1000 / udps_per_bit;
+        int accel = s->accel_mg[axis] * 1000 / (int)ug_per_bit;
+        stw_le_p(sample + axis * 2, CLAMP(gyro, -32768, 32767));
+        stw_le_p(sample + 6 + axis * 2, CLAMP(accel, -32768, 32767));
+    }
+}
+
+static bool acts_wp3_imu_transfer(ActsState *s, uint32_t *task)
+{
+    unsigned len = task[3];
+    uint8_t data[32];
+    if (!s->watch3 || ((task[5] >> 1) & 127) != 0x6a || !len ||
+        len > sizeof(data) || task[2] < 0x18000000 ||
+        (uint64_t)task[2] + len > 0x40000000) {
+        return false;
+    }
+    bool address_in_buffer = task[0] & (1u << 28);
+    uint8_t reg = address_in_buffer ? s->imu_reg : task[5] >> 8;
+    if (!(task[5] & 1)) {
+        if (address_space_read(&address_space_memory, task[2], MEMTXATTRS_UNSPECIFIED,
+                               data, len) != MEMTX_OK) {
+            return false;
+        }
+        if (address_in_buffer) {
+            reg = data[0];
+        }
+        for (unsigned i = address_in_buffer; i < len; i++, reg++) {
+            if (reg == 0x12 && (data[i] & 1)) {
+                memset(s->imu_regs, 0, sizeof(s->imu_regs));
+                s->imu_regs[0x12] = 4;
+            } else {
+                s->imu_regs[reg] = data[i];
+            }
+        }
+        s->imu_reg = reg;
+        return true;
+    }
+    uint8_t sample[12];
+    acts_wp3_imu_sample(s, sample);
+    for (unsigned i = 0; i < len; i++, reg++) {
+        data[i] = reg == 0x0f ? 0x6c : reg == 0x1e ? 3 :
+                  reg >= 0x22 && reg <= 0x2d ? sample[reg - 0x22] : s->imu_regs[reg];
+    }
+    s->imu_reg = reg;
+    qemu_log_mask(LOG_UNIMP, "WP3 LSM6DSO read %02x (%u bytes)\n", (uint8_t)(reg - len), len);
+    return address_space_write(&address_space_memory, task[2], MEMTXATTRS_UNSPECIFIED,
+                               data, len) == MEMTX_OK;
+}
+
+static bool acts_wp3_optical_transfer(ActsState *s, uint32_t *task)
+{
+    unsigned command = task[5], len = task[3];
+    uint8_t data[256];
+    if (((command >> 1) & 127) != 0x14 || !len || len > sizeof(data) ||
+        task[2] < 0x18000000 || (uint64_t)task[2] + len > 0x40000000) {
+        return false;
+    }
+    if (command & 1) {
+        for (unsigned i = 0; i < len; i++) {
+            data[i] = s->optical_regs[s->optical_page][s->optical_reg++];
+        }
+        return address_space_write(&address_space_memory, task[2], MEMTXATTRS_UNSPECIFIED,
+                                   data, len) == MEMTX_OK;
+    }
+    if (address_space_read(&address_space_memory, task[2], MEMTXATTRS_UNSPECIFIED,
+                           data, len) != MEMTX_OK) {
+        return false;
+    }
+    if (len == 2 && data[0] == 0xdd) {
+        if (data[1] < 0xc2 || data[1] > 0xc5) {
+            return false;
+        }
+        s->optical_page = data[1] - 0xc2;
+        return true;
+    }
+    s->optical_reg = data[0];
+    for (unsigned i = 1; i < len; i++) {
+        s->optical_regs[s->optical_page][s->optical_reg++] = data[i];
+    }
+    return true;
 }
 
 /* STK8321 on stock I2CMT1. Handle both polled DMA transfers and the
@@ -341,28 +459,35 @@ static bool acts_stk_transfer(ActsState *s, uint32_t *task)
                                data, len) == MEMTX_OK;
 }
 
-static void acts_stk_tick(ActsState *s, int64_t now)
+static void acts_motion_tick(ActsState *s, int64_t now)
 {
     if (!s->stk_enabled || now < s->stk_next_sample) {
         return;
     }
     s->stk_next_sample = now + 40000000;
+    unsigned sample_size = s->watch3 ? 12 : 6;
+    unsigned command = s->watch3 ? 0x22d5 : 0x023f;
     uint32_t *r = &s->regs[0x8c000 / 4];
     for (unsigned i = 0; i < 4; i++) {
         uint32_t *task = r + 0x100 / 4 + 16 * i;
         unsigned len = task[3], offset = s->stk_task_offset[i];
-        if ((task[1] & 3) != 3 || (task[5] & 0xffff) != 0x023f ||
-            ((task[0] >> 16) & 0xfff) != 6 || !len || len % 12 || offset >= len ||
+        if ((task[1] & 3) != 3 || (task[5] & 0xffff) != command ||
+            ((task[0] >> 16) & 0xfff) != sample_size || !len ||
+            len % (2 * sample_size) || offset >= len ||
             task[2] < 0x18000000 || (uint64_t)task[2] + len > 0x40000000) {
             continue;
         }
-        uint8_t sample[6];
-        acts_stk_sample(s, sample);
+        uint8_t sample[12] = {0};
+        if (s->watch3) {
+            acts_wp3_imu_sample(s, sample);
+        } else {
+            acts_stk_sample(s, sample);
+        }
         if (address_space_write(&address_space_memory, task[2] + offset,
-                                MEMTXATTRS_UNSPECIFIED, sample, sizeof(sample)) != MEMTX_OK) {
+                                MEMTXATTRS_UNSPECIFIED, sample, sample_size) != MEMTX_OK) {
             continue;
         }
-        offset += sizeof(sample);
+        offset += sample_size;
         task[4] = len - offset;
         if (offset == len / 2 || offset == len) {
             r[5] |= 1u << (i + (offset == len / 2 ? 4 : 0));
@@ -406,8 +531,8 @@ static void acts_gps_coordinate(char *out, size_t size, int coordinate, int digi
 
 static void acts_gps_tick(ActsState *s, int64_t now)
 {
-    if (!s->gps_enabled || !(s->regs[GPS_UART_CTL / 4] & GPS_UART_RX_IRQ) ||
-        s->gps_available) {
+    if (!s->gps_enabled || (s->watch3 ? (!s->spi2_gnss_booted || s->spi2_ready) :
+        (!(s->regs[GPS_UART_CTL / 4] & GPS_UART_RX_IRQ) || s->gps_available))) {
         return;
     }
 
@@ -440,6 +565,18 @@ static void acts_gps_tick(ActsState *s, int64_t now)
         s->gps_next_sentence = now + (s->gps_gga ? 850000000 : 150000000);
         s->gps_gga = !s->gps_gga;
     }
+    if (s->watch3) {
+        memcpy(s->spi2_reply, s->gps_sentence, s->gps_length);
+        s->spi2_reply_len = s->gps_length;
+        s->spi2_reply_pos = 0;
+        s->spi2_ready = true;
+        s->gps_pos = s->gps_length;
+        if (s->regs[(0x68000 + WP3_GNSS_READY_PIN * 4) / 4] & (1u << 20)) {
+            s->regs[0x68244 / 4] |= 1u << 30;
+            qemu_set_irq(s->gpio_irq, 1);
+        }
+        return;
+    }
     s->gps_available = MIN(12, s->gps_length - s->gps_pos);
     acts_gps_irq(s);
 }
@@ -455,7 +592,7 @@ static void acts_input_tick(void *opaque)
     int delta, ax, ay, az;
 
     timer_mod(s->input_timer, now + 6000000);
-    acts_stk_tick(s, now);
+    acts_motion_tick(s, now);
     acts_gps_tick(s, now);
     if (s->health_readings && now >= s->health_next_sample) {
         s->health_next_sample = now + 400000000;
@@ -523,6 +660,12 @@ static void acts_input_tick(void *opaque)
         s->accel_mg[0] = ax;
         s->accel_mg[1] = ay;
         s->accel_mg[2] = az;
+    } else if (s->watch3 && sscanf(line, "w %d %d %d", &ax, &ay, &az) == 3 &&
+               ax >= -2000000 && ax <= 2000000 && ay >= -2000000 && ay <= 2000000 &&
+               az >= -2000000 && az <= 2000000) {
+        s->gyro_mdps[0] = ax;
+        s->gyro_mdps[1] = ay;
+        s->gyro_mdps[2] = az;
     } else if (sscanf(line, "p %u %u %u", &x, &down, &capacity) >= 2 &&
                x >= 3300 && x <= 4400 && down <= 1 &&
                (capacity <= 100 || capacity == UINT32_MAX)) {
@@ -550,8 +693,12 @@ static void acts_input_tick(void *opaque)
         s->gps_pos = s->gps_length = s->gps_available = 0;
         s->gps_gga = false;
         s->gps_next_sentence = now;
+        if (s->watch3 && s->spi2_gnss_booted) {
+            s->spi2_ready = false;
+        }
         acts_gps_irq(s);
-    } else if (s->health_hook && sscanf(line, "l %u", &x) == 1 && x <= 100000) {
+    } else if ((s->health_hook || s->watch3) &&
+               sscanf(line, "l %u", &x) == 1 && x <= 100000) {
         s->ambient_lux = x;
     } else if (s->health_hook && sscanf(line, "h %u %u %u", &down, &x, &y) == 3 &&
                down <= 1 && x >= 30 && x <= 220 && y >= 70 && y <= 100) {
@@ -576,7 +723,27 @@ static void acts_wd_expire(void *opaque)
         s->ota_nand_snapshot = NULL;
     }
     error_report("Virtual watch watchdog expired");
+    if (qemu_loglevel_mask(LOG_UNIMP)) {
+        FILE *log = qemu_log_trylock();
+        if (log) {
+            cpu_dump_state(first_cpu, log, 0);
+            for (unsigned i = 0; i < 6; i++) {
+                ActsTimer *t = &s->timers[i];
+                fprintf(log, "Timer %u: ctl=%08x value=%08x count=%08x\n",
+                        i, t->ctl, t->value, t->count);
+            }
+            qemu_log_unlock(log);
+        }
+    }
     qemu_system_reset_request(SHUTDOWN_CAUSE_GUEST_RESET);
+}
+
+static void acts_bt_sleep_wake(void *opaque)
+{
+    ActsState *s = opaque;
+    if (s->bt.ready && s->bt.advertising && (s->regs[0x1048 / 4] & 7) == 4) {
+        qemu_irq_pulse(s->bt_irq);
+    }
 }
 static void acts_adc_irq(ActsState *s)
 {
@@ -781,6 +948,31 @@ static uint16_t acts_vg_color(const uint8_t *pixel, unsigned bytes)
     return lduw_le_p(pixel);
 }
 
+static uint8_t *acts_vg_decode_etc2(const uint8_t *image, unsigned stride,
+                                  unsigned width, unsigned height)
+{
+    uint8_t *decoded = g_malloc(width * height * 4);
+
+    for (unsigned y = 0; y < height; y += 4) {
+        for (unsigned x = 0; x < width; x += 4) {
+            uint8_t rgba[64];
+            etcdec_eac_rgba(image + (y / 4) * stride + (x / 4) * 16,
+                            rgba, 16);
+            for (unsigned row = 0; row < MIN(4, height - y); row++) {
+                uint8_t *dst = decoded + ((y + row) * width + x) * 4;
+                for (unsigned col = 0; col < MIN(4, width - x); col++) {
+                    const uint8_t *src = rgba + row * 16 + col * 4;
+                    dst[col * 4] = src[2];
+                    dst[col * 4 + 1] = src[1];
+                    dst[col * 4 + 2] = src[0];
+                    dst[col * 4 + 3] = src[3];
+                }
+            }
+        }
+    }
+    return decoded;
+}
+
 static uint16_t acts_vg_linear(const uint8_t *image, unsigned pitch,
                                unsigned w, unsigned h, unsigned bytes,
                                float u, float v, unsigned *opacity)
@@ -796,6 +988,14 @@ static uint16_t acts_vg_linear(const uint8_t *image, unsigned pitch,
     };
     float weights[] = {(1 - fx) * (1 - fy), fx * (1 - fy),
                        (1 - fx) * fy, fx * fy};
+    if (bytes == 1) {
+        float coverage = 0;
+        for (unsigned i = 0; i < ARRAY_SIZE(samples); i++) {
+            coverage += weights[i] * samples[i][0];
+        }
+        *opacity = (unsigned)(coverage + 0.5f);
+        return 0;
+    }
     uint16_t pixels[4];
     for (unsigned i = 0; i < ARRAY_SIZE(pixels); i++) {
         pixels[i] = acts_vg_color(samples[i], bytes);
@@ -843,43 +1043,79 @@ static bool acts_vg_blit(ActsState *s, uint32_t origin, uint32_t size,
     unsigned sw = state[0xa2f] & 0xffff, sh = state[0xa2f] >> 16;
     unsigned pitch = state[0xa12], spitch = state[0xa2b];
     uint32_t src = state[0xa29], dst = state[0xa11];
-    bool fade = state[0xa00] == 0xa101;
+    bool masked_path = path && state[0xa00] == 0xa102 &&
+                       state[0xa25] == 0x01011102;
+    bool fade = state[0xa00] == 0xa101 || masked_path;
     bool opaque = state[0xa00] == 0x10001001 || state[0xa00] == 0x1101;
     bool pattern = path && state[0xa00] == 0x10001002 &&
                    state[0xa27] == 0xff000000;
     bool linear_rgb565 = state[0xa25] == 0x01020105;
+    bool linear_mask = fade && state[0xa25] == 0x01020102;
+    bool alpha_mask = masked_path || linear_mask ||
+                      (fade && state[0xa25] == 0x01000102);
+    bool etc2 = state[0xa00] == 0x9101 &&
+                (state[0xa25] == 0x01000f00 || state[0xa25] == 0x01020f00) &&
+                (spitch & 0xf0000000) == 0x10000000;
+    bool indexed = state[0xa00] == 0x9101 &&
+                   (state[0xa25] == 0x01000900 || state[0xa25] == 0x01020900);
     bool argb = state[0xa00] == 0x9101 &&
-                (state[0xa25] == 0x41020100 || state[0xa25] == 0x41000100);
-    bool linear = linear_rgb565 || (argb && state[0xa25] == 0x41020100);
-    unsigned bytes = argb ? 4 : 2;
+                (etc2 || indexed || state[0xa25] == 0x41020100 ||
+                 state[0xa25] == 0x41000100);
+    bool linear = linear_rgb565 || (argb && (state[0xa25] & 0x00020000));
+    unsigned bytes = alpha_mask || indexed ? 1 : argb ? 4 : 2;
+    uint32_t color = state[0xa02];
+    uint16_t tint = ((color >> 8) & 0xf800) | ((color >> 5) & 0x07e0) |
+                    ((color >> 3) & 0x001f);
     unsigned alpha = state[0xa02] >> 24;
     qemu_log_mask(LOG_UNIMP,
                   "VG blit cfg=%08x fmt=%08x src=%08x %ux%u/%u dst=%08x (%u,%u %ux%u)\n",
                   state[0xa00], state[0xa25], src, sw, sh, spitch, dst, x, y, width, height);
-    if ((!argb && ((!fade && !pattern && !opaque) ||
+    if (etc2) {
+        spitch = (spitch & 0x0fffffff) * 4;
+    }
+    unsigned rows = etc2 ? DIV_ROUND_UP(sh, 4) : sh;
+    unsigned row_bytes = etc2 ? DIV_ROUND_UP(sw, 4) * 16 : sw * bytes;
+    if ((!alpha_mask && !argb && ((!fade && !pattern && !opaque) ||
                    (state[0xa25] != 0x01000105 && !linear_rgb565))) ||
         state[0xa10] != 0x101 ||
         (state[0xa27] && !pattern) || state[0xa2d] ||
         state[0xa1a] != 0x3f800000 || state[0xa1e] || state[0xa22] ||
         !width || !height || !sw || !sh || sw > 2047 || sh > 2047 ||
         x + width > 466 || y + height > 466 || pitch < (x + width) * 2 ||
-        spitch < sw * bytes || spitch > 8192 || pitch > 8192 ||
+        spitch < row_bytes || spitch > 8192 || pitch > 8192 ||
         src < 0x18000000 || dst < 0x18000000 ||
-        (uint64_t)src + spitch * sh > 0x40000000 ||
+        (uint64_t)src + spitch * rows > 0x40000000 ||
         (uint64_t)dst + pitch * (y + height) > 0x40000000) {
         return false;
     }
-    bool packed = argb && acts_vg_resource_packed(src, sw, sh);
+    bool packed = argb && !etc2 && !indexed && acts_vg_resource_packed(src, sw, sh);
     if (packed) {
         spitch = sw * 3;
         bytes = 3;
     }
-    g_autofree uint8_t *image = g_malloc(spitch * sh);
+    g_autofree uint8_t *image = g_malloc(spitch * rows);
     if (address_space_read(&address_space_memory, src, MEMTXATTRS_UNSPECIFIED,
-                           image, spitch * sh) != MEMTX_OK) {
+                           image, spitch * rows) != MEMTX_OK) {
         return false;
     }
-    if (argb && !packed && acts_vg_wfc_packed(image, sw, sh)) {
+    if (etc2) {
+        uint8_t *decoded = acts_vg_decode_etc2(image, spitch, sw, sh);
+        g_free(image);
+        image = decoded;
+        spitch = sw * 4;
+    } else if (indexed) {
+        uint8_t *decoded = g_malloc(sw * sh * 4);
+        for (unsigned row = 0; row < sh; row++) {
+            for (unsigned col = 0; col < sw; col++) {
+                stl_le_p(decoded + (row * sw + col) * 4,
+                         state[0xb00 + image[row * spitch + col]]);
+            }
+        }
+        g_free(image);
+        image = decoded;
+        bytes = 4;
+        spitch = sw * 4;
+    } else if (argb && !packed && acts_vg_wfc_packed(image, sw, sh)) {
         packed = true;
         spitch = sw * 3;
         bytes = 3;
@@ -914,9 +1150,16 @@ static bool acts_vg_blit(ActsState *s, uint32_t origin, uint32_t size,
                 unsigned iy = MIN((unsigned)(v * sh), sh - 1);
                 const uint8_t *p = image + iy * spitch + ix * bytes;
                 unsigned opacity = packed ? p[2] : argb ? p[3] : alpha;
-                uint16_t source = linear
+                uint16_t source = alpha_mask ? tint : linear
                     ? acts_vg_linear(image, spitch, sw, sh, bytes, u, v, &opacity)
                     : acts_vg_color(p, bytes);
+                if (alpha_mask) {
+                    opacity = p[0];
+                    if (linear_mask) {
+                        acts_vg_linear(image, spitch, sw, sh, 1, u, v, &opacity);
+                    }
+                    opacity = (opacity * alpha + 127) / 255;
+                }
                 if (fade || argb) {
                     uint16_t dest = lduw_le_p(row + i * 2);
                     unsigned red = ((source >> 11) * opacity + (dest >> 11) * (255 - opacity) + 127) / 255;
@@ -956,8 +1199,16 @@ static bool acts_vg_submit(ActsState *s, uint32_t units)
             qemu_set_irq(s->vg_irq, !!(s->regs[0x70014 / 4] & 1));
             return true;
         }
-        if ((op & 0xfffff000) == 0x30010000) {
-            s->vg_state[op & 0xfff] = arg;
+        if ((op & 0xf000f000) == 0x30000000) {
+            unsigned count = (op >> 16) & 0xfff, reg = op & 0xfff;
+            unsigned packets = (count + 2) / 2;
+            if (!count || count > 4096 - reg || packets > units - i) {
+                return false;
+            }
+            for (unsigned n = 0; n < count; n++) {
+                s->vg_state[reg + n] = ldl_le_p(stream + i * 8 + 4 + n * 4);
+            }
+            i += packets - 1;
         } else if (op == 0x10000007) {
             semaphore = 7;
         } else if (op == 0x20000007 && semaphore == 7) {
@@ -968,12 +1219,13 @@ static bool acts_vg_submit(ActsState *s, uint32_t units)
                     s->vg_state[0xa00] == 0x00000102 ||
                     s->vg_state[0xa00] == 0x10000102 ||
                     s->vg_state[0xa00] == 0x10000002 ||
-                    s->vg_state[0xa00] == 0x10001002)) {
+                    s->vg_state[0xa00] == 0x10001002 ||
+                    s->vg_state[0xa00] == 0x0000a102)) {
             unsigned length = op & 0xffff;
             const uint32_t *state = s->vg_state;
             Wp2Path path;
             if (!wp2_vg_decode_path(state, stream + (i + 1) * 8, length * 2, &path) ||
-                !(state[0xa00] == 0x10001002
+                !((state[0xa00] == 0x10001002 || state[0xa00] == 0x0000a102)
                   ? acts_vg_blit(s, state[0xa39], state[0xa3a], &path)
                   : wp2_vg_solid_path(state, &path))) {
                 qemu_log_mask(LOG_UNIMP, "Unsupported VG Lite path at packet %u\n", i);
@@ -1260,6 +1512,26 @@ enum {
 };
 
 static void acts_dma_run(ActsState *s, unsigned ch);
+
+static uint8_t acts_wp3_spi2_rx(ActsState *s)
+{
+    uint8_t value = 0xff;
+    if (s->spi2_pending) {
+        s->spi2_pending--;
+    }
+    if (!s->spi2_ready || s->spi2_read_command != 0x30) {
+        return value;
+    }
+    unsigned i = s->spi2_reply_pos++;
+    if (i < 3) {
+        return i == 1 ? s->spi2_reply_len : 0;
+    }
+    value = s->spi2_reply[i - 3];
+    if (s->spi2_reply_pos == s->spi2_reply_len + 3) {
+        s->spi2_ready = false;
+    }
+    return value;
+}
 static void acts_dsp_play_audio(ActsState *s);
 
 static void acts_dac_audio_write(void *opaque, int available)
@@ -1819,6 +2091,78 @@ static void acts_dma_run(ActsState *s, unsigned ch)
         acts_dac_queue(s, samples);
         goto complete;
     }
+    bool spi2_tx = s->watch3 && dst == 0x40000000 + WP3_SPI2_TX &&
+                   ((r[0] >> 8) & 31) == 9 && !(r[0] & 31);
+    bool spi2_rx = s->watch3 && src == 0x40000000 + WP3_SPI2_RX &&
+                   (r[0] & 31) == 9 && !((r[0] >> 8) & 31);
+    if (spi2_tx || spi2_rx) {
+        if (r[0] & (1u << 18) || !len || len > s->regs[WP3_SPI2_COUNT / 4] ||
+            !acts_writable_ram(spi2_tx ? src : dst, len)) {
+            error_report("Unsupported WP3 SPI2 DMA%u ctl=%08x src=%08x dst=%08x len=%u",
+                         ch, r[0], src, dst, len);
+            qemu_system_shutdown_request(SHUTDOWN_CAUSE_GUEST_SHUTDOWN);
+            return;
+        }
+        uint8_t *data = g_malloc(len);
+        if (spi2_tx) {
+            cpu_physical_memory_read(src, data, len);
+            qemu_log_mask(LOG_UNIMP, "WP3 SPI2 DMA TX %u bytes, command %02x\n",
+                          len, data[0]);
+            if (len == 3 && data[0] == 0x30) {
+                s->spi2_read_command = 0x30;
+            } else if (len == 17 && data[0] == 0x10 && data[1] == 0x80) {
+                s->spi2_patch_block = 0;
+                s->spi2_ready = false;
+                s->spi2_gnss_booted = false;
+            } else if (len == 18 && data[0] == 0x10 && data[1] == 0xb0) {
+                const uint8_t reply[] = {
+                    0xb0, 0, 0, 13, 0, 8, 0x80, 0x0a, 0xf0, 0x0f, 0x41,
+                    0x40, 4, 0, 0xa0, 0x76, 0x47, 0, 0x26, 0xb0, 1,
+                };
+                memcpy(s->spi2_reply, reply, sizeof(reply));
+                s->spi2_reply_len = sizeof(reply);
+                s->spi2_reply_pos = 0;
+                s->spi2_ready = true;
+            } else if ((len == 4093 || len == 3795) && data[0] == 0x10 &&
+                       s->spi2_patch_block < 80) {
+                uint8_t reply[] = {
+                    0xb0, 0, ++s->spi2_patch_block, 7, 0, 4, 0x80, 4,
+                    0, 0, 0, 0, 0x86, 0xb0, 1,
+                };
+                unsigned reply_len = sizeof(reply);
+                if (s->spi2_patch_block == 17 || s->spi2_patch_block == 19) {
+                    memcpy(s->spi2_reply + 4, reply + 3, sizeof(reply) - 3);
+                    memcpy(s->spi2_reply, reply, 2);
+                    s->spi2_reply[2] = 0xb0;
+                    s->spi2_reply[3] = s->spi2_patch_block == 17 ? 4 : 5;
+                    reply_len++;
+                } else {
+                    memcpy(s->spi2_reply, reply, reply_len);
+                }
+                s->spi2_reply_len = reply_len;
+                s->spi2_reply_pos = 0;
+                s->spi2_ready = true;
+            } else if (len == 15 && data[0] == 0x10 && data[1] == 0xb0 &&
+                       data[3] == 0xac && s->spi2_patch_block == 80) {
+                s->spi2_gnss_booted = true;
+                s->gps_next_sentence = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + 500000000;
+            }
+            if ((s->regs[WP3_SPI2_CTL / 4] & 3) == 3) {
+                s->spi2_pending = len;
+            }
+        } else {
+            s->spi2_reply_pos = 0;
+            s->spi2_read_command = 0x30;
+            for (unsigned i = 0; i < len; i++) {
+                data[i] = acts_wp3_spi2_rx(s);
+            }
+            qemu_log_mask(LOG_UNIMP, "WP3 SPI2 DMA RX %u bytes after command %02x\n",
+                          len, s->spi2_read_command);
+            cpu_physical_memory_write(dst, data, len);
+        }
+        g_free(data);
+        goto complete;
+    }
     /* Actions DMA peripheral request 10 supplies SPI3 base; library passes
      * only FIFO offset 0x0c/0x08 in SADDR/DADDR. */
     if((r[0]&31)==10) src=0x4003400c;
@@ -1887,7 +2231,8 @@ static uint32_t acts_count(ActsTimer *t)
     if (!(t->ctl & (1 << 5))) {
         return t->count;
     }
-    return t->count + (qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) - t->started) * 32 / 1000;
+    uint64_t elapsed = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) - t->started;
+    return t->count + muldiv64(elapsed, t->hz, NANOSECONDS_PER_SECOND);
 }
 
 static void acts_timer_arm(ActsTimer *t)
@@ -1896,7 +2241,7 @@ static void acts_timer_arm(ActsTimer *t)
     if (t->ctl & (1 << 5)) {
         uint32_t remaining = t->value - acts_count(t);
         timer_mod(t->timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
-                  MAX(1ULL, ((uint64_t)remaining * 1000 + 31) / 32));
+                  MAX(1ULL, ((uint64_t)remaining * NANOSECONDS_PER_SECOND + t->hz - 1) / t->hz));
     }
 }
 
@@ -1941,25 +2286,27 @@ static bool acts_storage_reg(hwaddr addr)
      * on peripherals and analog oscillator settling are not implemented yet. */
     return addr < 8 || addr == 0x80 || addr == 0x84 ||
            (addr >= 0x100 && addr <= 0x174) || addr == 0x3004 ||
-           addr == 0x10000 || (addr >= 0x10080 && addr <= 0x1008c) ||
-           addr == 0x2c03c || addr == 0x2c040 || /* PSRAM PHY delay taps */
+           addr == 0x10000 || addr == 0x10020 || addr == 0x10024 ||
+           (addr >= 0x10080 && addr <= 0x1008c) ||
+           addr == 0x2c000 || addr == 0x2c018 || addr == 0x2c03c || addr == 0x2c040 ||
            (addr >= 0x1000 && addr <= 0x1114) ||
            addr == 0x4030 ||
            addr == 0x4000 || addr == 0x4004 || addr == 0x4008 ||
-           addr == 0x400c || addr == 0x4014 || addr == 0x4040 || addr == 0x4044 ||
+           addr == 0x400c || addr == 0x4014 || addr == 0x4038 || addr == 0x4040 || addr == 0x4044 || addr == 0x4048 ||
            addr == 0x4110 || addr == 0x8004 || addr == 0x8008 ||
            (addr >= 0x4100 && addr <= 0x410c) || /* charger/power config */
            addr == 0x4200 || addr == 0x4204 || addr == 0x420c ||
            (addr >= 0x68000 && addr <= 0x68140) || /* pinmux config */
            (addr >= 0x68200 && addr <= 0x68208) ||
-           (addr >= 0x68300 && addr <= 0x6830c) || /* WIO pin controls */
+           (addr >= 0x68300 && addr <= 0x68310) || /* WIO pin controls */
            addr == 0x68400 || /* JTAG mux config */
            (addr >= 0xc030 && addr <= 0xc044) || /* RTC retention words */
            addr == 0x28000 || addr == 0x28024 || /* SPI0 ctrl/delay; HLE */
            addr == 0x34000 || /* SPI3 configuration, transfer registers separate */
            (addr >= 0x10300 && addr <= 0x1033c) ||
            addr == 0x88000 || addr == 0x8c000 || /* I2CMT control, idle only */
-           addr == 0x78000 || addr == 0x78004 ||
+           addr == 0x1c080 || addr == 0x78000 || addr == 0x78004 ||
+           addr == 0x78070 || addr == 0x78080 ||
            (addr>=0x64000 && addr<=0x640ac) ||
            (addr>=0x78100 && addr<=0x7811c) ||
            (addr>=0x78200 && addr<=0x7821c) ||
@@ -1975,7 +2322,7 @@ static bool acts_storage_reg(hwaddr addr)
            (addr >= 0x5c100 && addr <= 0x5c10c) ||
            addr == 0x5c000 || addr == 0x5c004 ||
            (addr >= 0x5c010 && addr <= 0x5c050 && addr != 0x5c014) ||
-           addr == 0x14000 || addr == 0x18000 || addr == 0x18094;
+           addr == 0x14000 || addr == 0x18000 || addr == 0x18080 || addr == 0x18094;
 }
 
 static uint32_t acts_pwm_clock(uint32_t reg)
@@ -1999,6 +2346,9 @@ static void acts_motor_update(ActsState *s)
         duty = MIN(pulse, period) * 1000 / period;
         freq = duty ? clock / period : 0;
     }
+    if (s->watch3 && (s->haptic_regs[0x0f] & 1)) {
+        duty = 1000;
+    }
     if (!s->motor_log || (duty == s->motor_duty && freq == s->motor_freq)) {
         return;
     }
@@ -2012,6 +2362,24 @@ static void acts_motor_update(ActsState *s)
 static uint64_t acts_read(void *opaque, hwaddr addr, unsigned size)
 {
     ActsState *s = opaque;
+    if (addr == 0x2c004) {
+        return 0x16 | (s->regs[0x2c024 / 4] == 1 ? 0 : 0x40);
+    }
+    if (addr == 0x2c00c) {
+        return s->psram_mode_regs[s->regs[0x2c02c / 4] & 15];
+    }
+    if (addr >= 0x2c020 && addr <= 0x2c034) {
+        return s->regs[addr / 4];
+    }
+    if (s->watch3 && addr >= WP3_SPI2_CTL && addr <= WP3_SPI2_COUNT) {
+        if (addr == WP3_SPI2_STAT) {
+            return (1u << 4) | (s->spi2_pending ? 0 : 1u << 6);
+        }
+        if (addr == WP3_SPI2_RX) {
+            return acts_wp3_spi2_rx(s);
+        }
+        return s->regs[addr / 4];
+    }
     if (addr == 0x3014) {
         return s->regs[0x3014 / 4];
     }
@@ -2126,6 +2494,9 @@ static uint64_t acts_read(void *opaque, hwaddr addr, unsigned size)
         if (bank == 1 && s->input_path) {
             input = s->crown_delta ? input & ~(1u << 26) : input | (1u << 26);
         }
+        if (bank == 1 && s->watch3) {
+            input = s->spi2_ready ? input | (1u << 30) : input & ~(1u << 30);
+        }
         return input;
     }
     if (addr >= 0x68240 && addr <= 0x68248) return s->regs[addr / 4];
@@ -2223,6 +2594,64 @@ static uint64_t acts_read(void *opaque, hwaddr addr, unsigned size)
 static void acts_write(void *opaque, hwaddr addr, uint64_t value, unsigned size)
 {
     ActsState *s = opaque;
+    if (addr == 0x1048) {
+        ActsTimer *t = &s->timers[2];
+        t->count = acts_count(t);
+        t->started = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+        t->hz = (value & 7) == 4 ? 32768 : 32000000;
+        s->regs[addr / 4] = value;
+        acts_timer_arm(t);
+        timer_del(s->bt_sleep_timer);
+        if ((value & 7) == 4 && !s->bt_external && s->bt.ready && s->bt.advertising) {
+            unsigned slots = CLAMP(lduw_le_p(s->bt.adv_params + 2), 0x20, 0x4000);
+            timer_mod(s->bt_sleep_timer, t->started + slots * 625000LL);
+        }
+        return;
+    }
+    if (addr == 0x2c008) {
+        if (s->regs[0x2c024 / 4] == 2 && s->regs[0x2c020 / 4] == 0xc0 &&
+            s->psram_mode_pos++ == 0) {
+            s->psram_mode_regs[s->regs[0x2c02c / 4] & 15] = value;
+        }
+        return;
+    }
+    if (addr >= 0x2c020 && addr <= 0x2c034) {
+        if (addr == 0x2c028) {
+            s->regs[addr / 4] &= ~value;
+            return;
+        }
+        if (addr == 0x2c024) {
+            s->psram_mode_pos = 0;
+            if (value & 3) {
+                s->regs[0x2c028 / 4] |= 1;
+            }
+        }
+        s->regs[addr / 4] = value;
+        return;
+    }
+    if (s->watch3 && addr >= WP3_SPI2_CTL && addr <= WP3_SPI2_COUNT) {
+        unsigned mode = s->regs[WP3_SPI2_CTL / 4] & 3;
+        switch (addr) {
+        case WP3_SPI2_CTL:
+            mode = value & 3;
+            s->spi2_pending = mode == 1 ? s->regs[WP3_SPI2_COUNT / 4] : 0;
+            break;
+        case WP3_SPI2_TX:
+            if (mode == 3 && s->spi2_pending < s->regs[WP3_SPI2_COUNT / 4]) {
+                s->spi2_pending++;
+            }
+            if (value == 0x30) {
+                s->spi2_read_command = value;
+            }
+            qemu_log_mask(LOG_UNIMP, "WP3 SPI2 TX %02x\n", (unsigned)value & 255);
+            break;
+        case WP3_SPI2_STAT:
+        case WP3_SPI2_RX:
+            return;
+        }
+        s->regs[addr / 4] = value;
+        return;
+    }
     if (addr == 0x3014) {
         s->regs[0x3014 / 4] &= ~value;
         qemu_set_irq(qdev_get_gpio_in(s->cpu, 20), !!s->regs[0x3014 / 4]);
@@ -2338,15 +2767,23 @@ static void acts_write(void *opaque, hwaddr addr, uint64_t value, unsigned size)
                 unsigned task_id = (off_mt - 0x100) / 0x40;
                 unsigned field = off_mt & 0x3f;
                 uint32_t *task = regs + 0x100 / 4 + 16 * task_id;
+                if (s->watch3 && bus == 1 && (field == 0 || field == 4 || field == 0x14)) {
+                    qemu_log_mask(LOG_UNIMP, "WP3 I2CMT1 task %u field %02x = %08" PRIx64
+                                  " DMA %08x %u command %08x\n", task_id, field, value,
+                                  task[2], task[3], task[5]);
+                }
                 if (bus == 1 && field == 4 && !(value & 1)) {
                     s->stk_task_offset[task_id] = 0;
                 }
                 if (!field && (value & (1u << 31))) {
-                    bool ack = bus == 1 && acts_stk_transfer(s, task);
+                    bool ack = s->watch3 ? (bus == 1 ? acts_wp3_imu_transfer(s, task)
+                                                    : acts_wp3_optical_transfer(s, task))
+                                         : bus == 1 && acts_stk_transfer(s, task);
                     task[4] = ack ? 0 : task[3];
                     regs[5] |= 1u << (task_id + (ack ? 0 : 8));
-                    qemu_log_mask(LOG_UNIMP, "I2CMT%u task %u slave %02x %s\n",
-                                  bus, task_id, (task[5] >> 1) & 127, ack ? "ACK" : "NACK");
+                    qemu_log_mask(LOG_UNIMP, "I2CMT%u task %u slave %02x %s, command %08x, length %u\n",
+                                  bus, task_id, (task[5] >> 1) & 127,
+                                  ack ? "ACK" : "NACK", task[5], task[3]);
                 }
             }
         } else {
@@ -2504,6 +2941,42 @@ static void acts_write(void *opaque, hwaddr addr, uint64_t value, unsigned size)
                 qemu_log_mask(LOG_UNIMP, "CST820 cmd=%04" PRIx64 " n=%u count=%u tx=%02x %02x %02x\n",
                               value, n, count, tx[0], tx[1], tx[2]);
                 ack = acts_cst820_transfer(s, tx, count, n, rx);
+            } else if (s->watch3 && bus == 1 && off == 0x18 &&
+                       count >= 2 && tx[0] == 0xd6) {
+                if (count == 3 && tx[2] == 0xd7 && n && n <= sizeof(s->i2c_rx[bus])) {
+                    for (unsigned i = 0; i < n; i++) {
+                        uint8_t reg = tx[1] + i;
+                        rx[i] = reg == 0 ? 0x64 : reg == 0x0e ?
+                                !(s->haptic_regs[0x0f] & 1) : s->haptic_regs[reg];
+                    }
+                    s->i2c_index[bus] = 0;
+                    s->i2c_left[bus] = n;
+                    ack = true;
+                } else if (count == n + 1 && count >= 3) {
+                    for (unsigned i = 2; i < count; i++) {
+                        s->haptic_regs[(uint8_t)(tx[1] + i - 2)] = tx[i];
+                    }
+                    acts_motor_update(s);
+                    ack = true;
+                }
+            } else if (s->watch3 && bus == 3 && off == 0x18 &&
+                       count >= 2 && tx[0] == 0x90) {
+                if (count == 3 && tx[2] == 0x91 && n && n <= sizeof(s->i2c_rx[bus])) {
+                    unsigned sample = MIN(DIV_ROUND_UP(s->ambient_lux * 1000u, 294u), UINT16_MAX);
+                    for (unsigned i = 0; i < n; i++) {
+                        uint8_t reg = tx[1] + i;
+                        rx[i] = tx[1] == 0x66 ? (i & 1 ? sample : sample >> 8) :
+                                reg == 0x64 ? 1 : reg == 0x65 ? 0xc0 : s->als_regs[reg];
+                    }
+                    s->i2c_index[bus] = 0;
+                    s->i2c_left[bus] = n;
+                    ack = true;
+                } else if (count == n + 1 && count >= 3) {
+                    for (unsigned i = 2; i < count; i++) {
+                        s->als_regs[(uint8_t)(tx[1] + i - 2)] = tx[i];
+                    }
+                    ack = true;
+                }
             } else if (bus == 2 && off == 0x18 &&
                        count >= 2 && tx[0] == 0xea) {
                 if (count == 3 && tx[2] == 0xeb && n && n <= sizeof(s->i2c_rx[bus])) {
@@ -2698,7 +3171,9 @@ static void acts_reset(void *opaque)
     uint32_t rtc_remain[6];
     memcpy(rtc_remain, &s->regs[0xc030 / 4], sizeof(rtc_remain));
     memset(s->regs, 0, sizeof(s->regs));
+    memset(s->haptic_regs, 0, sizeof(s->haptic_regs));
     acts_motor_update(s);
+    timer_del(s->bt_sleep_timer);
     memcpy(&s->regs[0xc030 / 4], rtc_remain, sizeof(rtc_remain));
     timer_del(s->dac_timer);
     timer_del(s->mic_timer);
@@ -2744,6 +3219,7 @@ static void acts_reset(void *opaque)
     s->battery_percent = UINT32_MAX;
     s->accel_mg[0] = s->accel_mg[1] = 0;
     s->accel_mg[2] = 1000;
+    memset(s->gyro_mdps, 0, sizeof(s->gyro_mdps));
     memset(s->stk_regs, 0, sizeof(s->stk_regs));
     s->stk_regs[0x0f] = 3;
     s->stk_reg = 0;
@@ -2763,6 +3239,19 @@ static void acts_reset(void *opaque)
     s->crown_down = false;
     s->crown_delta = 0;
     memset(s->knob_regs, 0, sizeof(s->knob_regs));
+    s->imu_reg = 0;
+    s->spi2_pending = 0;
+    s->spi2_ready = false;
+    s->spi2_gnss_booted = false;
+    s->spi2_read_command = 0;
+    s->spi2_reply_len = s->spi2_reply_pos = s->spi2_patch_block = 0;
+    memset(s->imu_regs, 0, sizeof(s->imu_regs));
+    memset(s->optical_regs, 0, sizeof(s->optical_regs));
+    memset(s->als_regs, 0, sizeof(s->als_regs));
+    s->optical_page = s->optical_reg = 0;
+    memset(s->psram_mode_regs, 0, sizeof(s->psram_mode_regs));
+    s->psram_mode_pos = 0;
+    s->imu_regs[0x12] = 4;
     acts_pmu_irq(s);
     if (s->input_path) {
         timer_mod(s->input_timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + 6000000);
@@ -2790,6 +3279,7 @@ static void acts_reset(void *opaque)
         ActsTimer *t = &s->timers[i];
         timer_del(t->timer);
         t->ctl = t->value = t->count = 0;
+        t->hz = 32000000;
         t->started = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
         qemu_set_irq(t->irq, 0);
     }
@@ -2871,6 +3361,7 @@ static void acts_init(MachineState *machine)
     s->exploratory = g_strcmp0(g_getenv("QEMU_WP2_EXPLORATORY"), "1") == 0;
     s->host_rtc = g_strcmp0(g_getenv("QEMU_WP2_HOST_RTC"), "1") == 0;
     s->stock_awake = g_strcmp0(g_getenv("QEMU_WP2_STOCK_AWAKE"), "1") == 0;
+    s->watch3 = g_strcmp0(g_getenv("QEMU_WP2_MODEL"), "wp3") == 0;
     s->input_path = g_getenv("QEMU_WP2_INPUT");
     s->viewer_brightness = 100;
     s->stk_enabled = s->input_path && g_getenv("QEMU_WP2_LIVE_SENSORS");
@@ -3030,6 +3521,7 @@ static void acts_init(MachineState *machine)
     sysbus_realize_and_unref(SYS_BUS_DEVICE(s->cpu), &error_fatal);
     s->lcd_irq=qdev_get_gpio_in(s->cpu,43);
     s->bt_irq = qdev_get_gpio_in(s->cpu, 56);
+    s->bt_sleep_timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, acts_bt_sleep_wake, s);
     s->bt_rx_timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, acts_bt_rx_drain, s);
     Chardev *bt_chr = qemu_chr_find("wp2-hci");
     if (bt_chr) {

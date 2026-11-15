@@ -93,6 +93,24 @@ select a different build, set both `WP2_BAD_APPLE_TAG` and
 - Open **Watch log** to inspect recent guest UART output or save the full captured UART log. Add `?debug` to the URL for
   verbose GPU/MMIO diagnostics; this increases logging and memory use.
 
+## Watch 3 Pro browser preview
+
+Build the WebAssembly runtime from the current emulator sources and prepare desktop
+`wp3-stock` fixtures first. Use `stage.py --profile wp3-stock` with those fixtures
+and the matching ROM. It carries over the model's stock texture index.
+
+Run `publish.py --profile wp3-stock --model-selector` with the staged Watch 3 Pro
+files in `--stock`. Publish the Watch Pro 2 files to the same `--output` directory
+with `--profile wp2-stock --model-selector`. Serve that directory to open either
+`/emulator/watch-pro-2/` or `/emulator/watch-pro-3/`. The heading lets you switch
+between the two routes. Pass `--model-selector` when both pages are present.
+
+Watch 3 Pro starts with stock firmware and the virtual charger connected. It
+allows the guest's initial reboot during setup. The preview does not expose
+Watch Pro 2 presets, watch-face uploads, or optical reading controls on the
+Watch 3 Pro page. **Ambient light** sends lux to the virtual W1160 sensor over
+the same emulated I²C path as the desktop toolkit.
+
 ## Current limits
 
 The port reuses the native model, including its approximations and stock-specific

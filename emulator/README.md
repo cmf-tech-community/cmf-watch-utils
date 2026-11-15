@@ -8,7 +8,7 @@ firmware tests. These builds do not establish hardware fidelity.
 
 Use the [Emulator CLI guide](https://cmf.arnv.dev/emulator/) for setup, profile
 selection and test commands. From the repository root, `uv sync --locked` and
-`uv run cmf-watch-utils emu profiles` list the two Watch Pro 2 baselines. Running
+`uv run cmf-watch-utils emu profiles` lists the available profiles. Running
 the emulator also requires a matching compatibility ROM and prepared local virtual
 NOR, raw NAND and NAND ID files. Generate them with `emu prepare-fixtures` using
 the exact stock package, pinned NAND ID and Arm-capable GDB. The interactive viewer uses Tcl/Tk `wish`, while
@@ -85,3 +85,11 @@ Run these commands from the repository root after `uv sync --locked`.
 Archives are written to `emulator/dist/`. Each QEMU build includes the synthetic
 boot check. Arch-specific firmware boot and viewer behavior have not been verified;
 the Linux release runner uses Ubuntu 22.04.
+
+## Watch 3 Pro desktop preview
+
+The experimental `wp3-stock` profile boots stock Watch 3 Pro `1.0.1.77` in the shared native QEMU runtime. It uses a synthetic flash layout and the compatibility ROM. Prepare it with `emu prepare-fixtures --profile wp3-stock --stock <watch-3-pro-package> --provisioning-stock <watch-pro-2-1.0.0.73-package>` and the usual QEMU, Arm GDB, NAND ID and provisioner options. The Watch Pro 2 package supplies the virtual NAND writer. Run the resulting fixtures with `emu run --profile wp3-stock`. The stock guest starts on virtual charger power during first boot. Disconnect it through Advanced after initialization to use the watch screen.
+
+Watch 3 Pro pairing, recovery, factory suite coverage, and browser support are still in development.
+
+The optional `stock-audio.bin` sound bank works with both models’ verified stock builds. Place the bank in the model’s fixture directory. The Watch 3 Pro aging test produced a non-silent WAV capture and accepted live microphone input with `--host-mic --audio dsound` on Windows. The normal GPS factory test accepts live simulated coordinates from the Advanced panel. Optical readings remain unverified.

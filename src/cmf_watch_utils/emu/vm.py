@@ -48,7 +48,8 @@ def runtime_env(args, model, **values):
 def run_env(args, model, output, nor, nand):
     return runtime_env(args, model, NOR=nor, NAND=nand, FRAME=output / "frame.ppm",
                        INPUT=output / "input.txt", MOTOR=output / "motor.log",
-                       UNPLUGGED=int(not args.charger_connected), HOST_RTC=1, EXPLORATORY=0)
+                       UNPLUGGED=int(model.name != "wp3" and not args.charger_connected),
+                       HOST_RTC=1, EXPLORATORY=0)
 
 
 def command(args, model, output, env, audio, *, media_clock=False):
@@ -61,7 +62,7 @@ def command(args, model, output, env, audio, *, media_clock=False):
             "-serial", "null", "-serial", "null", "-icount", clock]
     if args.hci_port:
         argv += ["-chardev", f"socket,id=wp2-hci,host=127.0.0.1,port={args.hci_port}"]
-    if not args.allow_reboot:
+    if not args.allow_reboot and model.name != "wp3":
         argv.append("-no-reboot")
     return argv
 
@@ -152,12 +153,14 @@ def monitored(args, argv, env, output):
         require(status == 0, f"QEMU exited with status {status}")
 
 
-def live(args, argv, env, output, version, stock, title):
+def live(args, argv, env, output, version, stock, profile):
     default_wish = "wish.exe" if os.name == "nt" else "wish"
     wish = args.wish or shutil.which(default_wish, path=env.get("PATH"))
     require(wish is not None, "Tk wish not found; provide --wish or use --headless")
     with as_file(files(__package__).joinpath("watch_window.tcl")) as script:
-        viewer = [executable(wish, env), str(script), str(output), "stock" if stock else "custom", version, title]
+        viewer = [executable(wish, env), str(script), str(output), "stock" if stock else "custom",
+                  version, profile.model.title, profile.model.name, str(int(stock and profile.live_health)),
+                  str(int(args.charger_connected or profile.model.name == "wp3"))]
         with child(argv, env, output / "qemu.log") as vm, child(viewer, env, output / "viewer.log") as gui:
             while vm.poll() is None and gui.poll() is None:
                 time.sleep(0.2)
@@ -174,9 +177,11 @@ def run(args, profile):
     require(nand.is_file() and nand.stat().st_size == model.nand_bytes, "Invalid raw NAND")
     require(not args.sdfs or args.app, "--sdfs requires --app")
     require(not args.ota_snapshot or args.allow_reboot, "--ota-snapshot requires --allow-reboot")
+    require(not (profile.experimental and args.ota_snapshot),
+            "OTA snapshots are unverified for this profile")
     require(not args.wav or args.headless, "--wav requires --headless")
-    require(not args.headless or args.audio in (None, "auto", "none"),
-            "--audio is for live runs; use --wav for headless")
+    require(not args.headless or args.host_mic or args.audio in (None, "auto", "none"),
+            "Headless speaker tests use --wav unless a host microphone backend is selected")
     stock = not (args.app or args.ota_image or args.nor)
     require(not (args.watch_face or args.fmc_face) or (stock and not args.nand and profile.live_health),
             "Watch-face import requires the stock watch-face profile and its default NAND")
@@ -222,6 +227,8 @@ def run(args, profile):
         texture_index = output / "wfc-index.txt"
         texture_index.write_bytes(existing + b"\n" + index)
     env = run_env(args, model, output, nor, nand)
+    if model.name == "wp3":
+        env[model.env_prefix + "MODEL"] = model.name
     if texture_index.is_file():
         env[model.env_prefix + "WFC_INDEX"] = str(texture_index)
     stock_audio = args.fixtures / "stock-audio.bin"
@@ -229,17 +236,17 @@ def run(args, profile):
         env[model.env_prefix + "STOCK_AUDIO"] = str(stock_audio)
     audio = args.audio
     if audio == "auto":
-        audio = audio_backend(executable(args.qemu, env), env) if not args.headless and not args.wav else None
+        audio = audio_backend(executable(args.qemu, env), env) if (not args.headless or args.host_mic) and not args.wav else None
     if audio == "none":
         audio = None
     if args.host_mic:
-        require(audio, "--host-mic requires a windowed run with a host audio backend")
+        require(audio and not args.wav, "--host-mic requires a host audio backend and cannot be combined with --wav")
         env[model.env_prefix + "HOST_MIC"] = "1"
     media_clock = not stock and (audio or args.wav) and bool(re.fullmatch(rb"badapple\d+_\d{6}", stamp))
     if media_clock:
         env[model.env_prefix + "MEDIA_CLOCK"] = "1"
     argv = command(args, model, output, env, audio, media_clock=media_clock)
-    if not args.headless:
+    if not args.headless or model.name == "wp3":
         env[model.env_prefix + "LIVE_FRAME"] = "1"
         env[model.env_prefix + "LIVE_SENSORS"] = "1"
         if stock and profile.live_health:
@@ -250,6 +257,10 @@ def run(args, profile):
             argv += ["-kernel", str(kernel)]
     if args.qmp_port:
         argv += ["-qmp", f"tcp:127.0.0.1:{args.qmp_port},server=on,wait=off"]
+    if getattr(args, "gdb_port", None):
+        argv += ["-gdb", f"tcp:127.0.0.1:{args.gdb_port}"]
+    if getattr(args, "trace_mmio", False):
+        argv += ["-d", "unimp", "-D", str(output / "mmio.log")]
     if args.nand_export:
         env[model.env_prefix + "NAND_EXPORT"] = str(output / "nand-export.bin")
     if args.ota_snapshot:
@@ -269,15 +280,20 @@ def run(args, profile):
             uart = (output / "uart0.log").read_text(errors="replace")
             log = (output / "qemu.log").read_text(errors="replace")
             require("ZEPHYR FATAL ERROR" not in uart and "unsupported API" not in log
-                    and "stopped on unimplemented" not in log, "Guest hit a fatal or unsupported path")
+                    and "stopped on unimplemented" not in log
+                    and not re.search(r"Unsupported (?:DMA|DAC DMA|WP3 SPI2 DMA)\d+", log),
+                    f"Guest hit a fatal or unsupported path. See {output / 'qemu.log'} and {output / 'uart0.log'}")
             if not args.allow_reboot:
-                require(uart.count("*** Booting Zephyr OS") <= 1, "Guest restarted during the boot observation")
+                expected_boots = 2 if model.name == "wp3" else 1
+                require(uart.count("*** Booting Zephyr OS") <= expected_boots
+                        and log.count("Virtual watch watchdog expired") < expected_boots,
+                        "Guest restarted unexpectedly during the boot observation")
             if args.ota_snapshot:
                 require((output / "nand-staged.bin").is_file(), "Guest did not export OTA NAND on reset")
             require((output / "frame.ppm").is_file(), "Guest did not render a panel frame")
         else:
             print(f"Run directory {output}", flush=True)
-            live(args, argv, env, output, version, stock, model.title)
+            live(args, argv, env, output, version, stock, profile)
         report["outcome"] = "completed"
     except (OSError, ValueError, RuntimeError, EOFError, subprocess.SubprocessError) as error:
         report.update(outcome="failed", error=str(error))
