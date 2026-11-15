@@ -109,8 +109,11 @@ with `--profile wp2-stock --model-selector`. Serve that directory to open either
 `/emulator/watch-pro-2/` or `/emulator/watch-pro-3/`. The heading lets you switch
 between the two routes. Pass `--model-selector` when both pages are present.
 
-Watch 3 Pro starts with stock firmware and the virtual charger connected. It
-allows the guest's initial reboot during setup. Choose **Custom firmware** to
+Watch 3 Pro opens the stock watch face after its initial storage reboot with
+the virtual charger disconnected.
+Browser staging changes only the launcher selection in the virtual stock image.
+For the first-time language and QR screens, run `wp3-stock` in desktop QEMU.
+Choose **Custom firmware** to
 boot a Watch 3 Pro AOTA with application and SDFS images, or supply its raw
 ACTH application and optional SDFS and virtual NAND files. The **Display test**
 preset runs the built-in graphics demo. **Watch color**

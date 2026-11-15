@@ -492,7 +492,6 @@ function updateBootOptions() {
   $('boot-presets').hidden = false;
   if (watch3) {
     $('health-controls').hidden = true;
-    $('charger').checked = true;
     $('firmware-label').textContent = 'Firmware 1.0.1.77';
   }
   if (needsBaseFiles) $('stock-file-hint').firstElementChild.textContent =
@@ -794,7 +793,7 @@ $('reset-simulation').onclick = () => {
   $('brightness').value = 100;
   updateBrightness();
   $('battery').value = 69;
-  $('charger').checked = watch3;
+  $('charger').checked = false;
   $('health-enabled').checked = false;
   $('heart-rate').value = 72;
   $('blood-oxygen').value = 98;
@@ -1114,7 +1113,7 @@ $('start').onclick=async()=>{
           QEMU_WP2_FRAME:'/watch/frame.ppm',QEMU_WP2_INPUT:'/watch/input.txt',QEMU_WP2_LIVE_FRAME:'1',
           QEMU_WP2_PCM_STREAM:'/watch/speaker.pcm',
           QEMU_WP2_MOTOR:motorPath,
-          QEMU_WP2_LIVE_SENSORS:'1',QEMU_WP2_HOST_RTC:'1',QEMU_WP2_UNPLUGGED:watch3?'0':'1'});
+          QEMU_WP2_LIVE_SENSORS:'1',QEMU_WP2_HOST_RTC:'1',QEMU_WP2_UNPLUGGED:$('charger').checked?'0':'1'});
         if (watch3) module.ENV.QEMU_WP2_MODEL = 'wp3';
         if (mediaClock) module.ENV.QEMU_WP2_MEDIA_CLOCK = '1';
         if (!customApp && !watch3) {
