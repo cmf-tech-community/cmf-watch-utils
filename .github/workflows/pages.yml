@@ -73,9 +73,11 @@ jobs:
 
       - name: Prepare stock firmware for the browser
         run: |
+          wp3_stock=dumps/binaries/firmware/JX402_w3pro_V1.0.1.77.bin
+          git lfs pull --include="$wp3_stock" --exclude=""
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends gdb-multiarch gcc-arm-none-eabi libnewlib-arm-none-eabi libglib2.0-0 libpixman-1-0 libfdt1 libpulse0
-          bash emulator/web/prepare-stock.sh
+          bash emulator/web/prepare-stock.sh "$wp3_stock"
 
       - name: Prepare firmware presets
         env:
@@ -96,7 +98,9 @@ jobs:
           uv run --locked python emulator/web/prepare-presets.py --output browser-stock/presets "${args[@]}"
 
       - name: Add browser emulator
-        run: python3 emulator/web/publish.py --runtime wasm-output --stock browser-stock/staged --presets browser-stock/presets --output site/dist
+        run: |
+          python3 emulator/web/publish.py --model-selector --runtime wasm-output --stock browser-stock/staged --presets browser-stock/presets --output site/dist
+          python3 emulator/web/publish.py --profile wp3-stock --model-selector --runtime wasm-output --stock browser-stock/wp3-staged --output site/dist
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
