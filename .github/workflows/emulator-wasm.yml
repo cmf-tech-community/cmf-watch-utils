@@ -23,6 +23,8 @@ jobs:
         run: cc -Wall -Wextra -Werror emulator/tests/vg_path.c -lm -o /tmp/vg-path-test && /tmp/vg-path-test
       - name: Test speaker pitch and short sounds
         run: node --test emulator/tests/speaker.mjs
+      - name: Check browser script syntax
+        run: node --input-type=module --check < emulator/web/watch.js
       - uses: actions/checkout@v4
         with:
           repository: ktock/qemu-wasm
@@ -51,6 +53,12 @@ jobs:
           for file in qemu-system-arm qemu-system-arm.wasm qemu-system-arm.worker.js; do
             docker cp "wp2-wasm:/build/$file" wasm-output/ 2>/dev/null || true
           done
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: '3.12'
+      - name: Boot the synthetic guest in Chrome
+        timeout-minutes: 3
+        run: uv run --locked --with playwright==1.55.0 python emulator/smoke_browser.py wasm-output
       - uses: actions/upload-artifact@v4
         if: always()
         with:

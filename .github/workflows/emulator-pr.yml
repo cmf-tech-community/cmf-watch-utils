@@ -1,0 +1,91 @@
+name: Emulator PR checks
+
+on:
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: emulator-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GIT_LFS_SKIP_SMUDGE: '1'
+
+jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      native: ${{ steps.paths.outputs.native }}
+      wasm: ${{ steps.paths.outputs.wasm }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: paths
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          native=true
+          wasm=true
+          if [[ -n "$BASE_SHA" ]]; then
+            if ! git cat-file -e "$BASE_SHA^{commit}"; then
+              git fetch --no-tags --depth=1 origin "$BASE_SHA"
+            fi
+            common=(emulator/build.py emulator/hw .github/workflows/emulator-pr.yml)
+            native_paths=$(git diff --name-only "$BASE_SHA" HEAD -- "${common[@]}" emulator/rom .github/workflows/emulator.yml)
+            wasm_paths=$(git diff --name-only "$BASE_SHA" HEAD -- "${common[@]}" emulator/web emulator/tests emulator/smoke_browser.py .github/workflows/emulator-wasm.yml)
+            if [[ -z "$native_paths" ]]; then native=false; fi
+            if [[ -z "$wasm_paths" ]]; then wasm=false; fi
+          fi
+          echo "native=$native" >> "$GITHUB_OUTPUT"
+          echo "wasm=$wasm" >> "$GITHUB_OUTPUT"
+
+  native:
+    name: Native QEMU boot
+    needs: scope
+    if: needs.scope.outputs.native == 'true'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential ninja-build pkg-config libglib2.0-dev libpixman-1-dev libfdt-dev
+      - name: Build QEMU and boot the synthetic guest
+        run: python emulator/build.py --component qemu
+
+  wasm:
+    name: Browser WASM boot
+    needs: scope
+    if: needs.scope.outputs.wasm == 'true'
+    uses: ./.github/workflows/emulator-wasm.yml
+
+  gate:
+    name: Emulator smoke
+    needs: [scope, native, wasm]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required results
+        env:
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          NATIVE_REQUESTED: ${{ needs.scope.outputs.native }}
+          NATIVE_RESULT: ${{ needs.native.result }}
+          WASM_REQUESTED: ${{ needs.scope.outputs.wasm }}
+          WASM_RESULT: ${{ needs.wasm.result }}
+        run: |
+          [[ "$SCOPE_RESULT" == success ]]
+          for check in "$NATIVE_REQUESTED:$NATIVE_RESULT" "$WASM_REQUESTED:$WASM_RESULT"; do
+            if [[ "$check" != true:success && "$check" != false:skipped ]]; then
+              echo "Unexpected emulator check result: $check" >&2
+              exit 1
+            fi
+          done

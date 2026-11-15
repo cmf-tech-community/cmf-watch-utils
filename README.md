@@ -240,6 +240,8 @@ cd site && pnpm build
 
 ## Contributors
 
+See the [contributing guide](CONTRIBUTING.md) for local setup, emulator smoke tests, and what to include in a pull request.
+
 <a href="https://github.com/cmf-tech-community/cmf-watch-utils/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=cmf-tech-community/cmf-watch-utils" alt="Contributors" />
 </a>
