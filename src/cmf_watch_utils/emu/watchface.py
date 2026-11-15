@@ -9,22 +9,28 @@ from fwkit import lz4, sdfs, wfdl
 PAGE = 2048
 RAW_PAGE = 2112
 PAGES_PER_BLOCK = 64
-FONT_BLOCK = 0x34
-FONT_BLOCKS = 96
+FACE_PARTITIONS = {
+    "wp2": (0x34, 96, "local273.wfc", "local277.wfc"),
+    "wp3": (0x2a4, 24, "local274.wfc", "local822.wfc"),
+}
 MAX_FACE = 3021359
 FMC = "https://fmc.freethinkel.dev/api"
 FMC_SORTS = {"newest": "-created,id", "downloads": "-downloads,-created,id",
              "flashes": "-flashes,-created,id"}
 FMC_HEADERS = {"User-Agent": "cmf-watch-utils (+https://cmf.arnv.dev/)"}
+FMC_FILTERS = {
+    "wp2": 'published=true && (device="watch_pro_2" || device="")',
+    "wp3": 'published=true && device="watch_3_pro"',
+}
 
 
-def catalog(search="", sort="newest"):
+def catalog(search="", sort="newest", model="wp2"):
     entries = {}
     page = 1
     while True:
         query = urlencode({
             "page": page, "perPage": 100, "sort": FMC_SORTS[sort], "expand": "owner",
-            "filter": 'published=true && (device="watch_pro_2" || device="")',
+            "filter": FMC_FILTERS[model],
             "fields": "id,collectionId,name,preview,bin,downloads,flashes,expand.owner.name",
         })
         request = Request(f"{FMC}/collections/watchfaces/records?{query}", headers=FMC_HEADERS)
@@ -41,29 +47,29 @@ def catalog(search="", sort="newest"):
         page += 1
 
 
-def download_face(face_id):
-    face = next((face for face in catalog() if face["id"] == face_id), None)
+def download_face(face_id, model="wp2"):
+    face = next((face for face in catalog(model=model) if face["id"] == face_id), None)
     if face is None:
-        raise ValueError("No published Watch Pro 2 face matches that FMC ID")
+        raise ValueError("No published face for the selected watch matches that FMC ID")
     path = "/".join(quote(face[key], safe="") for key in ("collectionId", "id", "bin"))
     with urlopen(Request(f"{FMC}/files/{path}", headers=FMC_HEADERS), timeout=15) as response:
         return response.read(MAX_FACE + 1)
 
 
-def font_pages(nand):
+def face_pages(nand, first_block, block_count):
     if len(nand) != RAW_PAGE * 65536:
-        raise ValueError("Expected the prepared Watch Pro 2 NAND image.")
+        raise ValueError("Expected the prepared NAND image.")
     blocks = {}
     for offset in range(0, len(nand), RAW_PAGE * PAGES_PER_BLOCK):
         tag = nand[offset + PAGE:offset + PAGE + 8]
         logical = int.from_bytes(tag[6:8], "little")
         if tag[:6] not in (b"\xff\xff\x00\xff\0\0", b"\xff\xff\x01\xff\0\0"):
             continue
-        if FONT_BLOCK <= logical < FONT_BLOCK + FONT_BLOCKS:
+        if first_block <= logical < first_block + block_count:
             if logical in blocks:
-                raise ValueError("Ambiguous font partition in virtual NAND.")
+                raise ValueError("Ambiguous watch-face partition in virtual NAND.")
             blocks[logical] = offset
-    for logical in range(FONT_BLOCK, FONT_BLOCK + FONT_BLOCKS):
+    for logical in range(first_block, first_block + block_count):
         if logical not in blocks:
             break
         base = blocks[logical]
@@ -76,9 +82,9 @@ def font_pages(nand):
             yield offset
 
 
-def prepare_face(nand, face):
+def prepare_face(nand, face, model="wp2"):
     if not 0 < len(face) <= MAX_FACE:
-        raise ValueError("Choose a Watch Pro 2 face up to 3,021,359 bytes.")
+        raise ValueError("Choose a watch face up to 3,021,359 bytes.")
     parsed = wfdl.parse(face)
     start = 39 + struct.unpack_from("<H", face, 37)[0]
     end = len(face) - 36
@@ -97,25 +103,26 @@ def prepare_face(nand, face):
                 raise ValueError("Invalid packed watch-face texture.")
             textures.add(f"{resource.w}:{resource.h}:{hashlib.sha256(pixels).hexdigest()}")
 
-    pages = list(font_pages(nand))
+    first_block, block_count, primary, spare = FACE_PARTITIONS[model]
+    pages = list(face_pages(nand, first_block, block_count))
     original = b"".join(nand[offset:offset + PAGE] for offset in pages)
     if original[:8] != sdfs.MAGIC or len(original) < PAGE:
-        raise ValueError("Missing stock font and watch-face partition.")
+        raise ValueError("Missing stock watch-face partition.")
     count, size = struct.unpack_from("<II", original, 12)
     if not 0 < count <= 64 or size > len(original):
-        raise ValueError("Invalid stock font partition.")
+        raise ValueError("Invalid stock watch-face partition.")
     original = original[:size]
     entries = sdfs.parse(original)
     if any(entry.off + entry.size > size or not sdfs.verify(original, entry) for entry in entries):
-        raise ValueError("Stock font partition failed its resource checks.")
+        raise ValueError("Stock watch-face partition failed its resource checks.")
     files = sdfs.unpack(original)
-    if "local273.wfc" not in files:
-        raise ValueError("The default Activity Mood slot is missing.")
-    default_face = files["local273.wfc"]
-    files["local273.wfc"] = face
+    if primary not in files:
+        raise ValueError("The default watch face is missing.")
+    default_face = files[primary]
+    files[primary] = face
     packed = sdfs.pack(list(files.items()))
-    if len(packed) > len(pages) * PAGE and "local277.wfc" in files:
-        files["local277.wfc"] = default_face
+    if len(packed) > len(pages) * PAGE and spare in files:
+        files[spare] = default_face
         packed = sdfs.pack(list(files.items()))
     if len(packed) > len(pages) * PAGE:
         raise ValueError("This face exceeds the space in the prepared NAND fixture.")

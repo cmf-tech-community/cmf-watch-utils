@@ -5,6 +5,10 @@ const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 const viewOf = bytes => new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 const align64 = size => Math.ceil(size / 64) * 64;
+const facePartitions = {
+  wp2: {firstBlock: 0x34, blocks: 96, primary: 'local273.wfc', spare: 'local277.wfc'},
+  wp3: {firstBlock: 0x2a4, blocks: 24, primary: 'local274.wfc', spare: 'local822.wfc'},
+};
 
 function sum32(bytes) {
   const view = viewOf(bytes);
@@ -15,8 +19,8 @@ function sum32(bytes) {
   return sum;
 }
 
-function fontPages(nand) {
-  if (nand.length !== rawPageSize * 65536) throw Error('Expected the prepared Watch Pro 2 NAND image.');
+function facePages(nand, {firstBlock, blocks: count}) {
+  if (nand.length !== rawPageSize * 65536) throw Error('Expected the prepared NAND image.');
   const view = viewOf(nand);
   const blockSize = rawPageSize * pagesPerBlock;
   const blocks = new Map();
@@ -25,12 +29,12 @@ function fontPages(nand) {
     const marker = view.getUint32(tag, true);
     const logical = view.getUint16(tag + 6, true);
     if ((marker !== 0xff00ffff && marker !== 0xff01ffff) || view.getUint16(tag + 4, true) ||
-        logical < 0x34 || logical >= 0x34 + 96) continue;
-    if (blocks.has(logical)) throw Error('Ambiguous font partition in virtual NAND.');
+        logical < firstBlock || logical >= firstBlock + count) continue;
+    if (blocks.has(logical)) throw Error('Ambiguous watch-face partition in virtual NAND.');
     blocks.set(logical, offset);
   }
   const pages = [];
-  for (let logical = 0x34; blocks.has(logical); logical++) {
+  for (let logical = firstBlock; blocks.has(logical); logical++) {
     for (let page = 0; page < pagesPerBlock; page++) {
       const offset = blocks.get(logical) + page * rawPageSize;
       const tag = offset + pageSize;
@@ -44,13 +48,13 @@ function fontPages(nand) {
 
 function unpackSdfs(data) {
   if (data.length < pageSize || decoder.decode(data.subarray(0, 8)) !== 'sdfs.bin') {
-    throw Error('Missing stock font and watch-face partition.');
+    throw Error('Missing stock watch-face partition.');
   }
   const view = viewOf(data);
   const count = view.getUint32(12, true);
   const size = view.getUint32(16, true);
   const start = align64(32 + 32 * count);
-  if (!count || count > 64 || size < start || size > data.length) throw Error('Invalid stock font partition.');
+  if (!count || count > 64 || size < start || size > data.length) throw Error('Invalid stock watch-face partition.');
   const entries = new Map();
   for (let i = 0; i < count; i++) {
     const entry = 32 + i * 32;
@@ -60,7 +64,7 @@ function unpackSdfs(data) {
     const contents = data.subarray(offset, offset + length);
     if (offset < start || offset + length > size || entries.has(name) ||
         sum32(contents) !== view.getUint32(entry + 28, true)) {
-      throw Error('Stock font partition failed its resource checks.');
+      throw Error('Stock watch-face partition failed its resource checks.');
     }
     entries.set(name, contents);
   }
@@ -142,7 +146,7 @@ async function faceTextures(face) {
   const end = face.length - 36;
   if (face.length < 75 || face.length > 3021359 || view.getUint32(4, true) !== (1 + (face[7] === 2 ? 0x02000000 : 0)) ||
       face[36] !== 0x20 || !face.subarray(0, 36).every((byte, index) => byte === face[end + index])) {
-    throw Error('Expected a Watch Pro 2 watch-face file.');
+    throw Error('Expected a watch-face file for this watch.');
   }
   let offset = 39 + view.getUint16(37, true);
   if (offset > end || view.getUint32(24, true) !== end ||
@@ -172,18 +176,19 @@ async function faceTextures(face) {
   return [...textures].sort().map(texture => texture + '\n').join('');
 }
 
-export async function installWatchFace(nand, face) {
+export async function installWatchFace(nand, face, model = 'wp2') {
   const index = await faceTextures(face);
-  const pages = fontPages(nand);
+  const partition = facePartitions[model];
+  const pages = facePages(nand, partition);
   const data = new Uint8Array(pages.length * pageSize);
   pages.forEach((offset, page) => data.set(nand.subarray(offset, offset + pageSize), page * pageSize));
   const entries = unpackSdfs(data);
-  const defaultFace = entries.get('local273.wfc');
-  if (!defaultFace) throw Error('The default Activity Mood slot is missing.');
-  entries.set('local273.wfc', face);
+  const defaultFace = entries.get(partition.primary);
+  if (!defaultFace) throw Error('The default watch face is missing.');
+  entries.set(partition.primary, face);
   let packed = packSdfs(entries, data.length);
-  if (!packed && entries.has('local277.wfc')) {
-    entries.set('local277.wfc', defaultFace);
+  if (!packed && entries.has(partition.spare)) {
+    entries.set(partition.spare, defaultFace);
     packed = packSdfs(entries, data.length);
   }
   if (!packed) throw Error('This face exceeds the space in the prepared NAND fixture.');

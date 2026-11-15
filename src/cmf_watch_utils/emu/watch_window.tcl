@@ -281,6 +281,9 @@ proc touch {state x y} {
 set accelX 0
 set accelY 0
 set accelZ 1000
+set gyroX 0
+set gyroY 0
+set gyroZ 0
 set battery 4000
 set charging [expr {[llength $argv] > 6 ? [lindex $argv 6] : 0}]
 set virtualHealth 0
@@ -294,6 +297,7 @@ set ambientLux 0
 
 proc apply_sensors {} {
     global accelX accelY accelZ battery charging virtualHealth heartRate spo2 stock
+    global gyroX gyroY gyroZ watchModel
     global virtualGps gpsLatitude gpsLongitude
     global virtualHealthControls
     set latitude 0
@@ -306,6 +310,15 @@ proc apply_sensors {} {
             tk_messageBox -parent .advanced -icon error -message "Enter a latitude from -90 to 90 and a longitude from -180 to 180."
             return
         }
+    }
+    if {$watchModel eq "wp3"} {
+        foreach value [list $gyroX $gyroY $gyroZ] {
+            if {![string is integer -strict $value] || abs($value) > 2000} {
+                tk_messageBox -parent .advanced -icon error -message "Enter angular velocity from -2000 to 2000 degrees per second for each axis."
+                return
+            }
+        }
+        send_event "w [expr {$gyroX * 1000}] [expr {$gyroY * 1000}] [expr {$gyroZ * 1000}]"
     }
     send_event "a $accelX $accelY $accelZ"
     send_event "p $battery $charging"
@@ -334,6 +347,16 @@ proc open_sensors {} {
     pack .advanced.brightness .advanced.accelX .advanced.accelY .advanced.accelZ .advanced.battery \
         -fill x -pady 5
     pack .advanced.charger -fill x -pady {4 8}
+    if {$watchModel eq "wp3"} {
+        group .advanced.gyro "Gyroscope (°/s)"
+        foreach axis {X Y Z} {
+            label .advanced.gyro.label$axis -text $axis -background #1a1a1a -foreground #d8d8d8
+            spinbox .advanced.gyro.value$axis -textvariable gyro$axis -width 5 \
+                -from -2000 -to 2000 -increment 1 -background #2a2a2a -foreground #e8e8e8
+            pack .advanced.gyro.label$axis .advanced.gyro.value$axis -side left -padx 3 -pady 3
+        }
+        pack .advanced.gyro -fill x -pady 6
+    }
     if {$virtualHealthControls} {
         group .advanced.health "Simulated optical results"
         check .advanced.health.enabled "Enable simulated readings" virtualHealth

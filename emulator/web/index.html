@@ -119,6 +119,15 @@
           <button id="reset-orientation" type="button">Reset orientation</button>
         </div>
       </details>
+      <details class="settings-section" id="gyro-controls" hidden>
+        <summary>Gyroscope</summary>
+        <fieldset class="sensor-fields gyro-fields">
+          <legend>Angular velocity (°/s)</legend>
+          <label for="gyro-x">X<input id="gyro-x" type="number" min="-2000" max="2000" step="1" value="0" required></label>
+          <label for="gyro-y">Y<input id="gyro-y" type="number" min="-2000" max="2000" step="1" value="0" required></label>
+          <label for="gyro-z">Z<input id="gyro-z" type="number" min="-2000" max="2000" step="1" value="0" required></label>
+        </fieldset>
+      </details>
       <details class="settings-section" id="health-controls">
         <summary>Optical sensors</summary>
         <label class="switch-label"><input id="health-enabled" type="checkbox"> Simulate readings</label>
@@ -255,16 +264,29 @@
       <div class="panel-actions"><button id="hard-reset" type="button" title="Discard this session and boot stock">Hard reset to stock</button></div>
     </section>
   </aside>
-  <section class="diagnostics" aria-label="Watch log">
-    <details open>
-      <summary>Watch log <span id="firmware-label">Firmware 1.0.0.73</span></summary>
-      <pre id="log" tabindex="0">No output yet.</pre>
-    </details>
-    <button id="save-log" title="Save full watch log">Save log</button>
-    <details>
-      <summary>Motor log <span id="motor-status">Waiting for motor data</span></summary>
-      <pre id="motor-log" tabindex="0">No motor events yet.</pre>
-    </details>
+  <section class="diagnostics" aria-label="Emulator logs">
+    <div class="log-entry">
+      <details open>
+        <summary>Watch log <span id="firmware-label">Firmware 1.0.0.73</span></summary>
+        <pre id="log" tabindex="0">No output yet.</pre>
+      </details>
+      <div class="log-actions" role="group" aria-label="Watch log actions">
+        <button id="copy-log" type="button">Copy log</button>
+        <button id="save-log" type="button">Save log</button>
+        <span class="log-feedback" role="status"></span>
+      </div>
+    </div>
+    <div class="log-entry">
+      <details>
+        <summary>Motor log <span id="motor-status">Waiting for motor data</span></summary>
+        <pre id="motor-log" tabindex="0">No motor events yet.</pre>
+      </details>
+      <div class="log-actions" role="group" aria-label="Motor log actions">
+        <button id="copy-motor-log" type="button">Copy log</button>
+        <button id="save-motor-log" type="button">Save log</button>
+        <span class="log-feedback" role="status"></span>
+      </div>
+    </div>
   </section>
   </div>
 </main>

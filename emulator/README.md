@@ -92,4 +92,6 @@ The experimental `wp3-stock` profile boots stock Watch 3 Pro `1.0.1.77` in the s
 
 The [Watch 3 Pro browser preview](https://cmf.arnv.dev/emulator/watch-pro-3/) boots stock firmware. Watch 3 Pro pairing, recovery, and full factory suite coverage are still in development.
 
-The optional `stock-audio.bin` sound bank works with both models’ verified stock builds. Place the bank in the model’s fixture directory. The Watch 3 Pro aging test produced a non-silent WAV capture and accepted live microphone input with `--host-mic --audio dsound` on Windows. The normal GPS factory test accepts live simulated coordinates from the Advanced panel. Optical readings remain unverified.
+The optional `stock-audio.bin` sound bank works with both models’ verified stock builds. Place the bank in the model’s fixture directory. The Watch 3 Pro aging test produced a non-silent WAV capture and accepted live microphone input with `--host-mic --audio dsound` on Windows. The Advanced panel can set GPS, ambient light, acceleration, gyroscope readings, and simulated values for the stock heart rate and blood oxygen screens.
+
+Use `emu faces --profile wp3-stock` to list published Watch 3 Pro faces from FMC. Start a stock run with `--fmc-face <id>` or `--watch-face <file>` to replace Duskscape in that session’s virtual NAND.

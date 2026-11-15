@@ -66,6 +66,7 @@ struct ActsState {
     MemoryRegion rom, flash, sram, shared, psram, psram_alias, mmio, nor, param;
     MemoryRegion trace_ram, psram_wt_alias, psram_uncached, provisioning, bt_ram;
     MemoryRegion flash_uncached, jpeg_ram, usb_phy, dsp_dtcm, dsp_ptcm, dsp_sram;
+    MemoryRegion optical_results;
     const char *nand_export;
     const char *ota_nand_snapshot;
     DeviceState *cpu;
@@ -91,6 +92,7 @@ struct ActsState {
     uint8_t spi2_reply[96];
     unsigned spi2_reply_len, spi2_reply_pos, spi2_patch_block;
     bool health_hook;
+    bool wp3_health_hook;
     unsigned ambient_lux;
     uint8_t als_regs[256];
     uint32_t health_readings;
@@ -594,7 +596,7 @@ static void acts_input_tick(void *opaque)
     timer_mod(s->input_timer, now + 6000000);
     acts_motion_tick(s, now);
     acts_gps_tick(s, now);
-    if (s->health_readings && now >= s->health_next_sample) {
+    if (s->health_hook && s->health_readings && now >= s->health_next_sample) {
         s->health_next_sample = now + 400000000;
         unsigned mode = ldub_phys(&address_space_memory, 0x2ffb1301);
         if (mode == 1 || mode == 2) {
@@ -700,7 +702,8 @@ static void acts_input_tick(void *opaque)
     } else if ((s->health_hook || s->watch3) &&
                sscanf(line, "l %u", &x) == 1 && x <= 100000) {
         s->ambient_lux = x;
-    } else if (s->health_hook && sscanf(line, "h %u %u %u", &down, &x, &y) == 3 &&
+    } else if ((s->health_hook || s->wp3_health_hook) &&
+               sscanf(line, "h %u %u %u", &down, &x, &y) == 3 &&
                down <= 1 && x >= 30 && x <= 220 && y >= 70 && y <= 100) {
         s->health_readings = down ? x | (y << 8) : 0;
         s->health_next_sample = now;
@@ -3128,6 +3131,45 @@ static const MemoryRegionOps acts_ops = {
     .valid = { .min_access_size = 4, .max_access_size = 4, .unaligned = false },
 };
 
+static uint64_t acts_wp3_optical_read(void *opaque, hwaddr addr, unsigned size)
+{
+    ActsState *s = opaque;
+
+    if (addr == 0xe0) {
+        return s->health_readings;
+    }
+    if (addr == 0xd0 || addr == 0xd4) {
+        bool wear = addr == 0xd0;
+        if (s->health_readings) {
+            return wear ? 1 : (uint8_t)s->health_readings;
+        }
+        uint8_t reading = 0;
+        address_space_read(&address_space_memory, wear ? 0x2ff9bfb8 : 0x38064da3,
+                           MEMTXATTRS_UNSPECIFIED, &reading, sizeof(reading));
+        return reading;
+    }
+    if (addr + size <= 0x70) {
+        /* The stock SpO2 result structure has its percentage at offset 0x68. */
+        uint8_t result[4] = {0};
+        address_space_read(&address_space_memory, 0x3800ee94 + addr,
+                           MEMTXATTRS_UNSPECIFIED, result, size);
+        for (unsigned i = 0; i < size; i++) {
+            if (addr + i >= 0x68 && addr + i < 0x6c) {
+                result[i] = addr + i == 0x68 ? s->health_readings >> 8 : 0;
+            }
+        }
+        return ldl_le_p(result);
+    }
+    return 0;
+}
+
+static const MemoryRegionOps acts_wp3_optical_ops = {
+    .read = acts_wp3_optical_read,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .valid = { .min_access_size = 1, .max_access_size = 4 },
+    .impl = { .min_access_size = 1, .max_access_size = 4 },
+};
+
 static uint64_t acts_usb_phy_read(void *opaque, hwaddr addr, unsigned size)
 {
     ActsState *s = opaque;
@@ -3356,6 +3398,58 @@ static bool acts_install_stock_lux_hook(void)
         return false;
     }
     stl_le_p(entry + 8, 0x400fffe8);
+    return true;
+}
+
+static void acts_wp3_stock_brightness(ActsState *s)
+{
+    /* 1.0.1.77 only. Call the stock brightness setter with its highest
+     * manual level and request that it also update the in-guest setting. */
+    const uint8_t startup[] = {
+        0x00, 0xb5, 0x0a, 0x4a, 0x0a, 0x4b, 0xff, 0xb0,
+        0x9b, 0x1a, 0x00, 0x90, 0x02, 0x46, 0x5b, 0x01,
+    };
+    const uint8_t code[] = {
+        0x10, 0xb5, 0x04, 0x24, 0x30, 0xb4, 0x68, 0x46,
+        0x01, 0x21, 0x02, 0x4b, 0x98, 0x47, 0x02, 0xb0,
+        0x10, 0xbd, 0x00, 0xbf, 0x7d, 0xa5, 0x0d, 0x10,
+    };
+    const uint8_t empty[sizeof(code)] = {0};
+    uint8_t *entry = (uint8_t *)memory_region_get_ram_ptr(&s->nor) + 0x24000 + 0xdaf04;
+    uint8_t *slot = rom_ptr(0x7ec0, sizeof(code));
+    if (!slot || memcmp(entry, startup, sizeof(startup)) ||
+        memcmp(slot, empty, sizeof(empty))) {
+        return;
+    }
+    stl_le_p(entry, 0xf000f8df);
+    stl_le_p(entry + 4, 0x7ec1);
+    memcpy(slot, code, sizeof(code));
+}
+
+static bool acts_wp3_stock_health(ActsState *s)
+{
+    /* Stock 1.0.1.77 wear and instantaneous result getters. Route their
+     * loads to the virtual readings with the original RAM values as a fallback. */
+    const uint8_t spo2_accessor[] = {
+        0x30, 0xb1, 0x04, 0x4b, 0x1b, 0x68, 0x1b, 0xb1,
+        0x03, 0x4b, 0x03, 0x60, 0x00, 0x20, 0x70, 0x47,
+        0x02, 0x4b, 0x18, 0x47, 0xe0, 0xff, 0x0f, 0x40,
+        0x00, 0xff, 0x0f, 0x40, 0x71, 0xce, 0x0d, 0x10,
+    };
+    const uint8_t empty[sizeof(spo2_accessor)] = {0};
+    uint8_t *app = (uint8_t *)memory_region_get_ram_ptr(&s->nor) + 0x24000;
+    uint8_t *wear = app + 0x1ae290;
+    uint8_t *heart = app + 0xdcc28;
+    uint8_t *spo2 = app + 0x220efc;
+    uint8_t *slot = rom_ptr(0x7d80, sizeof(spo2_accessor));
+    if (!slot || ldl_le_p(wear) != 0x2ff9bfb8 || ldl_le_p(heart) != 0x38064da3 ||
+        ldl_le_p(spo2) != 0x100dce71 || memcmp(slot, empty, sizeof(empty))) {
+        return false;
+    }
+    stl_le_p(wear, 0x400fffd0);
+    stl_le_p(heart, 0x400fffd4);
+    memcpy(slot, spo2_accessor, sizeof(spo2_accessor));
+    stl_le_p(spo2, 0x7d81);
     return true;
 }
 
@@ -3591,6 +3685,15 @@ static void acts_init(MachineState *machine)
         exit(1);
     }
     armv7m_load_kernel(ARM_CPU(first_cpu), machine->kernel_filename, 0x10000000, 0x1000000);
+    if (s->watch3 && !machine->kernel_filename) {
+        acts_wp3_stock_brightness(s);
+        s->wp3_health_hook = s->input_path && acts_wp3_stock_health(s);
+        if (s->wp3_health_hook) {
+            memory_region_init_io(&s->optical_results, OBJECT(machine), &acts_wp3_optical_ops,
+                                  s, "acts.virtual-optical", 0xe4);
+            memory_region_add_subregion(&s->mmio, 0xfff00, &s->optical_results);
+        }
+    }
     if (s->health_hook) {
         const uint8_t prologue[] = {0x2d, 0xe9, 0xf0, 0x47, 0x2d, 0xed, 0x02, 0x8b};
         const uint8_t jump[] = {0xdf, 0xf8, 0x00, 0xf0, 0x01, 0x7f, 0x00, 0x00};
