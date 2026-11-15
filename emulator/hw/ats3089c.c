@@ -1064,9 +1064,10 @@ static bool acts_vg_blit(ActsState *s, uint32_t origin, uint32_t size,
                 (spitch & 0xf0000000) == 0x10000000;
     bool indexed = state[0xa00] == 0x9101 &&
                    (state[0xa25] == 0x01000900 || state[0xa25] == 0x01020900);
-    bool argb = state[0xa00] == 0x9101 &&
+    bool faded_argb = state[0xa00] == 0xa101 && state[0xa25] == 0x41000100;
+    bool argb = faded_argb || (state[0xa00] == 0x9101 &&
                 (etc2 || indexed || state[0xa25] == 0x41020100 ||
-                 state[0xa25] == 0x41000100);
+                 state[0xa25] == 0x41000100));
     bool linear = linear_rgb565 || (argb && (state[0xa25] & 0x00020000));
     unsigned bytes = alpha_mask || indexed ? 1 : argb ? 4 : 2;
     uint32_t color = state[0xa02];
@@ -1164,6 +1165,8 @@ static bool acts_vg_blit(ActsState *s, uint32_t origin, uint32_t size,
                     if (linear_mask) {
                         acts_vg_linear(image, spitch, sw, sh, 1, u, v, &opacity);
                     }
+                }
+                if (alpha_mask || faded_argb) {
                     opacity = (opacity * alpha + 127) / 255;
                 }
                 if (fade || argb) {
