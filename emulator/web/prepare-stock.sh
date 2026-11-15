@@ -2,6 +2,10 @@
 set -euo pipefail
 
 work="$PWD/browser-stock"
+watch3_stock=${1:-}
+if [[ -n "$watch3_stock" ]]; then
+    watch3_stock=$(realpath -- "$watch3_stock")
+fi
 release=https://github.com/cmf-tech-community/cmf-watch-utils/releases/download/emulator-v0.1.0-preview.6
 frames=https://platform-watch-test.s3.ap-northeast-1.amazonaws.com/device_sku
 mkdir -p "$work/runtime" "$work/frames"
@@ -49,3 +53,15 @@ uv run --locked --with unicorn==2.1.4 python emulator/prepare-stock-audio.py \
 uv run --locked python emulator/web/stage.py \
     --fixtures "$work/fixtures" --rom "$rom" --stock-image "$work/stock.bin" \
     --frames-dir "$work/frames" --output "$work/staged"
+
+if [[ -n "$watch3_stock" ]]; then
+    uv run --locked cmf-watch-utils emu prepare-fixtures --profile wp3-stock \
+        --fixtures "$work/wp3-fixtures" --stock "$watch3_stock" --provisioning-stock "$work/stock.bin" \
+        --nand-id "$work/nand-id.bin" --qemu "$work/runtime/qemu-system-arm" \
+        --rom "$work/runtime/compat.bin" --provisioner "$work/runtime" --gdb gdb-multiarch
+    uv run --locked --with unicorn==2.1.4 python emulator/prepare-stock-audio.py \
+        --stock "$watch3_stock" --decoder "$work/decoder" \
+        --output "$work/wp3-fixtures/stock-audio.bin"
+    uv run --locked python emulator/web/stage.py --profile wp3-stock \
+        --fixtures "$work/wp3-fixtures" --rom "$rom" --output "$work/wp3-staged"
+fi

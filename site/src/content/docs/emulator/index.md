@@ -8,8 +8,13 @@ computer. Watch Pro 2 also supports custom apps and virtual firmware updates.
 
 ## Browser preview
 
-[Open the Watch Pro 2 browser emulator](/emulator/watch-pro-2/) in a recent
-desktop version of Chrome or Edge. Stock firmware starts automatically.
+Open either model in a recent desktop version of Chrome or Edge. Stock firmware
+starts automatically. Select the model name above the virtual watch to switch.
+
+- [Watch Pro 2](/emulator/watch-pro-2/) supports stock firmware, custom builds, the Bad Apple preset, and the FMC watch-face catalog.
+- [Watch 3 Pro](/emulator/watch-pro-3/) runs stock firmware `1.0.1.77` with touchscreen, crown, and simulated ambient light. The first boot can restart once before the language screen appears. Nothing X pairing is still in development.
+
+### Watch Pro 2 controls and presets
 The first boot downloads the virtual storage and can take a moment. **Watch log**
 shows the guest's progress. **Motor log** shows when the virtual watch vibrates,
 including its duty cycle and frequency. On browsers that support vibration,

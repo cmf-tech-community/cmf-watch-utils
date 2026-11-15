@@ -95,6 +95,10 @@ select a different build, set both `WP2_BAD_APPLE_TAG` and
 
 ## Watch 3 Pro browser preview
 
+The [hosted preview](https://cmf.arnv.dev/emulator/watch-pro-3/) includes stock
+`1.0.1.77`. Select the model name above the virtual watch to switch between
+Watch Pro 2 and Watch 3 Pro.
+
 Build the WebAssembly runtime from the current emulator sources and prepare desktop
 `wp3-stock` fixtures first. Use `stage.py --profile wp3-stock` with those fixtures
 and the matching ROM. It carries over the model's stock texture index.
@@ -122,8 +126,8 @@ Sound is enabled by default. If Chromium blocks autoplay, click or tap the
 emulator. The browser plays samples from the emulated DAC at their declared
 rate. The bundled Bad Apple preset uses an aligned QEMU clock to keep the DAC
 supplied at real-time speed. Use desktop QEMU for virtual Bluetooth OTA
-and recovery. Browser sessions use temporary storage and support Watch Pro 2.
-The Pages build generates stock files from the public firmware package.
+and recovery. Browser sessions use temporary storage. The Pages build generates
+stock files for both watch models from the pinned firmware packages.
 
 ## Development checks
 
