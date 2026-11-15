@@ -1,11 +1,10 @@
 ---
-title: Watch Pro 2 emulator
+title: Watch emulator
 description: What the QEMU preview supports and where to start.
 ---
 
-The emulator runs CMF Watch Pro 2 firmware on your computer. You can use
-the watch face and menus, try a custom app, or test a firmware update
-without a physical watch.
+The emulator runs stock CMF Watch Pro 2 and Watch 3 Pro firmware on your
+computer. Watch Pro 2 also supports custom apps and virtual firmware updates.
 
 ## Browser preview
 

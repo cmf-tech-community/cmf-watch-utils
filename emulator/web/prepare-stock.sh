@@ -27,6 +27,8 @@ b09698c1f139d00d47f1d92c052bd492d67c9459e402b5f9f0b303b43a61c08a  frames/light-g
 d192de8ca5f20e34cdc4d5f2945e4fffd37143b062ba3ead7f165118696d9931  frames/orange.png
 SUMS
 cd ..
+python3 emulator/build.py --component rom --work-dir "$work/rom-build" --output-dir "$work/rom-output"
+rom="$work/rom-build/cmf-emulator-wp2-rom-rom/compat.bin"
 uv run --locked cmf-watch-utils emu prepare-fixtures \
     --fixtures "$work/fixtures" --stock "$work/stock.bin" --nand-id "$work/nand-id.bin" \
     --qemu "$work/runtime/qemu-system-arm" --rom "$work/runtime/compat.bin" \
@@ -45,5 +47,5 @@ uv run --locked --with unicorn==2.1.4 python emulator/prepare-stock-audio.py \
     --stock "$work/stock.bin" --decoder "$work/decoder" \
     --output "$work/fixtures/stock-audio.bin"
 uv run --locked python emulator/web/stage.py \
-    --fixtures "$work/fixtures" --rom "$work/runtime/compat.bin" --stock-image "$work/stock.bin" \
+    --fixtures "$work/fixtures" --rom "$rom" --stock-image "$work/stock.bin" \
     --frames-dir "$work/frames" --output "$work/staged"

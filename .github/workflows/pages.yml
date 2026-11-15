@@ -13,6 +13,10 @@ on:
       wasm_run_id:
         description: Reuse a verified WebAssembly artifact from a previous run
         type: string
+      preview_only:
+        description: Build the Pages artifact without deploying it
+        type: boolean
+        default: false
 
 permissions:
   actions: read
@@ -101,7 +105,7 @@ jobs:
 
   deploy:
     needs: build
-    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    if: ${{ !cancelled() && needs.build.result == 'success' && !inputs.preview_only }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
