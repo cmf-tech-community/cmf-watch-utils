@@ -1,4 +1,4 @@
-self.onmessage = async ({data: firmware}) => {
+self.onmessage = async ({data: {firmware, model}}) => {
   try {
     const indexURL = 'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/';
     importScripts(indexURL + 'pyodide.js');
@@ -8,13 +8,14 @@ self.onmessage = async ({data: firmware}) => {
     if (!source.ok) throw Error('The firmware validator could not be downloaded.');
     python.unpackArchive(await source.arrayBuffer(), 'zip', {extractDir: '/firmware-tools'});
     python.FS.writeFile('/update.bin', new Uint8Array(firmware));
+    python.globals.set('model_name', model);
     python.runPython(`
 import sys
 from pathlib import Path
 sys.path.insert(0, "/firmware-tools")
 from cmf_watch_utils.emu.image import verify_package
-from cmf_watch_utils.emu.profiles import WP2
-app, resources, _ = verify_package(Path("/update.bin").read_bytes(), WP2)
+from cmf_watch_utils.emu.profiles import PROFILES
+app, resources, _ = verify_package(Path("/update.bin").read_bytes(), PROFILES[f"{model_name}-stock"].model)
 Path("/app.bin").write_bytes(app)
 Path("/sdfs.bin").write_bytes(resources)
 `);

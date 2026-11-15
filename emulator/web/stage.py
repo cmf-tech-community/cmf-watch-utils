@@ -5,7 +5,7 @@ from pathlib import Path
 import shutil
 
 from cmf_watch_utils.emu.profiles import PROFILES
-from page import ROUTES, render_page
+from page import FRAME_FILES, ROUTES, render_page
 
 
 parser = argparse.ArgumentParser()
@@ -16,7 +16,7 @@ parser.add_argument("--output", type=Path, required=True)
 texture_source = parser.add_mutually_exclusive_group()
 texture_source.add_argument("--wfc-dir", type=Path)
 texture_source.add_argument("--stock-image", type=Path, help="Generate the texture index from the published stock image")
-parser.add_argument("--frames-dir", type=Path, help="Directory with the four Nothing X front renders")
+parser.add_argument("--frames-dir", type=Path, help="Directory with the selected model's front renders")
 args = parser.parse_args()
 profile = PROFILES[args.profile]
 if args.profile == "wp3-stock" and (args.stock_image or args.wfc_dir):
@@ -25,9 +25,9 @@ nor, nand, nand_id = profile.fixtures(args.fixtures)
 rom = args.rom.read_bytes()
 if len(rom) != 65536:
     raise ValueError("Expected a 64 KiB compatibility ROM")
-frame_names = ("dark-grey.png", "light-grey.png", "blue.png", "orange.png")
+frame_names = FRAME_FILES[args.profile]
 if args.frames_dir and any(not (args.frames_dir / name).is_file() for name in frame_names):
-    parser.error("--frames-dir needs dark-grey.png, light-grey.png, blue.png, and orange.png")
+    parser.error("--frames-dir needs " + ", ".join(frame_names))
 args.output.mkdir(parents=True, exist_ok=False)
 if args.frames_dir:
     frames = args.output / "frames"

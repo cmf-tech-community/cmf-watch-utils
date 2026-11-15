@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import shutil
 from zipfile import ZIP_DEFLATED, ZipFile
-from page import ROUTES, render_page
+from page import FRAME_FILES, ROUTES, render_page
 
 
 parser = argparse.ArgumentParser()
@@ -16,8 +16,8 @@ parser.add_argument("--output", type=Path, required=True)
 parser.add_argument("--stock", type=Path, help="Staged browser stock image and watch frames")
 parser.add_argument("--presets", type=Path, help="Prepared browser firmware presets")
 args = parser.parse_args()
-if args.profile == "wp3-stock" and (not args.stock or args.presets):
-    parser.error("Watch 3 Pro requires its staged stock fixtures and supports the stock boot preset")
+if args.profile == "wp3-stock" and not args.stock:
+    parser.error("Watch 3 Pro requires its staged stock fixtures")
 if args.stock:
     manifest = args.stock / "fixtures" / "manifest.json"
     metadata = json.loads(manifest.read_text(encoding="utf-8")) if manifest.is_file() else {}
@@ -43,17 +43,16 @@ stock_files = []
 preset_files = []
 if args.presets:
     preset_files = [args.presets / "display-demo.bin"]
-    bad_apple = [args.presets / name for name in ("bad-apple-app.bin", "bad-apple-sdfs.bin")]
-    if any(path.exists() for path in bad_apple):
-        preset_files.extend(bad_apple)
+    if args.profile == "wp2-stock":
+        bad_apple = [args.presets / name for name in ("bad-apple-app.bin", "bad-apple-sdfs.bin")]
+        if any(path.exists() for path in bad_apple):
+            preset_files.extend(bad_apple)
 if args.stock:
     stock_files = [args.stock / "fixtures" / name for name in (
         "app.bin", "compat.bin", "nand-defaults.bin", "nand-id.bin", "nor.bin", "wfc-index.txt",
     )]
-    if args.profile == "wp2-stock":
-        stock_files += [args.stock / "frames" / f"{color}.png" for color in (
-            "dark-grey", "light-grey", "blue", "orange",
-        )]
+    if args.profile == "wp2-stock" or (args.stock / "frames").is_dir():
+        stock_files += [args.stock / "frames" / name for name in FRAME_FILES[args.profile]]
     audio = args.stock / "fixtures" / "stock-audio.bin"
     if audio.is_file():
         stock_files.append(audio)

@@ -100,7 +100,7 @@ jobs:
       - name: Add browser emulator
         run: |
           python3 emulator/web/publish.py --model-selector --runtime wasm-output --stock browser-stock/staged --presets browser-stock/presets --output site/dist
-          python3 emulator/web/publish.py --profile wp3-stock --model-selector --runtime wasm-output --stock browser-stock/wp3-staged --output site/dist
+          python3 emulator/web/publish.py --profile wp3-stock --model-selector --runtime wasm-output --stock browser-stock/wp3-staged --presets browser-stock/presets --output site/dist
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

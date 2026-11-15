@@ -55,6 +55,21 @@ uv run --locked python emulator/web/stage.py \
     --frames-dir "$work/frames" --output "$work/staged"
 
 if [[ -n "$watch3_stock" ]]; then
+    product_cdn=https://cdn.shopify.com/s/files/1/0579/8091/1768/files
+    mkdir -p "$work/wp3-frames"
+    (
+        cd "$work/wp3-frames"
+        curl -fLsS --retry 3 "$product_cdn/0000s_0045_CMF-Watch-3-Pro-dark-grey.png?v=1753682898&width=768" -o dark-grey.png
+        curl -fLsS --retry 3 "$product_cdn/0000s_0044_CMF-Watch-3-Pro-Light-grey.png?v=1753682898&width=768" -o light-grey.png
+        curl -fLsS --retry 3 "$product_cdn/0000s_0043_CMF-Watch-3-Pro-Orange.png?v=1753682899&width=768" -o orange.png
+        curl -fLsS --retry 3 "$product_cdn/20260911-113857.webp?v=1789126027&width=768" -o light-green.webp
+        sha256sum -c <<'SUMS'
+99ccb5ee2840f55539c7d0e2d6676ef1f481f18ca42d466757227d8507865e87  dark-grey.png
+81a263a66ccb4c46cb5f0123c968b17e4e6419074d0817fea1360bf56b8c4932  light-grey.png
+8b50644dcfee0cadbe4e1d9f90679d9e6dd7e366da8284046a10cba776828e35  orange.png
+270b87236992c311d2f6105b65b1dca0220d284d96ddd19236a0041d31f0d79f  light-green.webp
+SUMS
+    )
     uv run --locked cmf-watch-utils emu prepare-fixtures --profile wp3-stock \
         --fixtures "$work/wp3-fixtures" --stock "$watch3_stock" --provisioning-stock "$work/stock.bin" \
         --nand-id "$work/nand-id.bin" --qemu "$work/runtime/qemu-system-arm" \
@@ -63,5 +78,5 @@ if [[ -n "$watch3_stock" ]]; then
         --stock "$watch3_stock" --decoder "$work/decoder" \
         --output "$work/wp3-fixtures/stock-audio.bin"
     uv run --locked python emulator/web/stage.py --profile wp3-stock \
-        --fixtures "$work/wp3-fixtures" --rom "$rom" --output "$work/wp3-staged"
+        --fixtures "$work/wp3-fixtures" --rom "$rom" --frames-dir "$work/wp3-frames" --output "$work/wp3-staged"
 fi

@@ -110,10 +110,14 @@ with `--profile wp2-stock --model-selector`. Serve that directory to open either
 between the two routes. Pass `--model-selector` when both pages are present.
 
 Watch 3 Pro starts with stock firmware and the virtual charger connected. It
-allows the guest's initial reboot during setup. The preview does not expose
-Watch Pro 2 presets, watch-face uploads, or optical reading controls on the
-Watch 3 Pro page. **Ambient light** sends lux to the virtual W1160 sensor over
-the same emulated I²C path as the desktop toolkit.
+allows the guest's initial reboot during setup. Choose **Custom firmware** to
+boot a Watch 3 Pro AOTA with application and SDFS images, or supply its raw
+ACTH application and optional SDFS and virtual NAND files. The **Display test**
+preset runs the built-in graphics demo. **Watch color**
+switches among the four bundled Watch 3 Pro front renders. Watch Pro 2 presets,
+watch-face uploads, and optical reading controls are currently model-specific.
+**Ambient light** sends lux to the virtual W1160 sensor over the same emulated
+I²C path as the desktop toolkit.
 
 ## Current limits
 

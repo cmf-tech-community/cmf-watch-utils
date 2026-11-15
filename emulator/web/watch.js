@@ -452,7 +452,7 @@ function loadFrame() {
   label.title = file?.name || '';
   frameFile.closest('.file-row').querySelector('.clear-file').hidden = !file;
   frameUrl = file ? URL.createObjectURL(file) : undefined;
-  if ((watch3 || (hosted && !bundledStock)) && !frameUrl) {
+  if (hosted && !bundledStock && !frameUrl) {
     delete frameCase.dataset.frame;
     return;
   }
@@ -467,7 +467,8 @@ function loadFrame() {
   image.onerror = () => {
     if (frameColor.value === color && frameUrl === source) delete frameCase.dataset.frame;
   };
-  image.src = source || new URL(`./frames/${color}.png`, import.meta.url).href;
+  const format = frameColor.selectedOptions[0].dataset.format || 'png';
+  image.src = source || new URL(`./frames/${color}.${format}`, import.meta.url).href;
 }
 frameColor.addEventListener('change', () => {
   frameFile.value = '';
@@ -488,10 +489,8 @@ function updateBootOptions() {
 {
   $('advanced-boot-files').open = needsBaseFiles;
   $('hosted-frames').hidden = false;
-  $('boot-presets').hidden = watch3;
+  $('boot-presets').hidden = false;
   if (watch3) {
-    document.querySelector('.advanced .panel-actions').append($('hard-reset'));
-    $('boot-images').hidden = true;
     $('health-controls').hidden = true;
     $('charger').checked = true;
     $('firmware-label').textContent = 'Firmware 1.0.1.77';
@@ -868,7 +867,7 @@ function validateHostedFirmware(bytes) {
     timeout = setTimeout(() => reject(Error('The firmware validator timed out.')), 60000);
     worker.onmessage = ({data}) => data.error ? reject(Error(data.error)) : resolve(data);
     worker.onerror = () => reject(Error('The browser firmware validator could not start.'));
-    worker.postMessage(bytes, [bytes]);
+    worker.postMessage({firmware: bytes, model: watch3 ? 'wp3' : 'wp2'}, [bytes]);
   }).finally(() => {
     clearTimeout(timeout);
     worker.terminate();
@@ -876,7 +875,6 @@ function validateHostedFirmware(bytes) {
 }
 
 async function readBootOverrides() {
-  if (watch3) return {};
   const preset = bootPreset.value;
   const stock = preset === 'stock';
   const builtIn = builtInPresets.get(preset);
@@ -884,9 +882,9 @@ async function readBootOverrides() {
   const firmware = uploads ? $('firmware-file').files[0] : undefined;
   const app = uploads ? $('app-file').files[0] : undefined;
   const nand = uploads || needsBaseFiles ? $('nand-file').files[0] : undefined;
-  const face = stock ? $('face-file').files[0] : undefined;
+  const face = stock && !watch3 ? $('face-file').files[0] : undefined;
   const sdfs = uploads ? $('sdfs-file').files[0] : undefined;
-  const catalogFace = stock ? faceCatalog.selected() : undefined;
+  const catalogFace = stock && !watch3 ? faceCatalog.selected() : undefined;
   if (builtIn && !firmware && !app && !sdfs) {
     const load = async name => {
       const response = await fetch(new URL(`./presets/${name}`, import.meta.url));
@@ -927,10 +925,12 @@ async function readBootOverrides() {
     } catch {
       throw Error('The selected firmware file could not be read. Select a local copy and retry.');
     }
-    if (packageBytes.byteLength === 56903752) {
+    if (packageBytes.byteLength === (watch3 ? 45069312 : 56903752)) {
       const hash = await crypto.subtle.digest('SHA-256', packageBytes);
       const digest = Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
-      if (digest === '30903fc8ce6db4f8860bb554366635db3d2bcbb2d43827b3b50fbbac22b59353') return { nand };
+      const stockHash = watch3 ? 'cf381188eb5fe26a14047a03697e68b58785bdcd01c4baf8703d4624650c6352'
+        : '30903fc8ce6db4f8860bb554366635db3d2bcbb2d43827b3b50fbbac22b59353';
+      if (digest === stockHash) return { nand };
     }
     if (hosted) {
       const {app, sdfs} = await validateHostedFirmware(packageBytes);
@@ -938,7 +938,7 @@ async function readBootOverrides() {
     }
     let response;
     try {
-      response = await fetch('./firmware', {
+      response = await fetch(watch3 ? './firmware/wp3' : './firmware', {
         method: 'POST',
         headers: {'Content-Type': 'application/octet-stream'},
         body: packageBytes,
@@ -965,7 +965,7 @@ async function readBootOverrides() {
   }
   if (!app) return { nand, face, catalogFace };
   if (app.size < 0x208 || app.size > 0x34b000) {
-    throw Error('Application does not fit the Watch Pro 2 partition.');
+    throw Error('Application does not fit the selected watch’s partition.');
   }
   const bytes = new Uint8Array(await app.arrayBuffer());
   const vectors = new DataView(bytes.buffer);
@@ -974,7 +974,7 @@ async function readBootOverrides() {
   if (new TextDecoder().decode(bytes.subarray(0, 8)) !== 'ACTHHTCA' ||
       sp < 0x2ff00000 || sp >= 0x30000000 || !(reset & 1) ||
       reset < 0x10000200 || reset >= 0x10000000 + bytes.length) {
-    throw Error('Expected a Watch Pro 2 ACTH application with valid boot vectors.');
+    throw Error('Expected an ACTH application with valid boot vectors.');
   }
   return { app: bytes, nand, sdfs };
 }
@@ -1176,9 +1176,9 @@ if (crossOriginIsolated && (idle || requestedPreset)) {
   bootUrl.searchParams.delete('preset');
   history.replaceState(null, '', bootUrl);
 }
-if (!watch3 && builtInPresets.has(requestedPreset)) {
+if (builtInPresets.has(requestedPreset)) {
   bootPreset.value = requestedPreset;
-} else if (!watch3 && (requestedPreset === 'bad-apple' || requestedPreset === 'custom')) {
+} else if (requestedPreset === 'custom' || (!watch3 && requestedPreset === 'bad-apple')) {
   bootPreset.value = requestedPreset;
 }
 updateBootOptions();

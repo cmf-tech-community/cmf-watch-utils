@@ -3,6 +3,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 ROUTES = {"wp2-stock": "watch-pro-2", "wp3-stock": "watch-pro-3"}
+FRAME_FILES = {
+    "wp2-stock": ("dark-grey.png", "light-grey.png", "blue.png", "orange.png"),
+    "wp3-stock": ("dark-grey.png", "light-grey.png", "light-green.webp", "orange.png"),
+}
 
 
 def render_page(profile, attributes=(), *, model_selector=False):
@@ -11,8 +15,12 @@ def render_page(profile, attributes=(), *, model_selector=False):
         attributes = (*attributes, 'data-model="wp3"')
         html = html.replace("Watch Pro 2", "Watch 3 Pro")
         html = html.replace("/emulator/watch-pro-2/", "/emulator/watch-pro-3/")
+        html = html.replace('<option value="blue">Blue</option>',
+                            '<option value="light-green" data-format="webp">Light Green</option>')
+        html = html.replace('          <option value="bad-apple">Bad Apple</option>\n', '')
+        html = html.replace("Watch 3 Pro AOTA package.", "Watch 3 Pro AOTA package with application and SDFS resources.")
         html = html.replace("Explore stock, try Bad Apple and watch faces, or load your own firmware.",
-                            "Explore the stock firmware on a virtual watch.")
+                            "Explore stock firmware or boot a custom Watch 3 Pro application.")
         html = "\n".join(line for line in html.split("\n")
                          if 'property="og:image' not in line and 'name="twitter:card"' not in line)
     if model_selector:
