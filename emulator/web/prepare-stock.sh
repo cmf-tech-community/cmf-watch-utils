@@ -56,7 +56,14 @@ uv run --locked python emulator/web/stage.py \
 
 if [[ -n "$watch3_stock" ]]; then
     product_cdn=https://cdn.shopify.com/s/files/1/0579/8091/1768/files
-    mkdir -p "$work/wp3-frames"
+    wp3_release=https://github.com/cmf-tech-community/cmf-watch-utils/releases/download/emulator-v0.1.0-preview.8
+    mkdir -p "$work/wp3-frames" "$work/wp3-runtime"
+    curl -fLsS --retry 3 "$wp3_release/cmf-emulator-linux-x64.tar.gz" -o "$work/wp3-qemu.tar.gz"
+    (cd "$work" && sha256sum -c <<'SUMS'
+36d45acab59c452f98f4997258ab96b5bd2443e03846cb8d6203080f31e72ef7  wp3-qemu.tar.gz
+SUMS
+)
+    tar -xf "$work/wp3-qemu.tar.gz" -C "$work/wp3-runtime" --strip-components 1
     (
         cd "$work/wp3-frames"
         curl -fLsS --retry 3 "$product_cdn/0000s_0045_CMF-Watch-3-Pro-dark-grey.png?v=1753682898&width=768" -o dark-grey.png
@@ -79,5 +86,5 @@ SUMS
         --output "$work/wp3-fixtures/stock-audio.bin"
     uv run --locked python emulator/web/stage.py --profile wp3-stock \
         --fixtures "$work/wp3-fixtures" --rom "$rom" --frames-dir "$work/wp3-frames" --output "$work/wp3-staged" \
-        --qemu "$work/runtime/qemu-system-arm" --gdb gdb-multiarch --provisioner "$work/runtime/provision-nand.bin"
+        --qemu "$work/wp3-runtime/qemu-system-arm" --gdb gdb-multiarch --provisioner "$work/runtime/provision-nand.bin"
 fi

@@ -54,12 +54,17 @@ def initialize_watch3_storage(args, model, nor, nand, nand_id, target):
     with child(argv, env, work / "qemu.log") as process, (work / "gdb.log").open("wb") as log:
         time.sleep(1)
         if process.poll() is not None:
-            raise RuntimeError(f"QEMU could not start. See {work}")
+            raise RuntimeError(f"QEMU could not start. See {work}\n"
+                               + (work / "qemu.log").read_text(errors="replace")[-1500:])
         subprocess.run(gdb, env=env, stdout=log, stderr=log, timeout=120)
-        if (process.wait(timeout=15) != 0 or not target.is_file() or
-                target.stat().st_size != model.nand_bytes or
-                "MSG_REBOOT, recover:1" not in uart.read_text(errors="replace")):
-            raise RuntimeError(f"Watch 3 Pro storage initialization did not complete. See {work}")
+        status = process.wait(timeout=15)
+    captured = target.stat().st_size if target.is_file() else 0
+    recovered = uart.is_file() and "MSG_REBOOT, recover:1" in uart.read_text(errors="replace")
+    if status != 0 or captured != model.nand_bytes or not recovered:
+        diagnostics = "\n".join((work / name).read_text(errors="replace")[-1500:]
+                                for name in ("qemu.log", "gdb.log"))
+        raise RuntimeError(f"Watch 3 Pro storage initialization failed (QEMU exit {status}, "
+                           f"NAND {captured} bytes, recovery reboot {recovered}). See {work}\n{diagnostics}")
 
 
 parser = argparse.ArgumentParser()
