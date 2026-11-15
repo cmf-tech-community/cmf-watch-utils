@@ -101,7 +101,10 @@ Watch Pro 2 and Watch 3 Pro.
 
 Build the WebAssembly runtime from the current emulator sources and prepare desktop
 `wp3-stock` fixtures first. Use `stage.py --profile wp3-stock` with those fixtures
-and the matching ROM. It carries over the model's stock texture index.
+and the matching ROM. Pass the native QEMU executable with `--qemu`, an Arm-capable
+debugger with `--gdb`, and the native runtime's `provision-nand.bin` with
+`--provisioner`. Staging carries over the model's stock texture index and lets
+stock firmware write its initial settings to the browser's virtual NAND.
 
 Run `publish.py --profile wp3-stock --model-selector` with the staged Watch 3 Pro
 files in `--stock`. Publish the Watch Pro 2 files to the same `--output` directory
@@ -109,9 +112,8 @@ with `--profile wp2-stock --model-selector`. Serve that directory to open either
 `/emulator/watch-pro-2/` or `/emulator/watch-pro-3/`. The heading lets you switch
 between the two routes. Pass `--model-selector` when both pages are present.
 
-Watch 3 Pro opens the stock watch face after its initial storage reboot with
-the virtual charger disconnected.
-Browser staging changes only the launcher selection in the virtual stock image.
+Watch 3 Pro opens the stock watch face with the virtual charger disconnected.
+The stock browser preview bypasses first-time setup and stays awake while idle.
 For the first-time language and QR screens, run `wp3-stock` in desktop QEMU.
 Choose **Custom firmware** to
 boot a Watch 3 Pro AOTA with application and SDFS images, or supply its raw
