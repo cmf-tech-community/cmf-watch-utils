@@ -189,32 +189,37 @@ canvas { display: block; width: 94%; height: auto; border-radius: 50%; touch-act
   font-size: 11px;
 }
 .diagnostics {
-  position: relative;
   grid-column: 1 / -1;
   border-top: 1px solid var(--line);
   background: #090909;
 }
+.log-entry { position: relative; --log-actions-width: 146px; }
 .diagnostics summary {
   height: 36px;
-  margin-right: 86px;
+  margin-right: var(--log-actions-width);
   padding: 0 14px;
   line-height: 36px;
   cursor: pointer;
   font-size: 12px;
 }
 #firmware-label, #motor-status { margin-left: 8px; font-size: 10px; color: var(--muted); }
-#save-log {
+.log-actions {
   position: absolute;
   top: 0;
   right: 0;
-  width: 86px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  width: var(--log-actions-width);
   height: 36px;
+}
+.log-actions button {
   border: 0;
   border-left: 1px solid var(--line);
   background: transparent;
   font-size: 11px;
 }
-#save-log:hover { background: #161616; }
+.log-actions button:hover { background: #161616; }
+.log-feedback { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
 .diagnostics details[open] pre { border-top: 1px solid var(--line); }
 .diagnostics pre {
   max-height: 160px;
@@ -606,6 +611,8 @@ body[data-model="wp3"] .case[data-frame] { --bezel-width: 46%; --bezel-center: 5
 .sensor-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
 .sensor-fields label { display: grid; gap: 4px; }
 .sensor-fields input { width: 100%; min-width: 0; padding: 4px; border: 1px solid var(--line); background: #121212; color: var(--text); }
+.gyro-fields { min-width: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-inline: 0; padding: 0; border: 0; }
+.gyro-fields legend { padding: 0 0 6px; }
 @media (min-width: 651px) {
   .side-panels > .settings-group {
     max-height: min(580px, 67vh);

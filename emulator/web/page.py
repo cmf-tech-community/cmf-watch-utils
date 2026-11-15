@@ -21,6 +21,7 @@ def render_page(profile, attributes=(), *, model_selector=False):
                             '<option value="orange" selected>Orange</option>')
         html = html.replace('          <option value="bad-apple">Bad Apple</option>\n', '')
         html = html.replace("Watch 3 Pro AOTA package.", "Watch 3 Pro AOTA package with application and SDFS resources.")
+        html = html.replace("Replaces Activity Mood", "Replaces Duskscape")
         html = html.replace("Explore stock, try Bad Apple and watch faces, or load your own firmware.",
                             "Explore stock firmware or boot a custom Watch 3 Pro application.")
         html = "\n".join(line for line in html.split("\n")

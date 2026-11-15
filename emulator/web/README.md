@@ -119,8 +119,8 @@ Choose **Custom firmware** to
 boot a Watch 3 Pro AOTA with application and SDFS images, or supply its raw
 ACTH application and optional SDFS and virtual NAND files. The **Display test**
 preset runs the built-in graphics demo. **Watch color**
-switches among the four bundled Watch 3 Pro front renders. Watch Pro 2 presets,
-watch-face uploads, and optical reading controls are currently model-specific.
+switches among the four bundled Watch 3 Pro front renders. Its stock
+firmware starts at the highest manual brightness.
 **Ambient light** sends lux to the virtual W1160 sensor over the same emulated
 I²C path as the desktop toolkit.
 
@@ -155,12 +155,14 @@ scroll it using both touch and crown rotation, and tap a stock app. Repeat after
 reset. Keep the runtime revision, boot output and screenshots with the results.
 A loading screen or a canvas with no guest output is not a successful boot.
 
-With the local Python server running, select a single Watch Pro 2 face
-(`.wfdl`, `.wfc`, or `.bin`) under **Boot images â†’ Watch face**, then press Play.
-The import replaces Activity Mood for that stock session. If the face needs
-more room, the importer uses the Prismatic Time slot to keep the original
-Activity Mood available. The browser changes its in-memory copy of the prepared
-NAND. Use **Hard reset to stock** to start over.
+Select a face file (`.wfdl`, `.wfc`, or `.bin`) for your watch under
+**Boot images → Watch face**, then press Play. The importer replaces Activity
+Mood on Watch Pro 2 or Duskscape on Watch 3 Pro for the session. The **FMC watch
+faces** panel lists published faces for the selected model. Choose a face and
+select **Apply watch face** to boot it. The browser edits its in-memory NAND.
+Large faces may use a second stock slot for space. **Hard reset to stock**
+restores all stock faces.
+
 
 For a custom firmware session, open **Boot images** and select its Watch Pro 2 ACTH `app.bin` under
 **Application image** and its matching `sdfs.bin`, if provided, under
@@ -183,9 +185,15 @@ settings. **Hard reset to stock** discards the running session and selected
 files, then starts a fresh stock session.
 
 Open **Optical sensors** to set the heart rate and blood oxygen shown by
-the stock measurement apps. Open **GPS** to send a stationary fix at a
+the stock measurement apps. On Watch 3 Pro this supplies the values those
+screens read. The raw optical waveform and measurement history are outside
+that simulation. Open **Gyroscope** on Watch 3 Pro to enter X, Y and Z angular
+velocity in degrees per second. Open **GPS** to send a stationary fix at a
 latitude and longitude in decimal degrees. The guest must start its GPS
 receiver, for example when starting an outdoor workout.
+
+Use **Copy log** or **Save log** in either log header to export the full watch
+log or just the motor events.
 
 Pass `--frames-dir` to the staging script to include the four Nothing X
 front renders. Select **Watch color** in the browser to switch frames while

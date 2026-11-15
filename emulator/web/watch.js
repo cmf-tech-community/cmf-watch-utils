@@ -9,6 +9,7 @@ const pixels = context.createImageData(466,466);
 const hosted = document.body.hasAttribute('data-hosted');
 const bundledStock = document.body.hasAttribute('data-stock-ready');
 const watch3 = document.body.dataset.model === 'wp3';
+const faceModel = watch3 ? 'wp3' : 'wp2';
 const modelSlug = watch3 ? 'watch-pro-3' : 'watch-pro-2';
 const modelToggle = $('model-toggle');
 if (modelToggle) {
@@ -45,10 +46,11 @@ const needsBaseFiles = hosted && !bundledStock;
 let bootInProgress = false;
 let bootedCatalogFace;
 let nextFace;
-if (crossOriginIsolated && !watch3) {
+const nextFaceKey = `${faceModel}-next-face`;
+if (crossOriginIsolated) {
   try {
-    nextFace = JSON.parse(sessionStorage.getItem('wp2-next-face'));
-    sessionStorage.removeItem('wp2-next-face');
+    nextFace = JSON.parse(sessionStorage.getItem(nextFaceKey));
+    sessionStorage.removeItem(nextFaceKey);
   } catch {}
 }
 const faceCatalog = setupFaceCatalog($('face-catalog'), nextFace, face => {
@@ -66,7 +68,7 @@ const faceCatalog = setupFaceCatalog($('face-catalog'), nextFace, face => {
     faceFile.dispatchEvent(new Event('change'));
   }
   $('start').click();
-});
+}, faceModel);
 const requiredFixtures = ['nor.bin', 'nand-defaults.bin', 'nand-id.bin', 'compat.bin', 'app.bin'];
 let runtime, timer, pointer=null, crownDown=false, frames=0, lastFrame=null;
 let lastFrameFile;
@@ -102,7 +104,7 @@ function restartFor(preset, face) {
   const url = new URL(location.href);
   if (face) {
     try {
-      sessionStorage.setItem('wp2-next-face', JSON.stringify(face));
+      sessionStorage.setItem(nextFaceKey, JSON.stringify(face));
     } catch {
       $('image-error').textContent = 'Stop the emulator and choose the face again.';
       return;
@@ -481,8 +483,8 @@ function updateBootOptions() {
   $('firmware-package').hidden = !uploads;
   $('raw-applications').hidden = !uploads;
   $('advanced-boot-files').hidden = !uploads && !needsBaseFiles;
-  $('face-catalog').hidden = watch3 || !stock;
-  $('watch-face-upload').hidden = watch3 || !stock;
+  $('face-catalog').hidden = !stock;
+  $('watch-face-upload').hidden = !stock;
   $('display-demo-guide').hidden = preset !== 'display-demo';
   $('bad-apple-guide').hidden = preset !== 'bad-apple' || !uploads;
 }
@@ -491,7 +493,7 @@ function updateBootOptions() {
   $('hosted-frames').hidden = false;
   $('boot-presets').hidden = false;
   if (watch3) {
-    $('health-controls').hidden = true;
+    $('gyro-controls').hidden = false;
     $('firmware-label').textContent = 'Firmware 1.0.1.77';
   }
   if (needsBaseFiles) $('stock-file-hint').firstElementChild.textContent =
@@ -537,21 +539,52 @@ document.addEventListener('keydown', event => {
     updateFullscreen();
   }
 });
-$('save-log').onclick=()=>{
-  const parts = [runtimeLog, '\n'];
-  if (runtime) {
-    for (const path of [...(debug ? ['/watch/qemu.log'] : []), '/watch/uart.log', motorPath]) {
-      try {
-        const contents = runtime.FS.readFile(path);
-        if (path === motorPath) parts.push('Motor log (virtual ms, duty per mille, Hz)\n');
-        parts.push(contents, '\n');
-      } catch {}
+function exportLog(motorOnly) {
+  const read = path => {
+    try {
+      return runtime?.FS.readFile(path, {encoding: 'utf8'}) || '';
+    } catch {
+      return '';
     }
-  }
-  const url = URL.createObjectURL(new Blob(parts, {type:'text/plain'}));
-  const link=document.createElement('a');link.href=url;link.download=watch3?'wp3-browser.log':'wp2-browser.log';link.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-};
+  };
+  const motor = read(motorPath);
+  const motorLog = motor && `Motor log (virtual ms, duty per mille, Hz)\n${motor}`;
+  if (motorOnly) return motorLog || $('motor-log').textContent;
+  return [runtimeLog, debug ? read('/watch/qemu.log') : '', read('/watch/uart.log'), motorLog]
+    .filter(Boolean).join('\n') || $('log').textContent;
+}
+
+for (const [copyId, saveId, kind] of [
+  ['copy-log', 'save-log', 'browser'],
+  ['copy-motor-log', 'save-motor-log', 'motor'],
+]) {
+  const copy = $(copyId);
+  const feedback = copy.parentElement.querySelector('.log-feedback');
+  let feedbackTimer;
+  copy.onclick = async () => {
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(exportLog(kind === 'motor'));
+      copied = true;
+    } catch {}
+    clearTimeout(feedbackTimer);
+    copy.textContent = copied ? 'Copied' : 'Copy failed';
+    feedback.textContent = copied ? 'Log copied to the clipboard.' : 'Could not copy the log.';
+    feedbackTimer = setTimeout(() => {
+      copy.textContent = 'Copy log';
+      feedback.textContent = '';
+    }, 1800);
+  };
+  $(saveId).onclick = () => {
+    const contents = exportLog(kind === 'motor');
+    const url = URL.createObjectURL(new Blob([contents], {type: 'text/plain;charset=utf-8'}));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `wp${watch3 ? 3 : 2}-${kind}.log`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+}
 const roller = document.querySelector('.knurls');
 let rollY;
 roller.addEventListener('pointerdown', event => {
@@ -717,6 +750,14 @@ let drag;
 let motionTimer;
 
 const axes = [...$('orientation-axes').querySelectorAll('input')];
+const gyroAxes = [...$('gyro-controls').querySelectorAll('input')];
+
+function sendGyroscope() {
+  if (!watch3 || gyroAxes.some(axis => !axis.validity.valid)) return;
+  input(`w ${gyroAxes.map(axis => axis.valueAsNumber * 1000).join(' ')}`);
+}
+
+for (const axis of gyroAxes) axis.addEventListener('change', sendGyroscope);
 
 function showOrientation() {
   $('orientation-model').style.transform = `rotateY(${roll}deg) rotateX(${pitch}deg)`;
@@ -807,6 +848,8 @@ $('reset-simulation').onclick = () => {
   updateBattery();
   sendPower();
   setOrientation(0, 0);
+  for (const axis of gyroAxes) axis.value = 0;
+  sendGyroscope();
 };
 
 $('capture').onclick = () => {
@@ -881,9 +924,9 @@ async function readBootOverrides() {
   const firmware = uploads ? $('firmware-file').files[0] : undefined;
   const app = uploads ? $('app-file').files[0] : undefined;
   const nand = uploads || needsBaseFiles ? $('nand-file').files[0] : undefined;
-  const face = stock && !watch3 ? $('face-file').files[0] : undefined;
+  const face = stock ? $('face-file').files[0] : undefined;
   const sdfs = uploads ? $('sdfs-file').files[0] : undefined;
-  const catalogFace = stock && !watch3 ? faceCatalog.selected() : undefined;
+  const catalogFace = stock ? faceCatalog.selected() : undefined;
   if (builtIn && !firmware && !app && !sdfs) {
     const load = async name => {
       const response = await fetch(new URL(`./presets/${name}`, import.meta.url));
@@ -980,7 +1023,7 @@ async function readBootOverrides() {
 
 async function installFace(face, files) {
   const nand = files.find(([name]) => name === 'nand-defaults.bin')[1];
-  const index = await installWatchFace(nand, new Uint8Array(await face.arrayBuffer()));
+  const index = await installWatchFace(nand, new Uint8Array(await face.arrayBuffer()), faceModel);
   if (!index) return;
   const existing = files.find(([name]) => name === 'wfc-index.txt');
   if (existing) {
@@ -1135,6 +1178,7 @@ $('start').onclick=async()=>{
       if ($('gps-enabled').checked) sendGps();
       updateAmbientLight();
       input(`a ${gravity.join(' ')}`);
+      sendGyroscope();
       status('Waiting for the guest display...', false, 'loading');
       setTimeout(() => {
         if (!halted && !frames) status('No display frame after 90 seconds. Check the watch log.', false, 'timeout');

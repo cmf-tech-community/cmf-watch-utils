@@ -1,10 +1,13 @@
 const origin = 'https://fmc.freethinkel.dev';
-const compatible = 'published=true && (device="watch_pro_2" || device="")';
+const compatible = {
+  wp2: 'published=true && (device="watch_pro_2" || device="")',
+  wp3: 'published=true && device="watch_3_pro"',
+};
 
-async function entries() {
+async function entries(model) {
   const faces = new Map();
   const query = new URLSearchParams({
-    filter: compatible, perPage: 100, sort: '-created,id', expand: 'owner',
+    filter: compatible[model], perPage: 100, sort: '-created,id', expand: 'owner',
     fields: 'id,collectionId,name,preview,bin,downloads,flashes,expand.owner.name',
   });
   let totalPages;
@@ -37,7 +40,7 @@ export async function downloadCatalogFace(face) {
   return file;
 }
 
-export function setupFaceCatalog(picker, initial, onApply) {
+export function setupFaceCatalog(picker, initial, onApply, model = 'wp2') {
   const choices = picker.querySelector('.catalog-options');
   const message = picker.querySelector('[role=status]');
   const clear = picker.querySelector('.catalog-clear');
@@ -126,7 +129,7 @@ export function setupFaceCatalog(picker, initial, onApply) {
     loading = true;
     message.textContent = 'Loading FMC watch faces…';
     try {
-      faces = await entries();
+      faces = await entries(model);
       showResults();
     } catch {
       message.textContent = 'FMC could not load. Close and reopen the picker to retry.';

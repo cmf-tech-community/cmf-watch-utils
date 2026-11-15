@@ -158,8 +158,9 @@ def live(args, argv, env, output, version, stock, profile):
     wish = args.wish or shutil.which(default_wish, path=env.get("PATH"))
     require(wish is not None, "Tk wish not found; provide --wish or use --headless")
     with as_file(files(__package__).joinpath("watch_window.tcl")) as script:
+        optical = stock and (profile.live_health or profile.model.name == "wp3")
         viewer = [executable(wish, env), str(script), str(output), "stock" if stock else "custom",
-                  version, profile.model.title, profile.model.name, str(int(stock and profile.live_health)),
+                  version, profile.model.title, profile.model.name, str(int(optical)),
                   str(int(args.charger_connected or profile.model.name == "wp3"))]
         with child(argv, env, output / "qemu.log") as vm, child(viewer, env, output / "viewer.log") as gui:
             while vm.poll() is None and gui.poll() is None:
@@ -183,7 +184,8 @@ def run(args, profile):
     require(not args.headless or args.host_mic or args.audio in (None, "auto", "none"),
             "Headless speaker tests use --wav unless a host microphone backend is selected")
     stock = not (args.app or args.ota_image or args.nor)
-    require(not (args.watch_face or args.fmc_face) or (stock and not args.nand and profile.live_health),
+    require(not (args.watch_face or args.fmc_face) or
+            (stock and not args.nand and (profile.live_health or model.name == "wp3")),
             "Watch-face import requires the stock watch-face profile and its default NAND")
     data = bytearray((args.nor or base).read_bytes())
     require(len(data) == model.nor_bytes, "Invalid virtual NOR size")
@@ -215,9 +217,9 @@ def run(args, profile):
     if args.watch_face or args.fmc_face:
         from .watchface import PAGE, download_face, prepare_face
 
-        face = args.watch_face.read_bytes() if args.watch_face else download_face(args.fmc_face)
+        face = args.watch_face.read_bytes() if args.watch_face else download_face(args.fmc_face, model.name)
         image = bytearray(nand.read_bytes())
-        pages, packed, index = prepare_face(image, face)
+        pages, packed, index = prepare_face(image, face, model.name)
         for offset, page in zip(pages, range(0, len(packed), PAGE)):
             chunk = packed[page:page + PAGE]
             image[offset:offset + len(chunk)] = chunk
