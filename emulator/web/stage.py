@@ -3,9 +3,24 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import struct
 
 from cmf_watch_utils.emu.profiles import PROFILES
+from fwkit.aota import sum32
 from page import FRAME_FILES, ROUTES, render_page
+
+
+def watch_face_preview(app):
+    launcher_check = 0x45158
+    if app[launcher_check:launcher_check + 4] != bytes.fromhex("81f1b3fe"):
+        raise ValueError("Unexpected Watch 3 Pro launcher code")
+    preview = bytearray(app)
+    preview[launcher_check:launcher_check + 4] = bytes.fromhex("012000bf")
+    size = struct.unpack_from("<I", preview, 24)[0]
+    struct.pack_into("<I", preview, 28, 0xffffffff - sum32(preview[512:512 + size]))
+    struct.pack_into("<I", preview, 32, 0)
+    struct.pack_into("<I", preview, 32, 0xffffffff - sum32(preview[:512]))
+    return preview
 
 
 parser = argparse.ArgumentParser()
@@ -22,6 +37,10 @@ profile = PROFILES[args.profile]
 if args.profile == "wp3-stock" and (args.stock_image or args.wfc_dir):
     parser.error("The Watch 3 Pro texture index comes from its prepared fixtures")
 nor, nand, nand_id = profile.fixtures(args.fixtures)
+stock_nor = bytearray(nor.read_bytes())
+stock_app = profile.stock_app(stock_nor)
+if args.profile == "wp3-stock":
+    profile.model.app.stage(stock_nor, watch_face_preview(stock_app))
 rom = args.rom.read_bytes()
 if len(rom) != 65536:
     raise ValueError("Expected a 64 KiB compatibility ROM")
@@ -40,10 +59,11 @@ for name in ("watch.js", "style.css", "face.mjs", "catalog.mjs", "speaker.mjs", 
 (args.output / "index.html").write_text(render_page(args.profile), encoding="utf-8")
 fixtures = args.output / "fixtures"
 fixtures.mkdir()
-for path, name in ((nor, "nor.bin"), (nand, "nand-defaults.bin"), (nand_id, "nand-id.bin")):
+for path, name in ((nand, "nand-defaults.bin"), (nand_id, "nand-id.bin")):
     shutil.copyfile(path, fixtures / name)
+(fixtures / "nor.bin").write_bytes(stock_nor)
 (fixtures / "compat.bin").write_bytes(rom)
-(fixtures / "app.bin").write_bytes(profile.stock_app(nor.read_bytes()))
+(fixtures / "app.bin").write_bytes(stock_app)
 files = ["nor.bin", "nand-defaults.bin", "nand-id.bin", "compat.bin", "app.bin"]
 stock_audio = args.fixtures / "stock-audio.bin"
 if stock_audio.is_file():
