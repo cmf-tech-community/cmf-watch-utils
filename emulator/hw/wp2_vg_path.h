@@ -13,41 +13,51 @@ static bool wp2_vg_rgb565_path(uint32_t config)
     return config == 0x9102 || config == 0x1102;
 }
 
-static float wp2_vg_path_coord(const uint8_t *word, bool fp32)
+static float wp2_vg_path_coord(const uint8_t *word, unsigned format)
 {
+    if (format == 1) {
+        return (int16_t)lduw_le_p(word);
+    }
     uint32_t bits = ldl_le_p(word);
     float coord;
 
-    if (!fp32) {
+    if (format != 3) {
         return (int32_t)bits;
     }
     memcpy(&coord, &bits, sizeof(coord));
     return coord;
 }
 
-/* Inline S32 and FP32 VG Lite paths, with curves flattened into line segments. */
+/* Inline VG Lite paths, with curves flattened into line segments. */
 static bool wp2_vg_decode_path(const uint32_t *r, const uint8_t *words,
                                unsigned count, Wp2Path *path)
 {
     unsigned mode = r[0xa34] & 3;
+    unsigned format = (r[0xa34] >> 20) & 3;
+    bool scaled_pattern = r[0xa00] == 0x10001002 && format == 1;
     bool rgb565 = wp2_vg_rgb565_path(r[0xa00]);
-    float tx, ty;
+    float sx, sy, tx, ty;
+    memcpy(&sx, &r[0xa40], sizeof(sx));
+    memcpy(&sy, &r[0xa44], sizeof(sy));
     memcpy(&tx, &r[0xa42], sizeof(tx));
     memcpy(&ty, &r[0xa45], sizeof(ty));
-    if (r[0xa10] != 0x101 || (mode != 3 && !(mode == 1 && rgb565)) ||
-        r[0xa3b] != 0x3f800000 || r[0xa40] != 0x3f800000 || r[0xa44] != 0x3f800000 ||
+    if (r[0xa10] != 0x101 || (mode != 3 && !(mode == 1 && (rgb565 || scaled_pattern))) ||
+        r[0xa3b] != 0x3f800000 ||
         r[0xa3c] || r[0xa41] || r[0xa43] || count > 512 ||
-        (!rgb565 && (r[0xa42] || r[0xa45])) ||
+        (!scaled_pattern && (sx != 1 || sy != 1)) ||
+        !(sx > 0 && sx <= 16 && sy > 0 && sy <= 16) ||
+        (!rgb565 && !scaled_pattern && (r[0xa42] || r[0xa45])) ||
         !(fabsf(tx) <= 4096 && fabsf(ty) <= 4096)) {
         return false;
     }
     Wp2PathEdge *edges = path->edges;
     Wp2PathPoint current = {0}, first = {0};
     unsigned n = 0;
-    bool fp32 = (r[0xa34] & 0x00300000) == 0x00300000;
+    unsigned stride = format == 1 ? 2 : 4;
+    unsigned slots = count * 4 / stride;
     bool open = false, ended = false;
-    for (unsigned i = 0; i < count;) {
-        unsigned op = words[i++ * 4];
+    for (unsigned i = 0; i < slots;) {
+        unsigned op = words[i++ * stride];
         if (op <= 3 && open) {
             if (n == ARRAY_SIZE(path->edges)) return false;
             edges[n++] = (Wp2PathEdge){current, first};
@@ -63,11 +73,11 @@ static bool wp2_vg_decode_path(const uint32_t *r, const uint8_t *words,
         }
         if (op > 9) return false;
         unsigned points = op >= 8 ? 3 : op >= 6 ? 2 : 1;
-        if (i + 2 * points > count || (op >= 4 && !open)) return false;
+        if (i + 2 * points > slots || (op >= 4 && !open)) return false;
         Wp2PathPoint p[3];
         for (unsigned j = 0; j < points; j++) {
-            p[j].x = wp2_vg_path_coord(words + i++ * 4, fp32);
-            p[j].y = wp2_vg_path_coord(words + i++ * 4, fp32);
+            p[j].x = wp2_vg_path_coord(words + i++ * stride, format);
+            p[j].y = wp2_vg_path_coord(words + i++ * stride, format);
             if (op & 1) {
                 p[j].x += current.x;
                 p[j].y += current.y;
@@ -97,12 +107,12 @@ static bool wp2_vg_decode_path(const uint32_t *r, const uint8_t *words,
         }
         current = p[points - 1];
     }
-    if (tx || ty) {
+    if (sx != 1 || sy != 1 || tx || ty) {
         for (unsigned j = 0; j < n; j++) {
-            edges[j].a.x += tx;
-            edges[j].a.y += ty;
-            edges[j].b.x += tx;
-            edges[j].b.y += ty;
+            edges[j].a.x = edges[j].a.x * sx + tx;
+            edges[j].a.y = edges[j].a.y * sy + ty;
+            edges[j].b.x = edges[j].b.x * sx + tx;
+            edges[j].b.y = edges[j].b.y * sy + ty;
         }
     }
     path->count = n;

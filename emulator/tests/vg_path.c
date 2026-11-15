@@ -64,6 +64,19 @@ int main(void) {
     r[0xa45] = 0;
     fp_words[1] = 0x7fc00000;
     assert(!wp2_vg_decode_path(r, (uint8_t *)fp_words, ARRAY_SIZE(fp_words), &path));
+    uint32_t s16_words[] = {
+        0x00000002, 0x00040000, 0x000001d2, 0x01d20004,
+        0x000401d2, 0x01d20000, 0x00000000, 0x00000000,
+    };
+    r[0xa00] = 0x10001002;
+    r[0xa34] = 0x03100011;
+    r[0xa40] = r[0xa44] = 0x3f140000;
+    r[0xa42] = 0x42c49800;
+    r[0xa45] = 0x42c29800;
+    assert(wp2_vg_decode_path(r, (uint8_t *)s16_words, ARRAY_SIZE(s16_words), &path));
+    assert(path.even_odd && path.count == 4 &&
+           path.edges[0].a.x == 98.296875f && path.edges[0].a.y == 97.296875f &&
+           path.edges[0].b.x == 367.703125f);
     r[0xa12] = 1;
     assert(!wp2_vg_solid_path(r, &path));
     puts("VG path alpha, opaque fill, coverage and bounds passed");
