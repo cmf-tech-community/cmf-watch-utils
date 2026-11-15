@@ -182,15 +182,20 @@ def extract_qemu(archive, work):
     return source
 
 
+def write_smoke_images(directory):
+    flash = bytearray(0x400000)
+    struct.pack_into("<II6HII", flash, 0x24200, 0x2ff70000, 0x10000209,
+                     0x202a, 0x4902, 0x6008, 0x4902, 0x6008, 0xe7fe,
+                     0x2ff60400, 0x40038008)
+    (directory / "nor.bin").write_bytes(flash)
+    (directory / "nand-id.bin").write_bytes(bytes(790))
+    (directory / "rom.bin").write_bytes(bytes(0x10000))
+
+
 def smoke(binary, work):
     with tempfile.TemporaryDirectory(dir=work) as scratch, socket.socket() as listener:
         scratch = Path(scratch)
-        flash = bytearray(0x400000)
-        struct.pack_into("<II4HI", flash, 0x24200, 0x2ff70000, 0x10000209,
-                         0x202a, 0x4901, 0x6008, 0xe7fe, 0x2ff60400)
-        (scratch / "nor.bin").write_bytes(flash)
-        (scratch / "nand-id.bin").write_bytes(bytes(790))
-        (scratch / "rom.bin").write_bytes(bytes(0x10000))
+        write_smoke_images(scratch)
         listener.bind(("127.0.0.1", 0))
         listener.listen(1)
         listener.settimeout(12)
