@@ -78,5 +78,6 @@ SUMS
         --stock "$watch3_stock" --decoder "$work/decoder" \
         --output "$work/wp3-fixtures/stock-audio.bin"
     uv run --locked python emulator/web/stage.py --profile wp3-stock \
-        --fixtures "$work/wp3-fixtures" --rom "$rom" --frames-dir "$work/wp3-frames" --output "$work/wp3-staged"
+        --fixtures "$work/wp3-fixtures" --rom "$rom" --frames-dir "$work/wp3-frames" --output "$work/wp3-staged" \
+        --qemu "$work/runtime/qemu-system-arm" --gdb gdb-multiarch --provisioner "$work/runtime/provision-nand.bin"
 fi
