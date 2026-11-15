@@ -12,7 +12,7 @@ Open either model in a recent desktop version of Chrome or Edge. Stock firmware
 starts automatically. Select the model name above the virtual watch to switch.
 
 - [Watch Pro 2](/emulator/watch-pro-2/) supports stock firmware, custom builds, the Bad Apple preset, and the FMC watch-face catalog.
-- [Watch 3 Pro](/emulator/watch-pro-3/) runs stock firmware `1.0.1.77` with touchscreen, crown, and simulated ambient light. The first boot can restart once before the language screen appears. Nothing X pairing is still in development.
+- [Watch 3 Pro](/emulator/watch-pro-3/) runs stock firmware `1.0.1.77` with touchscreen, crown, and simulated ambient light. Use **Watch color** to switch cases or **Custom firmware** to load an AOTA with application and SDFS images or raw Watch 3 Pro files. The first stock boot can restart once before the language screen appears. Nothing X pairing is still in development.
 
 ### Watch Pro 2 controls and presets
 The first boot downloads the virtual storage and can take a moment. **Watch log**

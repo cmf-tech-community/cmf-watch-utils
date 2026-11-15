@@ -507,6 +507,8 @@ details[open] > summary::after { transform: rotate(90deg); }
 .frame-color select { max-width: 60%; }
 .case { --bezel-width: 51.75%; --bezel-center: 50.175%; --screen-width: 94%; }
 .case:is([data-color="blue"], [data-color="orange"]) { --bezel-width: 51.4%; }
+body[data-model="wp3"] .case[data-frame] { --bezel-width: 46%; --bezel-center: 50%; }
+.case:not([data-frame], .frameless)[data-color="light-green"] { background: linear-gradient(145deg, #99b5a9, #446257 55%, #77968a); }
 .case[data-frame]:not(.frameless) {
   position: relative;
   width: min(100%, 510px, 67vh);

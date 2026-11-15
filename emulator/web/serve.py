@@ -8,17 +8,21 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from cmf_watch_utils.emu.image import verify_package
-from cmf_watch_utils.emu.prepare import STOCK_SHA256
-from cmf_watch_utils.emu.profiles import WP2
+from cmf_watch_utils.emu.prepare import STOCK_SHA256, WP3_STOCK_SHA256
+from cmf_watch_utils.emu.profiles import WP2, WP3
 
 from cmf_watch_utils.emu.watchface import MAX_FACE, face_patch
+
+
+FIRMWARE_ROUTES = {"/firmware": (WP2, STOCK_SHA256), "/firmware/wp3": (WP3, WP3_STOCK_SHA256)}
 
 
 class Handler(SimpleHTTPRequestHandler):
     extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".wasm": "application/wasm"}
 
     def do_POST(self):
-        if self.path not in ("/watch-face", "/firmware"):
+        firmware = FIRMWARE_ROUTES.get(self.path)
+        if self.path != "/watch-face" and firmware is None:
             self.send_error(404)
             return
         origin = self.headers.get("Origin")
@@ -38,12 +42,13 @@ class Handler(SimpleHTTPRequestHandler):
             payload = self.rfile.read(length)
             if len(payload) != length:
                 raise ValueError("Incomplete file.")
-            if self.path == "/firmware":
-                if hashlib.sha256(payload).hexdigest() == STOCK_SHA256:
+            if firmware:
+                model, stock_hash = firmware
+                if hashlib.sha256(payload).hexdigest() == stock_hash:
                     self.send_response(204)
                     self.end_headers()
                     return
-                app, resources, _ = verify_package(payload, WP2)
+                app, resources, _ = verify_package(payload, model)
                 patch = struct.pack("<I", len(app)) + app + resources
             else:
                 nand = Path(self.directory, "fixtures", "nand-defaults.bin").read_bytes()
