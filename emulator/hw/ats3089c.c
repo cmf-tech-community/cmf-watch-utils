@@ -1046,7 +1046,8 @@ static bool acts_vg_blit(ActsState *s, uint32_t origin, uint32_t size,
     bool masked_path = path && state[0xa00] == 0xa102 &&
                        state[0xa25] == 0x01011102;
     bool fade = state[0xa00] == 0xa101 || masked_path;
-    bool opaque = state[0xa00] == 0x10001001 || state[0xa00] == 0x1101;
+    bool opaque = state[0xa00] == 0x10001001 || state[0xa00] == 0x1101 ||
+                  (path && wp2_vg_rgb565_path(state[0xa00]));
     bool pattern = path && state[0xa00] == 0x10001002 &&
                    state[0xa27] == 0xff000000;
     bool linear_rgb565 = state[0xa25] == 0x01020105;
@@ -1220,12 +1221,14 @@ static bool acts_vg_submit(ActsState *s, uint32_t units)
                     s->vg_state[0xa00] == 0x10000102 ||
                     s->vg_state[0xa00] == 0x10000002 ||
                     s->vg_state[0xa00] == 0x10001002 ||
-                    s->vg_state[0xa00] == 0x0000a102)) {
+                    s->vg_state[0xa00] == 0x0000a102 ||
+                    wp2_vg_rgb565_path(s->vg_state[0xa00]))) {
             unsigned length = op & 0xffff;
             const uint32_t *state = s->vg_state;
             Wp2Path path;
             if (!wp2_vg_decode_path(state, stream + (i + 1) * 8, length * 2, &path) ||
-                !((state[0xa00] == 0x10001002 || state[0xa00] == 0x0000a102)
+                !((state[0xa00] == 0x10001002 || state[0xa00] == 0x0000a102 ||
+                   wp2_vg_rgb565_path(state[0xa00]))
                   ? acts_vg_blit(s, state[0xa39], state[0xa3a], &path)
                   : wp2_vg_solid_path(state, &path))) {
                 qemu_log_mask(LOG_UNIMP, "Unsupported VG Lite path at packet %u\n", i);
