@@ -1049,8 +1049,10 @@ static bool acts_vg_blit(ActsState *s, uint32_t origin, uint32_t size,
     bool opaque = state[0xa00] == 0x10001001 || state[0xa00] == 0x1101 ||
                   (path && wp2_vg_rgb565_path(state[0xa00]));
     bool pattern = path && state[0xa00] == 0x10001002 &&
-                   state[0xa27] == 0xff000000;
-    bool linear_rgb565 = state[0xa25] == 0x01020105;
+                   (state[0xa27] == 0xff000000 ||
+                    (state[0xa25] == 0x01021105 && !state[0xa27]));
+    bool linear_rgb565 = state[0xa25] == 0x01020105 ||
+                         (pattern && state[0xa25] == 0x01021105);
     bool linear_mask = fade && state[0xa25] == 0x01020102;
     bool alpha_mask = masked_path || linear_mask ||
                       (fade && state[0xa25] == 0x01000102);
