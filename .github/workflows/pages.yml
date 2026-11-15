@@ -74,7 +74,7 @@ jobs:
       - name: Prepare stock firmware for the browser
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends gdb-multiarch gcc-arm-none-eabi libglib2.0-0 libpixman-1-0 libfdt1 libpulse0
+          sudo apt-get install -y --no-install-recommends gdb-multiarch gcc-arm-none-eabi libnewlib-arm-none-eabi libglib2.0-0 libpixman-1-0 libfdt1 libpulse0
           bash emulator/web/prepare-stock.sh
 
       - name: Prepare firmware presets
