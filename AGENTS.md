@@ -52,6 +52,7 @@ Documentation layout:
 docs/index.mdx               project home and device matrix
 docs/about/                  project-wide documentation
 docs/getting-started/        host setup and first steps
+docs/contributing/           shared firmware analysis workflow
 docs/tooling/                fwkit and BLE tool references
 docs/emulator/               emulator setup, boot, OTA and recovery
 docs/devices/<model>/        protocol, formats, internals, guides for one device
@@ -82,7 +83,6 @@ docs/dumps/                  manifests and downloadable images
   the answer is `0x9042`; on `A041` the end is `0x9041` with payload `A5`.
 - Watch faces: delete and append is the reliable update path.
 - `.ajs`: 240×240 JPEG frames, fps byte `+0x07` (0 means 25); `9.ajs` is sport type 22, 8 s.
-- Full Bad Apple (~18.75 MiB) exceeds the ~3.85 MiB free after replacing `9.ajs`.
 - The bootloader is not part of the AOTA image; no universal recovery has been proven.
 
 These values are specific to firmware `1.0.0.73` on board `JX402`. Other devices and builds
@@ -154,3 +154,20 @@ cd site && pnpm build
 The placeholder MAC is `AA:BB:CC:DD:EE:FF`. Real MAC addresses, serial numbers, pairing
 secrets, authkeys, session keys, GPS tracks and notification contents are stripped from logs,
 screenshots, issues and commits. `tools/.watch_state.json` is gitignored and never published.
+
+
+## Documentation evidence and current emulator scope
+
+Use current code and recorded results when changing support claims. Explain
+inputs before commands, define model-specific terms, and keep historical run
+sizes in the evidence archive. Troubleshooting belongs under Getting started;
+do not describe emulator recovery as a physical recovery procedure.
+
+Current fixture preparation generates stock texture indexes for both models.
+Watch 3 Pro has a verified small app/SDFS virtual OTA transfer, guest reset and
+host-modeled install. Automatic extraction from arbitrary WP3 NAND snapshots,
+physical recovery and full factory-test parity remain unverified. See the
+site's OTA and recovery page for the precise boundary.
+
+Documentation changes follow `site/src/content/docs/ai/documentation.md`, including
+reader scenarios, evidence boundaries, link preservation and local verification.

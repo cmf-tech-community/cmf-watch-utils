@@ -4,9 +4,12 @@ description: What the QEMU preview supports and where to start.
 ---
 
 The emulator runs stock CMF Watch Pro 2 and Watch 3 Pro firmware on your
-computer. Watch Pro 2 also supports custom apps and virtual firmware updates.
+computer. Both profiles support custom application boots. Desktop virtual OTA
+has model-specific test coverage described in [OTA and recovery](/emulator/ota-recovery/).
 
 ## Browser preview
+
+For step-by-step instructions, start with [Use the browser emulator](/emulator/browser-guide/).
 
 Open either model in a recent desktop version of Chrome or Edge. Stock firmware
 starts automatically. Select the model name above the virtual watch to switch.
@@ -45,7 +48,7 @@ prepared base files.
 Use the camera button to save the circular display as a transparent PNG.
 Turn on **Include frame in screenshots** under **Display** to include the case.
 
-Open **FMC watch faces** to browse the catalog for the selected model. Search by
+Open **FMC watch faces** to browse the [FMC](https://fmc.tools) catalog for the selected model. Search by
 title or creator and sort by newest, most downloaded, or most flashed. Choose a
 face, then select **Apply watch face** to install it at boot. Applying restarts
 a running watch. To use a local face file, stop the watch, select the file
@@ -56,7 +59,7 @@ separately under **Raw application files**.
 
 On Watch Pro 2, select **Bad Apple** from **Boot preset** to run the bundled demo.
 For an example of a custom Zephyr application, see the
-[Bad Apple source](https://github.com/cmf-tech-community/firmware-wp2-badapple) and
+[Bad Apple source](https://github.com/fmctools/firmware-wp2-badapple) and
 [case study](/devices/cmf-watch-pro-2/guides/bad-apple/).
 For Bluetooth OTA and recovery tests, use desktop QEMU.
 

@@ -3,6 +3,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 ROUTES = {"wp2-stock": "watch-pro-2", "wp3-stock": "watch-pro-3"}
+OG_IMAGES = {"wp2-stock": "og-watch-emulator.png", "wp3-stock": "og-watch-3-pro.png"}
 FRAME_FILES = {
     "wp2-stock": ("dark-grey.png", "light-grey.png", "blue.png", "orange.png"),
     "wp3-stock": ("dark-grey.png", "light-grey.png", "light-green.webp", "orange.png"),
@@ -22,10 +23,9 @@ def render_page(profile, attributes=(), *, model_selector=False):
         html = html.replace('          <option value="bad-apple">Bad Apple</option>\n', '')
         html = html.replace("Watch 3 Pro AOTA package.", "Watch 3 Pro AOTA package with application and SDFS resources.")
         html = html.replace("Replaces Activity Mood", "Replaces Duskscape")
-        html = html.replace("Explore stock, try Bad Apple and watch faces, or load your own firmware.",
-                            "Explore stock firmware or boot a custom Watch 3 Pro application.")
-        html = "\n".join(line for line in html.split("\n")
-                         if 'property="og:image' not in line and 'name="twitter:card"' not in line)
+        html = html.replace("og-watch-emulator.png", OG_IMAGES[profile])
+        html = html.replace("CMF Watch 3 Pro with a green dot-matrix watch face beside the words CMF Watch Emulator.",
+                            "CMF Watch 3 Pro with an orange strap and analog watch face beside the words CMF Watch Emulator.")
     if model_selector:
         current = "Watch 3 Pro" if profile == "wp3-stock" else "Watch Pro 2"
         alternate = "wp2-stock" if profile == "wp3-stock" else "wp3-stock"

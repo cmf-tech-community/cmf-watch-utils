@@ -33,5 +33,7 @@ data phase.
 
 ## Safety
 
-Read-only commands (`scan`, `info`, `at`, `ota-state`) are safe. Commands that write to the
+Use `scan`, `info`, `ota-state` and known read-only AT queries for diagnosis.
+The `at` command can also send settings or reset commands; its effect depends on
+the command supplied. Commands that write to the
 watch (`wf-flash`, `wf-delete`, `ota-*` writes) should only be run with explicit approval.

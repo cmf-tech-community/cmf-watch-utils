@@ -9,7 +9,9 @@ use paths relative to the checkout. On Windows, use `runtime/qemu-system-arm.exe
 ## Watch Pro 2 storage
 
 QEMU needs files that stand in for the watch's storage. They contain the app,
-its fonts and images, and the language setting. The CLI uses the reference
+its fonts and images, and the language setting. These prepared storage files
+are called **fixtures** in the CLI. Creating them only writes files on your
+computer; it does not connect to or modify a physical watch. The CLI uses the reference
 firmware to create these files on your computer.
 
 1. Download the pinned SDK [NAND ID file](https://raw.githubusercontent.com/lvgl/lv_port_actions_technology/26f51e584940d5b141cd1d09d2629d69b595f579/action_technology_sdk/zephyr/tools/prebuilt/leopard/common/bin/nand_id_all.bin)
@@ -27,8 +29,9 @@ uv run cmf-watch-utils emu prepare-fixtures --fixtures fixtures --stock dumps/bi
 
 The command prints where it saved the storage files and logs. The
 `fixtures` folder should contain `nor.bin`, `nand-id.bin` and
-`nand-defaults.bin`. Keep them for future runs. If you already have these
-three files from a previous setup, reuse them and go to [Headless boot](#headless-boot).
+`nand-defaults.bin`, plus `wfc-index.txt` for stock texture decoding. Keep them
+together for future runs. If older fixtures show corrupted watch-face graphics,
+prepare a fresh directory with the current CLI to generate the texture index.
 
 ## Watch 3 Pro storage
 
@@ -43,7 +46,9 @@ uv run cmf-watch-utils emu prepare-fixtures --profile wp3-stock --fixtures fixtu
 Add `--profile wp3-stock` and substitute `fixtures-wp3` for `fixtures` in
 the commands below. Keep `wfc-index.txt` beside the flash files. Native
 stock fixtures can show the language screen. The [browser preview](/emulator/watch-pro-3/)
-starts at the face.
+starts at the face. With the current desktop CLI, add `--watch-face-preview`
+to the Watch 3 Pro stock run for the same starting screen. This completes local
+setup for testing; it does not perform Nothing X account pairing.
 
 ## Headless boot
 
@@ -104,6 +109,8 @@ That direct boot checks whether the app starts and renders. Use
 ```text
 uv run cmf-watch-utils emu preflight --image local/update.bin
 ```
+
+For Watch 3 Pro, add `--profile wp3-stock` to the preflight command too.
 
 Preflight means checking a package without running it. The command checks the
 target board, checksums, and whether the app and its resources fit. It only

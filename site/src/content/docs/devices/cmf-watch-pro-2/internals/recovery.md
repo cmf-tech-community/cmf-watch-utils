@@ -15,17 +15,14 @@ the service survives a broken app.
 
 ## What QEMU recovery verifies
 
-| Scenario | What the test verified |
-|---|---|
-| Stock OTA reset and install | Stock reported success and the host sent END. QMP observed the guest OTA reset and retained reboot reason. The recovery supervisor read logical TEMP from the captured virtual NAND using the stock NAND driver, validated app/SDFS data, retired the pending record and wrote a separate virtual NOR. The resulting Bad Apple app booted to the panel. |
-| Crown + charger with a broken app | Given both modeled inputs, the host restored the stock app and SDFS from the verified local fixture while leaving other virtual NOR partitions in place apart from retiring pending OTA records. The restored stock image booted. |
-| Actions OTA | The guest returned image validation success. Installation and post-reset boot were verified separately for the stock OTA path. |
+Virtual tests cover stock OTA validation, reset and host-modeled installation,
+and stock restoration when the modeled crown and charger inputs are present.
+The [emulator recovery reference](/emulator/ota-recovery/) records the exact
+stages and command requirements.
 
 The guest starts through a compatibility ROM. The real bootloader and recovery
-partitions were not read back or executed in this flow. The model cannot verify
-the physical power-on selector, recovery BLE when the app is broken, or recovery
-after corruption in the bootloader, storage or power path. Use
-[OTA and recovery](/emulator/ota-recovery/) for the fixture and command requirements.
+partitions were not read back or executed. These tests cannot establish physical
+recovery when the application, bootloader, storage or power path is damaged.
 
 ## Evidence in the firmware
 
@@ -51,19 +48,16 @@ Factory-menu reset options can erase local settings and pairing state.
 ## UART / physical debug
 
 The app contains a UART shell (`nand logic read/write`, `devboot`, `reboot`, `cpuload`) on
-`UART_0`. Reaching it requires physical access to the debug pads and a USB-UART adapter. It is
-the most promising route for a real unbrick or a NAND dump, but the shell has not been
-connected.
+`UART_0`. Reaching it requires physical access to the debug pads and a USB-UART adapter. Physical access and recovery through this shell have not been verified.
+Its presence in the firmware is not proof that it can recover a damaged watch.
 
 ## Practical precautions
 
-1. A known-good full image and the exact image to be flashed are kept.
-2. Every CRC is verified before flashing.
-3. Interrupting power or the BLE link during the data phase aborts the transfer.
-4. After a failed flash, the watch reboots and `info` is checked before a retry.
-5. If the app never returns, OTA attempts are not repeated; UART/hardware recovery is
-   investigated instead.
-6. Bootloader images and firmware for a different board are not flashed.
+Use the [flashing guide](/devices/cmf-watch-pro-2/guides/ota-flash/) for
+preparation and the [troubleshooting guide](/getting-started/troubleshooting/)
+for failed updates. Keep a known-good image, verify the candidate and establish
+that the app responds before retrying. A saved image alone does not provide a
+working recovery transport.
 
 ## Bootloop warning
 

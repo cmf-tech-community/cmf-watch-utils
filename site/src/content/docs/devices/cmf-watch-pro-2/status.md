@@ -1,77 +1,31 @@
 ---
-title: What works
-description: Verified functionality, hardware-tested results and known-good paths.
+title: Watch Pro 2 support and verification
+description: What has been verified on Watch Pro 2 hardware, in the emulator, and with offline tools.
 ---
 
-The table identifies where each Watch Pro 2 workflow was verified. Watch 3 Pro has a [separate device profile](/devices/cmf-watch-pro-3/).
+The reference device is Watch Pro 2 board `JX402` with stock firmware
+`1.0.0.73`. Physical Bluetooth tests used Windows. Offline format checks and
+virtual tests have their own scope.
 
-## Status summary
+<span id="status-summary"></span>
+<span id="firmware-and-container-work"></span>
+<span id="watch-faces-and-ui"></span>
+<span id="animations-and-the-bad-apple-proof-of-concept"></span>
+<span id="ble-and-ota"></span>
 
-| Area | Status | Evidence |
-|---|---|---|
-| Read shell/AT commands over BLE | Verified | `GETVERSION`, `GETPID`, `GETBATLV`, `GETSN`, `GETGSENSOR` |
-| BLE authentication and session keys | Verified | Pairing, nonce exchange, AES-CBC session key |
-| AOTA container parse / rebuild | Verified offline | Byte-identical rebuild of the stock image |
-| SDFS partition parse / pack / pad | Verified offline | Every partition round-trips, including padded `res_e` |
-| RES picture and string pools | Verified offline | All shipped entries decode; edit round-trips |
-| STY scene bundles | Verified offline | Parse/build; add/delete/compact scene tests |
-| WFDL watch faces | Verified offline + on-watch upload | Build and upload/delete |
-| AJS animations | Verified offline + on-watch | Extract/repack byte-identical; custom animation played |
-| Full AOTA firmware OTA over BLE | Verified on hardware | Changed partition transferred and committed; watch booted |
-| Stock, onboarding, Bad Apple and Tilt Mouse boots | Verified in QEMU on Windows | Panel frames captured. Bad Apple also produced nonzero WAV samples. |
-| Virtual stock OTA | Verified in QEMU | Guest reset, staged NAND read through the stock NAND driver, host install and custom boot |
-| Actions SDK OTA | Verified in QEMU | Full transfer and guest-reported validation. Physical transfer with this client remains unverified. |
-| Crown + charger rescue | Verified in the recovery model | The host restored a broken virtual app and booted stock. The physical boot path remains unverified. |
-| App binary patching | Verified offline | Scene-id literal rewrite and header rebuild |
+| Workflow | Verified result |
+|---|---|
+| Bluetooth pairing and device queries | The stock watch paired, established an authenticated session, and answered version, battery and motion queries. [BLE tools](/tooling/ble-tools/) |
+| Watch-face upload | A rebuilt face rendered on a physical watch. Deleting an installed face and uploading its replacement freed and reused the slot. [Watch-face editing and upload](/devices/cmf-watch-pro-2/guides/dial-editing/) |
+| Firmware and resource tools | The reference AOTA image rebuilt byte-for-byte. SDFS, RES, STY, WFDL and AJS tools were checked on the documented stock formats. A modified warm-up animation also played on hardware. [Firmware toolkit](/tooling/fwkit/) · [Animation case study](/devices/cmf-watch-pro-2/guides/bad-apple/) |
+| Stock firmware update | A physical watch accepted a modified AOTA package, restarted and booted the updated resources. [Firmware flashing guide](/devices/cmf-watch-pro-2/guides/ota-flash/) |
+| Emulator boot | Stock and custom firmware draw on the virtual display. All six stock faces rendered in Windows QEMU and the browser. Bad Apple rendered in both, and Tilt Mouse booted on Windows. [Emulator](/emulator/) |
+| Virtual stock OTA | The guest accepted an update and restarted. The host read the staged package from virtual NAND, installed it with modeled recovery and booted the resulting app. [Virtual OTA and recovery](/emulator/ota-recovery/) |
+| Actions SDK OTA | Transfer and guest-reported validation passed in QEMU. Physical transfer with the published Actions client remains unverified. [Actions SDK OTA](/tooling/actions-ota/) |
+| Recovery | The QEMU model restored a broken virtual app and booted stock. The equivalent physical boot path remains unverified. [Recovery & boot modes](/devices/cmf-watch-pro-2/internals/recovery/) |
 
-## Firmware and container work
+<span id="what-the-toolkit-is-not"></span>
 
-- **AOTA** is a 0x400-byte header, a 32-byte entry table, LZMA chunks, and nested partitions
-  (`TEMP.bin`, `res.bin`, `fonts.bin`, `res_e.bin`, `sdfs_k.bin`). The toolkit verifies the
-  header CRC, every entry CRC, and can rebuild the image with changed partitions.
-- **SDFS** (`res_e`, `res_e`-style images) is a simple named-file filesystem with fixed
-  partition length. `fwkit.sdfs.pad_to()` preserves the original partition size while
-  refreshing `total_size` and the data checksum.
-- The stock image was rebuilt byte-for-byte to validate the parser/writer prior to any edit.
-
-## Watch faces and UI
-
-- `.wfdl` packages can be parsed into a resource tree, edited (including image replacement),
-  rebuilt and uploaded over BLE.
-- The upload path is `0x8052` → `0x9075` → watch pulls with `0xA064` → `0x9064` chunks →
-  `0xA065` → `0x9065`. Delete + append is the reliable update path.
-- `.sty` scene bundles are mapped enough to read the scene table, walk the node graph, add a
-  scene with fresh node IDs, delete a scene and compact records. A new scene still needs an
-  app-side scene-id reference if the scene is to be reachable from the UI.
-- `.res` picture codecs are fully decoded for the shipped content: JPEG and raw LZ4 with
-  RGB888/RGB565 variants.
-
-## Animations and the Bad Apple proof of concept
-
-- `.ajs` files are 240×240 JPEG frame sequences at 25 fps by default, with a small record
-  prelude and a tile table. `9.ajs` is the 8-second sport warm-up animation (sport type 22).
-- A 202-frame / 8.1-second PoC was built, extracted back byte-identically, packed into
-  `res_e.bin`, wrapped in a valid AOTA image, flashed over BLE, and **confirmed playing on the
-  watch UI**.
-- Full Bad Apple is ~5,250 frames / ~18.75 MiB, which does **not** fit in the free space left
-  by replacing only `9.ajs`. See [Limitations](/devices/cmf-watch-pro-2/limitations/).
-
-## BLE and OTA
-
-- BLE authentication, shell/AT commands, watch-face upload and the AOTA OTA state machine are
-  all usable from Python.
-- The critical OTA detail: **`0x9040` (INIT2) is sent on the OTA characteristic `...ff01`**, and
-  not first on the command characteristic. Sending it on `CMD_W` can reboot the watch before the
-  data phase starts.
-- At the end, `0xA041` is answered with `0x9041` and payload `A5`. Skipping the end ack leaves
-  the transfer uncommitted in testing.
-- A full 54 MB candidate flashed successfully; the watch reported `A041 01`, accepted the end
-  ack, rebooted and booted the new resource partition.
-
-See [Emulator CLI](/emulator/) and [Actions SDK OTA](/tooling/actions-ota/) for scope and dependencies.
-
-## What the toolkit is not
-
-This is not a universal unlock, not a bootloader exploit, and not a way to read arbitrary NAND.
-It works with the normal app/bootloader interfaces that the watch already exposes. Encrypted
-or unimplemented parts remain out of reach without a NAND dump or a patched app.
+Read [Firmware flashing risks and limitations](/devices/cmf-watch-pro-2/limitations/)
+before installing firmware on a physical watch. Watch 3 Pro results are
+documented in its [device profile](/devices/cmf-watch-pro-3/).

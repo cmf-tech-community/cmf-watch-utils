@@ -3,11 +3,12 @@ title: Picture codecs
 description: JPEG, raw LZ4, RGB888/RGB565 and all verified picture decoders.
 ---
 
-Status: **fully reversed and verified against all 2,192 entries of
-`bt_watch.res`** (2026-10). Every entry decodes; every `.sty` type-4
+The codecs below were verified against all 2,192 entries of
+`bt_watch.res` from Watch Pro 2 firmware 1.0.0.73. Every entry decodes; every `.sty` type-4
 node's `w/h/bpp` matches the decoded image (0 mismatches).
 
-This document supersedes the "unknown codec" notes in `aota.md` §RES.
+See the [AOTA reference](/devices/cmf-watch-pro-2/formats/aota/) for the
+firmware package containing this resource file.
 
 ---
 

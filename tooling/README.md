@@ -1,6 +1,10 @@
 # fwkit
 
-Offline toolkit for the CMF Watch Pro 2 firmware containers.
+Offline toolkit for firmware containers and resources. Watch Pro 2 is the
+reference for the format tables; Watch 3 Pro package differences are documented
+in its [device reference](https://cmf.arnv.dev/devices/cmf-watch-pro-3/formats/).
+Run commands from the repository root after `uv sync --locked`. Supply a local
+firmware file at the example path or replace that path with your own.
 
 ```bash
 uv run fwkit --help
@@ -29,6 +33,7 @@ uv run fwkit verify firmware/JX402_V1.0.0.73.bin
 1. Prove a byte-identical round-trip before editing a container.
 2. Keep the original partition length when a partition is embedded in an AOTA image
    (`fwkit.sdfs.pad_to`).
-3. Never redistribute vendor resources or firmware; the toolkit only reads what you supply.
+3. Keep the model and firmware version with your results. Parsing an image does
+   not establish that it can be flashed to another model.
 
 Regression tests live in `../tooling/tests/selftest.py` and need a firmware image you provide.

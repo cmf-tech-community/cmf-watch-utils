@@ -4,7 +4,7 @@ description: Device profile, verified capabilities and page map for the CMF Watc
 ---
 
 The CMF Watch Pro 2 is the first device covered by this project. It runs the Actions
-ATS3089C platform on board `JX402`, ships as firmware `1.0.0.73` and exposes a BLE command
+ATS3089C platform on board `JX402`, uses reference firmware `1.0.0.73` in this documentation and exposes a BLE command
 service, a watch-face upload channel and an AOTA firmware update path.
 
 ## Profile
@@ -77,5 +77,5 @@ The constants, offsets and BLE behaviour documented here belong to this firmware
 Other models and other builds are covered by separate sections; see the
 [roadmap](/about/roadmap/).
 
-Risks specific to this device — flashing, storage ceilings, unresolved formats — are on the
+Flashing risks and recovery limits are on the
 [limitations page](/devices/cmf-watch-pro-2/limitations/).

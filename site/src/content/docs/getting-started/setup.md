@@ -3,10 +3,15 @@ title: Setup
 description: Install the workspace, verify the command line, and choose your next step.
 ---
 
+This page installs the Python tools on your computer. To try the watch without
+installing tools, open the [browser emulator](/emulator/). For a documentation-only
+change, follow [Contributing](/getting-started/contributing/#preview-documentation).
+
 ## 1. Install the workspace
 
 Install Git and [uv](https://docs.astral.sh/uv/getting-started/installation/). The
-workspace uses Python 3.12 or later. `uv` can fetch a compatible Python when one
+workspace uses Python 3.12 or later. Git downloads the source; `uv` installs
+Python dependencies into this project’s environment. `uv` can fetch a compatible Python when one
 is missing. Open a terminal in the directory where you want the checkout.
 
 On Arch Linux, install the workspace tools with
@@ -18,7 +23,7 @@ The emulator's additional libraries are listed under
 
 ```powershell
 $env:GIT_LFS_SKIP_SMUDGE = '1'
-git clone https://github.com/cmf-tech-community/cmf-watch-utils.git
+git clone https://github.com/fmctools/cmf-watch-utils.git
 Remove-Item Env:GIT_LFS_SKIP_SMUDGE
 cd cmf-watch-utils
 uv sync --locked
@@ -27,12 +32,13 @@ uv sync --locked
 **Linux or macOS**
 
 ```bash
-GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/cmf-tech-community/cmf-watch-utils.git
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/fmctools/cmf-watch-utils.git
 cd cmf-watch-utils
 uv sync --locked
 ```
 
-These commands skip large firmware downloads. From the checkout, verify the tools:
+The `GIT_LFS_SKIP_SMUDGE` setting skips large firmware downloads during cloning.
+`uv sync --locked` installs the dependency versions recorded by the project. From the checkout, verify the tools:
 
 ```text
 uv run fwkit --help
@@ -48,7 +54,8 @@ with `-Target .` or `.` respectively to install the current checkout. Use
 
 ## 2. Get the reference firmware if your task needs it
 
-For container inspection or creating emulator fixtures, install Git LFS and fetch
+Skip this section for documentation changes or the firmware-free Python tests.
+For container inspection or creating emulator storage files, install Git LFS and fetch
 the exact reference image:
 
 ```text
@@ -68,3 +75,6 @@ Use a separate copy for edits.
 - **Talk to your watch** with the [BLE tools](/tooling/ble-tools/). Start with `scan`. Pairing and OTA negotiation are live operations.
 - **Check an Actions OTA package** offline with the [Actions OTA guide](/tooling/actions-ota/).
 - **Build the docs** from `site/` with Node.js 22.22 or later and pnpm 12. Run `pnpm install --frozen-lockfile` and `pnpm build`. Use `pnpm dev` to preview.
+
+For help with connection failures, pairing screens and failed downloads, see
+[Troubleshooting](/getting-started/troubleshooting/).

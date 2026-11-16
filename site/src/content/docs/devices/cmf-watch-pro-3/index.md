@@ -17,11 +17,19 @@ description: Firmware identity, supported workflows and research for the CMF Wat
 | Try stock firmware in a browser | [Open Watch 3 Pro](/emulator/watch-pro-3/) |
 | Test a build or a watch face | [Emulator inputs and file types](/emulator/) |
 | Prepare and run desktop QEMU | [First boot](/emulator/first-boot/#watch-3-pro-storage) |
-| Inspect the stock update | [Firmware and watch faces](/devices/cmf-watch-pro-3/formats/) and the [reference image](/dumps/#jx402_w3pro_v10177bin-stock-firmware) |
+| Inspect the stock update | [Firmware format](/devices/cmf-watch-pro-3/formats/) and the [reference image](/dumps/#jx402_w3pro_v10177bin-stock-firmware) |
 | Add a device model or parser | [Device documentation and contribution map](/about/roadmap/) |
+
+## Documentation map
+
+- [Support and verification](/devices/cmf-watch-pro-3/status/) separates offline, desktop, browser and physical results.
+- [Firmware format](/devices/cmf-watch-pro-3/formats/) describes the update container and application layout.
+- [Watch faces](/devices/cmf-watch-pro-3/watch-faces/) covers textures and custom previews.
+- [Hardware and emulation](/devices/cmf-watch-pro-3/hardware/) describes the modeled device interfaces.
+- [Testing stock firmware](/devices/cmf-watch-pro-3/testing/) provides input, sensor and passcode checks.
+- [Virtual OTA](/emulator/ota-recovery/#watch-3-pro-update-coverage) describes the verified update stages and remaining recovery limits.
 
 ## Verification scope
 
-The browser and desktop emulator run the stock application and render its launcher, touch and crown interactions, and stock watch-face picker. Browser tests covered stock numeric and gesture passcodes, off-wrist locking and unlocking. The stock measurement apps computed heart rate and blood oxygen from synthetic optical samples. See [hardware and emulation](/devices/cmf-watch-pro-3/hardware/) for the observed driver behaviour and limits.
-
-The browser starts with local setup complete. Desktop fixtures can start at the language and QR screens. Reaching a screen in QEMU establishes what the guest application can do with virtual devices. End-to-end Nothing X pairing on Watch 3 Pro, physical OTA and the physical bootloader and recovery paths remain unverified in this project. Use the [Watch Pro 2 device pages](/devices/cmf-watch-pro-2/) for that model’s separate hardware and protocol results.
+The browser starts with local setup complete. This does not establish Nothing X
+account pairing. Physical OTA and bootloader recovery remain unverified.

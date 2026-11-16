@@ -9,18 +9,18 @@
 <h1 align="center">CMF Watch Utils</h1>
 
 <p align="center">
-  Tooling and documentation for <b>CMF Watch Pro 2</b> — firmware container
+  Tooling and documentation for <b>CMF Watch Pro 2 and Watch 3 Pro</b> — firmware container
   toolkit, BLE tooling, a QEMU emulator preview and reverse-engineering notes.
 </p>
 
 <p align="center">
   <a href="https://cmf.arnv.dev/"><img alt="Docs" src="https://img.shields.io/badge/docs-cmf.arnv.dev-FB471F?style=for-the-badge&logo=readthedocs&logoColor=white" /></a>
   <a href="https://cmf.arnv.dev/devices/cmf-watch-pro-2/"><img alt="CMF Watch Pro 2" src="https://img.shields.io/badge/device-CMF%20Watch%20Pro%202-black?style=for-the-badge" /></a>
-  <a href="https://github.com/cmf-tech-community/cmf-watch-utils/actions"><img alt="CI" src="https://github.com/cmf-tech-community/cmf-watch-utils/actions/workflows/ci.yml/badge.svg" /></a>
-  <a href="https://github.com/cmf-tech-community/cmf-watch-utils/actions"><img alt="Pages" src="https://github.com/cmf-tech-community/cmf-watch-utils/actions/workflows/pages.yml/badge.svg" /></a>
+  <a href="https://github.com/fmctools/cmf-watch-utils/actions"><img alt="CI" src="https://github.com/fmctools/cmf-watch-utils/actions/workflows/ci.yml/badge.svg" /></a>
+  <a href="https://github.com/fmctools/cmf-watch-utils/actions"><img alt="Pages" src="https://github.com/fmctools/cmf-watch-utils/actions/workflows/pages.yml/badge.svg" /></a>
   <a href="LICENSE"><img alt="AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-blue?style=for-the-badge" /></a>
-  <a href="https://github.com/cmf-tech-community/cmf-watch-utils"><img alt="Stars" src="https://img.shields.io/github/stars/cmf-tech-community/cmf-watch-utils?style=for-the-badge" /></a>
-  <a href="https://github.com/cmf-tech-community/cmf-watch-utils"><img alt="Forks" src="https://img.shields.io/github/forks/cmf-tech-community/cmf-watch-utils?style=for-the-badge" /></a>
+  <a href="https://github.com/fmctools/cmf-watch-utils"><img alt="Stars" src="https://img.shields.io/github/stars/fmctools/cmf-watch-utils?style=for-the-badge" /></a>
+  <a href="https://github.com/fmctools/cmf-watch-utils"><img alt="Forks" src="https://img.shields.io/github/forks/fmctools/cmf-watch-utils?style=for-the-badge" /></a>
 </p>
 
 <p align="center">
@@ -50,10 +50,8 @@
 | Watch Pro 2 QEMU | stock, onboarding, Bad Apple and Tilt Mouse booted to the panel on Windows |
 | Watch 3 Pro QEMU | stock 1.0.1.77 boots in the browser and on desktop. See the [device profile](https://cmf.arnv.dev/devices/cmf-watch-pro-3/). |
 | Watch Pro 2 virtual recovery | stock OTA reset and staged install booted Bad Apple. Modeled crown + charger restored stock after app corruption |
-| Custom animation flashed and played | verified on hardware, 202-frame proof of concept |
-| Firmware `1.0.0.57` rollback image | published, rebuilt from extracted parts, all CRCs verify |
 
-[Bad Apple firmware](https://github.com/cmf-tech-community/firmware-wp2-badapple)
+[Bad Apple firmware](https://github.com/fmctools/firmware-wp2-badapple)
 is an example of building a custom Zephyr app for this watch. The
 [Bad Apple case study](https://cmf.arnv.dev/devices/cmf-watch-pro-2/guides/bad-apple/)
 explains how the player fits the watch's storage and memory.
@@ -83,12 +81,16 @@ through Git. The downloads below also have direct links.
 - [Downloads](#downloads)
 - [Layout](#layout)
 - [Documentation](#documentation)
-- [The three OTA rules that decide the outcome](#the-three-ota-rules-that-decide-the-outcome)
+- [Stock OTA protocol requirements](#stock-ota-protocol-requirements)
 - [Testing](#testing)
 - [Attribution](#attribution)
 - [License](#license)
 
 ## Use
+
+Download the reference firmware using the setup guide before running the offline
+examples. Run commands from the repository root. `info` requires pairing; start
+with `scan` and follow the [BLE guide](https://cmf.arnv.dev/tooling/ble-tools/).
 
 ```bash
 # offline: parse and verify a firmware image
@@ -110,8 +112,8 @@ uv run cmf-watch-utils emu preflight --image local/update.bin
 uv run cmf-watch-utils ota actions --image local/actions-update.bin
 ```
 
-These commands run offline. The available profiles are `wp2-stock` and `wp2-onboarding`,
-both based on Watch Pro 2 stock `1.0.0.73`. Booting needs the project QEMU build, its
+These commands run offline. The profiles are `wp2-stock` and `wp2-onboarding`
+for Watch Pro 2 stock `1.0.0.73`, and `wp3-stock` for Watch 3 Pro stock `1.0.1.77`. Booting needs the project QEMU build, its
 compatibility ROM, host runtime libraries and prepared local NOR/NAND fixtures with a NAND ID
 sidecar. Use `emu prepare-fixtures` to generate these locally from the stock package and
 pinned NAND ID table with an Arm-capable GDB. The interactive viewer also needs Tcl/Tk `wish`. Virtual BLE OTA needs a loopback H4
@@ -140,11 +142,11 @@ individual files below.
 
 | File | Size | SHA-256 (first 16) | Description |
 |---|---:|---|---|
-| [`JX402_V1.0.0.73.bin`](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73.bin) | 56.9 MB | `30903fc8ce6db4f8` | Stock factory firmware, `1.0.0.73` |
-| [`JX402_V1.0.0.57.bin`](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.57.bin) | 56.1 MB | `cd4574f1f9fa3110` | Rollback target, `1.0.0.57` |
-| [`JX402_V1.0.0.73_badapple9.bin`](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73_badapple9.bin) | 54.1 MB | `4933e593d14bef6f` | Rebuilt image with the animation proof of concept |
-| [`app_073.bin`](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/app/app_073.bin) | 2.4 MB | `30e7978c39d8fb79` | `app.bin` from the `1.0.0.73` image |
-| [`app_057.bin`](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/app/app_057.bin) | 2.4 MB | `26fbe34c10343949` | `app.bin` from the `1.0.0.57` image |
+| [`JX402_V1.0.0.73.bin`](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73.bin) | 56.9 MB | `30903fc8ce6db4f8` | Stock factory firmware, `1.0.0.73` |
+| [`JX402_V1.0.0.57.bin`](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.57.bin) | 56.1 MB | `cd4574f1f9fa3110` | Reconstructed older firmware; physical downgrade unverified |
+| [`JX402_V1.0.0.73_badapple9.bin`](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73_badapple9.bin) | 54.1 MB | `4933e593d14bef6f` | Rebuilt image with the animation proof of concept |
+| [`app_073.bin`](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/app/app_073.bin) | 2.4 MB | `30e7978c39d8fb79` | `app.bin` from the `1.0.0.73` image |
+| [`app_057.bin`](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/app/app_057.bin) | 2.4 MB | `26fbe34c10343949` | `app.bin` from the `1.0.0.57` image |
 
 Manifests with full hashes and per-entry CRC status:
 [`firmware-1.0.0.73.json`](dumps/manifests/firmware-1.0.0.73.json) ·
@@ -180,7 +182,8 @@ site/src/content/docs/
   index.mdx               project home and device matrix
   about/                  project-wide documentation
   getting-started/        host setup and first steps
-  tooling/                fwkit, BLE, emulator and Actions OTA references
+  tooling/                fwkit, BLE and Actions OTA references
+  emulator/               browser and desktop setup, virtual OTA and limits
   devices/<model>/        protocol, formats, internals and guides for one device
   ai/                     agent-facing briefings
   dumps/                  manifests and downloadable images
@@ -190,11 +193,11 @@ site/src/content/docs/
 
 ```bash
 cd site
-pnpm install
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-The site is served from the repository root, so the local preview is at
+Run these commands with Node.js 22.22 or later and pnpm 12. The local preview is at
 <http://localhost:4321/>. The published site is <https://cmf.arnv.dev/>.
 
 Key pages:
@@ -206,12 +209,13 @@ Key pages:
 - [Bad Apple case study](https://cmf.arnv.dev/devices/cmf-watch-pro-2/guides/bad-apple/)
 - [Dumps and downloads](https://cmf.arnv.dev/dumps/)
 - [Roadmap and devices](https://cmf.arnv.dev/about/roadmap/)
+- [Troubleshooting](https://cmf.arnv.dev/getting-started/troubleshooting/)
 - [Agent context](https://cmf.arnv.dev/ai/context/)
 
 For AI agents: [`/llms.txt`](https://cmf.arnv.dev/llms.txt) lists every page, and
 [`/llms-full.txt`](https://cmf.arnv.dev/llms-full.txt) contains the full text.
 
-## The three OTA rules that decide the outcome
+## Stock OTA protocol requirements
 
 These rules describe the stock CMF protocol.
 
@@ -226,16 +230,17 @@ These rules describe the stock CMF protocol.
 ```bash
 uv run --locked python -m unittest discover -s tests -v
 uv run python tooling/tests/selftest.py dumps/binaries/firmware/JX402_V1.0.0.73.bin
-cd site && pnpm build
+cd site
+pnpm build
 ```
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=cmf-tech-community%2Fcmf-watch-utils&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=fmctools%2Fcmf-watch-utils&type=date&legend=top-left">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=cmf-tech-community/cmf-watch-utils&amp;type=date&amp;theme=dark&amp;legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=cmf-tech-community/cmf-watch-utils&amp;type=date&amp;legend=top-left" />
-    <img src="https://api.star-history.com/chart?repos=cmf-tech-community/cmf-watch-utils&amp;type=date&amp;legend=top-left" alt="Star History Chart" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=fmctools/cmf-watch-utils&amp;type=date&amp;theme=dark&amp;legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=fmctools/cmf-watch-utils&amp;type=date&amp;legend=top-left" />
+    <img src="https://api.star-history.com/chart?repos=fmctools/cmf-watch-utils&amp;type=date&amp;legend=top-left" alt="Star History Chart" />
   </picture>
 </a>
 
@@ -243,17 +248,17 @@ cd site && pnpm build
 
 See the [contributing guide](CONTRIBUTING.md) for local setup, emulator smoke tests, and what to include in a pull request.
 
-<a href="https://github.com/cmf-tech-community/cmf-watch-utils/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=cmf-tech-community/cmf-watch-utils" alt="Contributors" />
+<a href="https://github.com/fmctools/cmf-watch-utils/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=fmctools/cmf-watch-utils" alt="Contributors" />
 </a>
 
-See the [full contributor graph](https://github.com/cmf-tech-community/cmf-watch-utils/graphs/contributors).
+See the [full contributor graph](https://github.com/fmctools/cmf-watch-utils/graphs/contributors).
 
 ## Attribution
 
 - [Arnav Kumar](https://github.com/arnav-kr) — [arnv.dev](https://arnv.dev)
 - The watch-face upload behaviour was informed by the AGPL-3.0
-  [`cmf-tech-community/fmc`](https://github.com/cmf-tech-community/fmc) project.
+  [`fmctools/fmc`](https://github.com/fmctools/fmc) project.
 - Bad Apple is a copyrighted work; no animation frames are published in the documentation.
   The proof-of-concept image contains them, so the redistribution terms of that work apply to
   that file.

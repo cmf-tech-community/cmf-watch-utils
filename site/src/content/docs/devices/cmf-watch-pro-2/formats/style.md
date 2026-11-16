@@ -266,6 +266,11 @@ scene 125 id=66977E99 410x502 group=1 alpha=255 items=1 data=0x2329C
 
 ## 7. Tooling (`fwkit`)
 
+These examples use files extracted from reference firmware 1.0.0.73.
+`out/bt_watch.sty` is the UI style bundle and `out/app_073.bin` is its application.
+The hexadecimal IDs refer to that build; inspect your own bundle before changing
+them. Each edit example is independent.
+
 ```text
 uv run fwkit sty-info   out/bt_watch.sty --scenes
 uv run fwkit sty-nodes  out/bt_watch.sty --type 4
@@ -282,7 +287,8 @@ Python API (`fwkit.sty`):
 
 ```python
 import fwkit.sty as sty
-s = sty.parse(open("bt_watch.sty", "rb").read())   # .build() is byte-identical
+blob = open("bt_watch.sty", "rb").read()
+s = sty.parse(blob)   # .build() is byte-identical
 s.node(0xDEFBE0D9)          # -> Node(type, id, xy, wh, children, ...)
 s.scene(125)                # -> Scene(width, height, alpha, group, id, count)
 s.scene_nodes(125)          # -> top-level Node list
@@ -299,5 +305,5 @@ out = sty.compact(blob)                              # GC without deleting
 Node records are patched **in place** (only changed bytes are written), so
 `.sty` edits never shift scene offsets or the node chain. Verified: a
 one-node retarget changes exactly the 1 byte of `pic_index` (333 -> 332)
-in a 10.8 s full-image rebuild, `fwkit verify` ok. Round-trip is
+in the reference resource, with package checksums verified after rebuilding. Round-trip is
 byte-identical for `bt_watch.sty` and `logo.sty`; `selftest.py` checks it.

@@ -1,4 +1,4 @@
-# Watch Pro 2 in the browser
+# Watch emulators in the browser
 
 The [browser preview](https://cmf.arnv.dev/emulator/watch-pro-2/) runs stock 1.0.0.73 using
 our existing ATS3089C model and compatibility ROM. The hosted preview downloads
@@ -59,8 +59,8 @@ The hosted preview accepts local firmware packages,
 application files and watch faces. Open **FMC watch faces** to browse community
 faces by name or author and sort by newest, downloads, or flashes. Choose a
 face and select **Apply watch face** to install it on the next boot. The same
-picker is available when serving local stock files. Select **Bad Apple** to
-provide your own built firmware. Under
+picker is available when serving local stock files. On Watch Pro 2, select **Bad Apple** to run the bundled release. Use
+**Custom firmware** for a build of your own. Under
 **Display**, you can choose a built-in frame color or replace its artwork with
 an image file.
 
@@ -185,9 +185,10 @@ settings. **Hard reset to stock** discards the running session and selected
 files, then starts a fresh stock session.
 
 Open **Optical sensors** to set the heart rate and blood oxygen shown by
-the stock measurement apps. On Watch 3 Pro this supplies the values those
-screens read. The raw optical waveform and measurement history are outside
-that simulation. Open **Gyroscope** on Watch 3 Pro to enter X, Y and Z angular
+the stock measurement apps. On Watch 3 Pro, **Simulate readings** supplies display values directly.
+Enable **Feed raw optical samples** and **Watch is worn** to have stock calculate
+measurements from a synthetic signal. Stock has displayed these results in its
+history screens; persistence across browser reloads remains unverified. Open **Gyroscope** on Watch 3 Pro to enter X, Y and Z angular
 velocity in degrees per second. Open **GPS** to send a stationary fix at a
 latitude and longitude in decimal degrees. The guest must start its GPS
 receiver, for example when starting an outdoor workout.

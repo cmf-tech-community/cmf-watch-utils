@@ -1,62 +1,34 @@
 ---
-title: Ghidra workflow
-description: Import app.bin, set the right base address and use the bundled analysis scripts.
+title: Watch Pro 2 analysis
+description: Reference addresses and entry points for analysing the Watch Pro 2 application.
 ---
 
 ## Import
 
-`app.bin` is a raw Thumb-2 image mapped at **`0x10000000`**. The import uses the
-`ARM:LE:32:Cortex` processor with an image base of `0x10000000`. The ACTH header starts at file
-offset 0, so file offset `X` maps to address `0x10000000 + X`.
+Use the shared [Ghidra workflow](/contributing/firmware-analysis/#import) to
+import an extracted `app.bin`. Watch Pro 2 1.0.0.73 uses Thumb-2 code with an
+image base of `0x10000000`. File offset X maps to `0x10000000 + X`.
 
 ## Bundled scripts
 
-`tooling/ghidra_scripts/` contains helpers for repeatable exports:
-
-| Script | Purpose |
-|---|---|
-| `DumpApp.java` | Summary, entry points and header fields |
-| `CountFns.java` | Function count and address ranges |
-| `FuncAt.java` / `ListFnsInRange.java` | Function boundaries |
-| `Decompile.java` / `DecompileAt.java` / `DecompRange.java` | Export decompilation |
-| `Callers.java` / `CallersOf.java` / `RefsTo.java` / `Xrefs.java` | Call and data xrefs |
-| `FindImm.java` / `FindOps.java` / `SearchDecomp.java` | Immediate/opcode/text search |
-| `FindStrings.java` / `FindStrXrefs.java` | String tables and references |
-| `FindOta.java` / `OtaFns.java` / `OtaGraph.java` / `OtaHandlers.java` / `OtaReq.java` | OTA state-machine mapping |
-| `NameMap.java` / `ExportAnnotated.java` | Export names and annotated listings |
+The [analysis script reference](/contributing/firmware-analysis/#bundled-scripts)
+lists the helpers in `tooling/ghidra_scripts/` and their purposes.
 
 ## Headless example
 
-```bash
-analyzeHeadless analysis-projects wp2 \
-  -import app.bin \
-  -processor ARM:LE:32:Cortex \
-  -loader BinaryLoader \
-  -loader-baseAddr 0x10000000 \
-  -scriptPath tooling/ghidra_scripts \
-  -postScript DumpApp.java \
-  -analysisTimeoutPerFile 900
-```
-
-Create the `analysis-projects` directory before import. To decompile one function:
-
-```bash
-analyzeHeadless analysis-projects wp2 -process app.bin -noanalysis \
-  -scriptPath tooling/ghidra_scripts \
-  -postScript DecompileAt.java 0x101F4D70
-```
-
-Exact argument order depends on the script; the Java file header lists its parameters.
+The [headless commands](/contributing/firmware-analysis/#headless-example)
+cover import and function export, including Windows command syntax.
 
 ## Conventions
 
-- Addresses in this documentation are virtual addresses (`0x10...`), not file offsets.
-- `0x101F4D70` is the BLE/AT group dispatcher; `0x10054CF4` is `system_app_launch`.
-- The ACTH fields are referenced in [app.bin internals](/devices/cmf-watch-pro-2/internals/appbin/).
-- Decompiler output is a hypothesis, confirmed by a live reply or a byte-level round-trip.
+For Watch Pro 2 1.0.0.73, `0x101F4D70` is the BLE/AT group dispatcher and
+`0x10054CF4` is `system_app_launch`. These are virtual addresses, not file
+offsets. See [app.bin internals](/devices/cmf-watch-pro-2/internals/appbin/)
+for ACTH fields and [BLE protocol](/devices/cmf-watch-pro-2/protocol/ble/)
+for dispatch and update functions. Do not reuse these addresses for another build.
 
 ## Reproducibility
 
-Ghidra versions differ in analysis quality, so the version, the script arguments and the
-SHA-256 of `app.bin` accompany a published finding. The firmware and the Ghidra project are
-not committed; both are large and the firmware is not redistributable here.
+Record the image hash, Ghidra version, script arguments and evidence supporting
+each interpretation. The shared [reproducibility guidance](/contributing/firmware-analysis/#reproducibility)
+describes what belongs with a finding.

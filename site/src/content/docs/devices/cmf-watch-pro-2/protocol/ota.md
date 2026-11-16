@@ -99,47 +99,18 @@ leaves the staged update uncommitted in testing.
 
 ## Verified run
 
-The successful flash transferred the changed `res_e` range plus metadata, reported `A041 01`,
-accepted `0x9041 A5`, then rebooted and played the new animation. A full candidate was ~54 MB;
-the actual served range was ~38 MB because unchanged partitions were not requested.
-
-Redacted shape of the end of a successful log:
-
-```text
-INIT1 0x9052 (OTA begin)
-A052 ok
-INIT2 0x9040 version=0100005a
-A040 ok, entering data phase
-...
-served ... (70.4% of image) off=0x323c2d8 len=3680
-watch status 0xa041 01; sending 0x9041 END
-waiting for post-flash status ...
-  <= cmd2=0xa042 000000000000000064
-summary: frames=... bytes=... (70.4% of image)
-```
-
-The percentage is relative to the whole image, not the requested range; a successful run can
-end well below 100%.
+On the reference unit, the watch requested the changed resource ranges,
+reported `A041 01`, accepted END and rebooted into the updated application.
+The requested ranges can be smaller than the complete package, so a successful
+transfer need not report 100% of the image served. The
+[recorded OTA run](/dumps/#run-logs-and-traces) provides the historical evidence.
 
 ## Client usage
 
-A probe that stops at `A040` without sending firmware data:
-
-```bash
-uv run python tools/ota_client.py --stop-after-a040 --version 0100005a -v
-```
-
-A full flash:
-
-```bash
-uv run python tools/ota_client.py \
-  --image firmware/custom-image.bin \
-  --version 0100005a
-```
-
-`-v` adds per-request logs. The client writes a summary even on failure. A disconnect during
-the data phase is not automatically recoverable; another flash only starts once the watch is
-back in the app and `info` works.
+Follow the [firmware flashing guide](/devices/cmf-watch-pro-2/guides/ota-flash/)
+for package checks, pairing and transfer commands. Negotiation alone can enter
+the update screen; it is not a purely offline check. For virtual testing, use
+[emulator OTA](/emulator/ota-recovery/).
 
 ## Common failures
 
@@ -150,3 +121,6 @@ back in the app and `info` works.
 | Transfer stops with `A041` and no commit | end acknowledgement `0x9041 A5` was not sent |
 | `no frames for Ns` | watch rebooted, aborted, or the host lost the connection |
 | Requests jump around | normal; the watch requests ranges, not a linear stream |
+
+For recovery steps after a disconnect or failed boot, see
+[Troubleshooting](/getting-started/troubleshooting/).

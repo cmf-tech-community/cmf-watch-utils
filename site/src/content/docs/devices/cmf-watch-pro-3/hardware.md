@@ -27,4 +27,7 @@ In raw-sample mode the emulator feeds a synthetic waveform into the FIFO and the
 
 ## Test scope
 
-Desktop factory checks exercised both crown directions, ambient light, motion, GNSS and selected display screens. These results cover individual tests and controls. The browser passcode test covered numeric and gesture setup, simulated off-wrist locking, wrong-entry rejection and a successful unlock. The low-level emulation does not reproduce physical sensor quality, battery and radio behaviour, or bootloader recovery. Partial factory screens and individual peripherals are useful regression checks. Completing a factory-menu interaction in QEMU does not establish a factory test result for physical hardware.
+The [verification matrix](/devices/cmf-watch-pro-3/status/) records desktop,
+browser and physical limits separately. Use [Testing stock firmware](/devices/cmf-watch-pro-3/testing/)
+for repeatable control and measurement checks. These modeled interfaces do not
+establish physical sensor accuracy, radio behavior or bootloader recovery.

@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import shutil
 from zipfile import ZIP_DEFLATED, ZipFile
-from page import FRAME_FILES, ROUTES, render_page
+from page import FRAME_FILES, OG_IMAGES, ROUTES, render_page
 
 
 parser = argparse.ArgumentParser()
@@ -74,8 +74,7 @@ for name in scripts:
     shutil.copyfile(web / name, assets / name)
 for name in ("isolation-worker.js", "favicon.svg"):
     shutil.copyfile(web / name, target / name)
-if args.profile == "wp2-stock":
-    shutil.copyfile(web / "og-watch-emulator.png", target / "og-watch-emulator.png")
+shutil.copyfile(web / OG_IMAGES[args.profile], target / OG_IMAGES[args.profile])
 body = ["data-hosted"]
 if args.stock:
     body.append("data-stock-ready")

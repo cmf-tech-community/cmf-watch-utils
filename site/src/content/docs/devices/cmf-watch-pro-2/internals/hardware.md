@@ -25,8 +25,8 @@ and `0x3830_xxxx` are **not** in `app.bin`; the image is XIP/loaded at
 
 | item | finding |
 |---|---|
-| panel | 410x502 AMOLED, CO5300 controller |
-| refresh | 55 Hz |
+| panel | 466×466 display used by the stock UI; controller details require model-specific evidence |
+| refresh | Host rendering speed does not establish the physical panel refresh rate |
 | UI toolkit | LVGL 8.x (`lvgl/src/extra`, `lv_api_map.h`) |
 | 2D GPU | VeriSilicon **VGLite** |
 | media | hardware JPEG decoder (Allwinner `ezJPEG`-style) |
@@ -48,7 +48,7 @@ indices, picture indices and colours.
   a rebuild with the vendor SDK, not an installable package.
 - Zephyr shell is present over `UART_0`: `devmem`, `kheap`, `dumpbuf`,
   `nand logic read/write`, `reboot`, `cpuload`.  Physical UART pads are
-  required; none are connected on this host.
+  required; physical UART access has not been established by this project.
 
 ## 4. Hidden factory mode
 
@@ -81,13 +81,10 @@ are only invoked deliberately.
 at `+0x07` is the frame rate (0 => 25).  `simple_video_9` creates
 `lv_timer_2(cb, 1000/fps, ...)`, so shipped files play at 25 fps.  All 19
 are sport warm-up animations driven by the `0x101ED708` table; they are
-not menu entries (see `watchface.md` for the index-to-sport map).
+not menu entries (see the [animation mapping](/devices/cmf-watch-pro-2/formats/watchface/#5-ajs-animation-files-nande)).
 
-`res_e.bin` is 58,777,088 B and the 19 files occupy 58,776,014 B (1,074 B
-free).  A 3:30 clip at 25 fps is 5,250 frames; at ~4 KB/frame that is
-~21 MB, so a Bad Apple build either replaces existing animations or
-repacks `res_e` without them.  A 202-frame PoC (`out/badapple_poc.ajs`,
-756,479 B, byte-identical extract/repack) projects to **18.75 MiB** for the
-full clip.  The offline candidate `out/JX402_V1.0.0.73_badapple9.bin`
-replaces `9.ajs` (sport type 22, 8 s warm-up) and has not been flashed.
-See `watchface.md` section 5 and `fwkit.ajs`.
+The animation partition is almost full in the reference image. Replacements
+must fit its fixed capacity after repacking. See [SDFS capacity](/devices/cmf-watch-pro-2/formats/sdfs/)
+and the [AJS format](/devices/cmf-watch-pro-2/formats/ajs/) for editing constraints.
+A replacement warm-up animation has played on hardware; that experiment is
+separate from the source-built [Bad Apple firmware](/devices/cmf-watch-pro-2/guides/bad-apple/).

@@ -3,6 +3,9 @@ title: Agent task examples
 description: Copy-paste prompts that keep an AI agent inside the project's safety and verification rules.
 ---
 
+For documentation changes, follow [Documentation guidelines](/ai/documentation/).
+
+
 These examples supplement the repository’s `AGENTS.md`. Include the device model and firmware version in each task.
 
 ## System preamble
@@ -11,8 +14,8 @@ Scope, device-write approval and data handling:
 
 > You are working in `cmf-watch-utils`, an unofficial CMF Watch research repo. Read
 > `AGENTS.md` and `site/src/content/docs/ai/context.md` first. Never flash, upload, delete or
-> change device settings without explicit approval. Never commit firmware, vendor assets,
-> animation/watch-face media, MAC/serial/secret/authkey data, or personal logs. Prove format
+> change device settings without explicit approval. Follow AGENTS.md for binary assets
+> and its published-dumps exception. Never commit personal identifiers or keys. Prove format
 > work with byte-identical round-trips. Prefer read-only commands. Explain risky commands
 > before running them.
 

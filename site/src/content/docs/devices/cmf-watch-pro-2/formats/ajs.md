@@ -1,6 +1,6 @@
 ---
 title: AJS animations
-description: The JPEG-frame animation format used for sport warm-ups, including tile tables and capacity math.
+description: The JPEG-frame animation format used for sport warm-ups, including frame records, tile tables and stock player behavior.
 ---
 
 `.ajs` files live in `/NAND:E` inside `res_e.bin` and are played by the sport warm-up view. They
@@ -8,22 +8,45 @@ are not menu entries or watch faces.
 
 ## Layout
 
-```text
-0x00  magic/header
-0x07  u8 fps (0 => 25)
-0x08  records, one per frame:
-        u16 size? / u16 tile_count?
-        frame header / tile table
-        JPEG tile stream(s)
+A `.ajs` is **not** a plain concatenation of JPEGs: each frame is preceded
+by a tile descriptor and the chain is driven by a length field, not marker
+scanning.  There are 8 prelude bytes, then repeated records:
+
+```
+0x00  u32 0
+0x04  bytes 00 00 00 <fps>    (0.73 files: 0x19 = 25 fps; 0 => 25)
+0x07  u8   fps               <-- not a version field
+
+record at p (first record p = 0x08):
+p+0x00  u16  size            bytes after this field
+p+0x02  "JPEG"               Allwinner tile descriptor magic
+p+0x06  u16  width           (240)
+p+0x08  u16  height          (240)
+p+0x0A  u16  tile_width      (240)
+p+0x0C  u16  tile_height     (240)
+p+0x0E  u16  tile_count N    (1 in every shipped file)
+p+0x10  N * (u16 offset, u16 length)   offsets from the "JPEG" magic
+p+...   tile JPEG streams    (each FF D8 … FF D9)
+next record p' = p + 2 + size
 ```
 
-The shipped files are 240×240, 25 fps, usually one tile per frame. Multi-tile frames use a
-tile table with `(offset, length)` pairs; offsets are relative to the descriptor magic.
+For one tile the table is `(18, jpeg_len)`, the JPEG starts at
+`p+0x14` (file `0x1C` for the first frame), and
+`size = 14 + 4*N + sum(tile lengths)` (= `18 + jpeg_len` for `N=1`).
+File `+0x1A` is the first tile's JPEG length.  There is no trailing record:
+the last frame ends at EOF.
 
-Each record ends immediately before the next record; the last record ends at EOF. JPEG streams
-are ordinary baseline JPEG (`FF D8 ... FF D9`).
+Tile offsets are relative to the descriptor magic, so a multi-tile frame is
+a normal table; the player computes `cols = ceil(width/tile_width)`,
+`rows = ceil(height/tile_height)` and blits every tile at
+`(col*tile_width, row*tile_height)`, clipped to the canvas.
 
 ## Tools
+
+First extract `res_e.bin` from the reference firmware and unpack its
+[SDFS filesystem](/devices/cmf-watch-pro-2/formats/sdfs/). In the example below,
+`work/res_e/9.ajs` is the stock warm-up animation for sport type 22.
+The output directories hold extracted frames and your rebuilt animation.
 
 ```bash
 uv run fwkit ajs-info    work/res_e/9.ajs --frames
@@ -37,15 +60,71 @@ byte-identical for the shipped files.
 
 ## Warm-up mapping
 
-The app table at `0x101ED708` has 19 16-byte records: `[sport_type, seconds, category, ajs_index]`.
-All 19 `.ajs` files are warm-up animations. The stock app maps sport type **22** to animation index **9** and an **8-second** warm-up timer. The encoded file can have a different duration.
-See [Watch faces & animations](/devices/cmf-watch-pro-2/formats/watchface/) for the full table.
+All 19 files are **sport warm-up animations**, not menu entries.  The
+app table at `0x101ED708` (file `0x1ED708`) has 19 16-byte records:
+`[sport_type, seconds, category, ajs_index]`.
+
+| `.ajs` | sport type | seconds | category |
+|---|---|---|---|
+| 1 | 14 | 20 | 9 |
+| 2 | 15 | 20 | 9 |
+| 3 | 16 | 30 | 9 |
+| 4 | 17 | 30 | 9 |
+| 5 | 18 | 30 | 9 |
+| 6 | 19 | 30 | 9 |
+| 7 | 20 | 20 | 9 |
+| 8 | 21 | 20 | 9 |
+| 9 | 22 | 8 | 11 |
+| 10 | 23 | 30 | 9 |
+| 11 | 24 | 20 | 9 |
+| 12 | 25 | 30 | 9 |
+| 13 | 26 | 8 | 11 |
+| 14 | 27 | 8 | 11 |
+| 15 | 28 | 6 | 11 |
+| 16 | 29 | 6 | 11 |
+| 17 | 30 | 6 | 11 |
+| 18 | 31 | 20 | 11 |
+| 19 | 32 | 20 | 9 |
+
+Replacing `N.ajs` only changes the warm-up preview/animation for that
+sport; it does not add a dial or menu item. The warm-up timer in the table
+and the duration encoded in the animation are independent.
+
+## Stock player
+
+Player (`simple_video_8` = open/parse, `simple_video_7` = timer tick,
+`simple_video_6` = rewind):
+
+1. 0x16 bytes are read from offset 0, `"JPEG"` is required at `+0x0A`,
+   width/height are parsed, and the fps byte is taken from prelude `+0x07`;
+2. the seek goes to `0x0A` (descriptor start) and `size + 2` bytes are read;
+3. every tile is decoded at `buffer + offset` with `length` bytes via the
+   Allwinner JPEG decoder (`FUN_100ffcc4` → `FUN_100ffa70`);
+4. the next `size` comes from the two bytes at `buffer[size]`.  At EOF the
+   short read yields 0, and `simple_video_6` seeks back to `0x08` to loop.
+
+`simple_video_9` creates `lv_timer_2(cb, 1000 / fps, ...)`; fps 0 is
+coerced to 25.  Observed frame counts: 1.ajs = 500, 8.ajs = 500,
+9.ajs = 1124, 16.ajs = 1397.  Frames are ~1.5–4.9 KB each; all 19 shipped
+files use 240×240 with a single 240×240 tile, and they fill `res_e.bin`
+(58,776,014 of 58,777,088 bytes; only 1,074 bytes free).
+
+Unlike `bt_watch.res` pictures, which have a 22-byte
+header with `"JPEG"` at `+0x04` and the same 14-byte tile descriptor after
+it, `.ajs` stores the descriptor after a 2-byte `size` field.
+
 
 ## Capacity
 
-The 202-frame PoC is 756,479 bytes (~3.7 KB/frame). Scaling to 5,250 frames gives ~19.7 MB
-(~18.75 MiB). `res_e` has only ~3.85 MiB free after replacing `9.ajs`, so a full clip needs
-more deletions or a smaller encode.
+The stock animation partition is almost full. A replacement must fit the space
+released by the original file, including the rebuilt filesystem table and alignment.
+Measure the encoded replacement and verify the rebuilt package; a clip's duration
+alone does not determine its size. The [SDFS reference](/devices/cmf-watch-pro-2/formats/sdfs/)
+documents the reference partition capacity.
+
+Replacing an animation changes an existing sport warm-up. Its display duration
+is controlled separately by the stock app's warm-up table. For a standalone
+video player, see the [source-built Bad Apple firmware](/devices/cmf-watch-pro-2/guides/bad-apple/).
 
 ## Pitfalls
 

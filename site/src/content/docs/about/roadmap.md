@@ -27,7 +27,7 @@ description: Where to document a device and how to establish the scope of suppor
 Identify the model, board and firmware version first. A device can have an
 offline format or emulator profile before it has a verified BLE route. State
 which part of a workflow was exercised and label the evidence as offline,
-emulated or physical. See the [contribution guide](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/CONTRIBUTING.md)
+emulated or physical. See the [contribution guide](https://github.com/fmctools/cmf-watch-utils/blob/main/CONTRIBUTING.md)
 for repository tests and how to submit changes.
 
 For watch-face work, record the model, package type, codec and the view used

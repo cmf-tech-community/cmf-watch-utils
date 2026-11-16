@@ -3,7 +3,9 @@ title: OTA and recovery
 description: Transfer a firmware update between virtual devices and check what happens after reboot.
 ---
 
-This workflow uses Watch Pro 2. Start with [First boot](/emulator/first-boot/). Watch 3 Pro OTA and recovery remain unverified. This guide uses two
+The commands below use Watch Pro 2. Start with [First boot](/emulator/first-boot/).
+Watch 3 Pro has a separately verified, narrower update test described below.
+This guide uses two
 local programs. QEMU runs the virtual watch. Netsim gives it a simulated
 Bluetooth radio so the OTA client can talk to it without a physical adapter.
 
@@ -85,3 +87,21 @@ The emulator uses a replacement boot handoff. These tests do not establish
 whether a real watch will enter recovery with a broken app or recover after
 power loss or damage to its boot partitions. See
 [Recovery & boot modes](/devices/cmf-watch-pro-2/internals/recovery/).
+
+## Watch 3 Pro update coverage
+
+A desktop QEMU test transferred a small app-and-resources package through the
+stock Watch 3 Pro service. Stock validated the staged data, accepted the final
+acknowledgement and requested an OTA reboot. The test recovered the exact staged
+payload from the saved virtual NAND and checked it against the package. The
+host installer applied it to a new virtual flash image, and the installed
+application booted and drew its test screen.
+
+This establishes transfer, stock validation, reboot and modeled installation
+for that package. It does not establish full stock resource updates, interrupted
+updates, rollback, or execution of the physical bootloader.
+
+Automatic extraction from arbitrary Watch 3 Pro NAND snapshots remains unverified.
+The test supplied an already extracted payload through `emu recover --pending-temp`.
+Do not use the Watch Pro 2 `--pending-nand` walkthrough as a complete Watch 3 Pro
+procedure. Select `--profile wp3-stock` when using model-aware commands.

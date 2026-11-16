@@ -10,6 +10,10 @@ byte-for-byte, and applies targeted edits. It never talks to a watch.
 uv run fwkit --help
 ```
 
+In the reference tables, `<file>`, `<image>` and similar names are placeholders,
+not literal shell arguments. Replace each with your path, and quote paths with
+spaces. Use `uv run fwkit COMMAND --help` for a command’s complete arguments.
+
 ## AOTA container
 
 | Command | Purpose |

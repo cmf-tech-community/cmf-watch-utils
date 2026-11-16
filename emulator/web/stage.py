@@ -11,7 +11,7 @@ import time
 from cmf_watch_utils.emu.profiles import PROFILES
 from cmf_watch_utils.emu.vm import child, executable, runtime_env
 from fwkit.aota import sum32
-from page import FRAME_FILES, ROUTES, render_page
+from page import FRAME_FILES, OG_IMAGES, ROUTES, render_page
 
 
 def watch_face_preview(app, rom):
@@ -117,6 +117,7 @@ if args.frames_dir:
 web = Path(__file__).resolve().parent
 for name in ("watch.js", "style.css", "face.mjs", "catalog.mjs", "speaker.mjs", "favicon.svg"):
     shutil.copyfile(web / name, args.output / name)
+shutil.copyfile(web / OG_IMAGES[args.profile], args.output / OG_IMAGES[args.profile])
 (args.output / "index.html").write_text(render_page(args.profile), encoding="utf-8")
 fixtures = args.output / "fixtures"
 fixtures.mkdir()

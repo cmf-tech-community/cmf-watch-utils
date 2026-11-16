@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CMF Watch Pro 2 Emulator</title>
-<meta name="description" content="Run CMF Watch Pro 2 firmware in your browser. Explore stock, try Bad Apple and watch faces, or load your own firmware.">
+<meta name="description" content="Run CMF Watch Pro 2 in your browser. Explore stock firmware, preview watch faces, test custom builds and simulate device inputs.">
 <link rel="canonical" href="https://cmf.arnv.dev/emulator/watch-pro-2/">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#101011">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="CMF Watch Utils">
 <meta property="og:title" content="CMF Watch Pro 2 Emulator">
-<meta property="og:description" content="Run CMF Watch Pro 2 firmware in your browser. Explore stock, try Bad Apple and watch faces, or load your own firmware.">
+<meta property="og:description" content="Run CMF Watch Pro 2 in your browser. Explore stock firmware, preview watch faces, test custom builds and simulate device inputs.">
 <meta property="og:url" content="https://cmf.arnv.dev/emulator/watch-pro-2/">
 <meta property="og:image" content="https://cmf.arnv.dev/emulator/watch-pro-2/og-watch-emulator.png">
 <meta property="og:image:type" content="image/png">
@@ -161,6 +161,7 @@
     </section>
     <section id="boot-images" class="settings-group">
       <h2>Boot images</h2>
+      <small><a href="https://cmf.arnv.dev/emulator/browser-guide/" target="_blank" rel="noopener noreferrer" title="Opens documentation in a new tab">Browser guide</a></small>
       <div id="boot-presets" class="field" hidden>
         <label for="boot-preset">Boot preset</label>
         <select id="boot-preset">
@@ -182,7 +183,7 @@
             </button>
           </div>
         </div>
-        <small>Watch Pro 2 AOTA package.</small>
+        <small>Watch Pro 2 AOTA package. <a href="https://cmf.arnv.dev/emulator/browser-guide/#load-custom-firmware" target="_blank" rel="noopener noreferrer" title="Opens documentation in a new tab">Choose the right file</a>.</small>
       </details>
       <details class="settings-section" id="raw-applications" open hidden>
         <summary>Raw application files</summary>
@@ -205,10 +206,11 @@
             </button>
           </div>
         </div>
-        <small>Companion sdfs.bin.</small>
+        <small>Companion sdfs.bin from the same build. <a href="https://cmf.arnv.dev/emulator/browser-guide/#load-custom-firmware" target="_blank" rel="noopener noreferrer" title="Opens documentation in a new tab">Application and resource files</a>.</small>
       </details>
       <details class="settings-section" id="face-catalog" hidden>
         <summary>FMC watch faces</summary>
+        <small>Community catalog from <a href="https://fmc.tools" target="_blank" rel="noopener noreferrer">FMC</a>.</small>
         <fieldset>
           <div class="catalog-filters">
             <input type="search" aria-label="Search watch faces" placeholder="Search names or authors">
@@ -230,7 +232,7 @@
           </div>
           <ul class="catalog-options" aria-label="FMC watch faces"></ul>
         </fieldset>
-        <small>Replaces Activity Mood for this session. Applying restarts a running watch.</small>
+        <small>Replaces Activity Mood for this session. Applying restarts a running watch. <a href="https://cmf.arnv.dev/emulator/browser-guide/#try-a-watch-face" target="_blank" rel="noopener noreferrer" title="Opens documentation in a new tab">Watch-face guide</a>.</small>
       </details>
       <details class="settings-section" id="watch-face-upload">
         <summary>Watch face</summary>
@@ -242,7 +244,7 @@
             </button>
           </div>
         </div>
-        <small>Replaces Activity Mood for this session.</small>
+        <small>Replaces Activity Mood for this session. <a href="https://cmf.arnv.dev/emulator/browser-guide/#try-a-watch-face" target="_blank" rel="noopener noreferrer" title="Opens documentation in a new tab">Load a face file</a>.</small>
       </details>
       <details class="settings-section" id="advanced-boot-files" hidden>
         <summary>Advanced boot files</summary>
@@ -261,11 +263,13 @@
             <label class="file-control"><input id="stock-files" type="file" multiple accept=".bin,.txt" aria-label="Base firmware files"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m-4 4 4-4 4 4M4 15v5h16v-5"/></svg><span class="file-name">Select files</span></label>
             <button class="clear-file" type="button" aria-label="Clear base firmware files" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8"/></svg></button>
           </div>
-          <small id="stock-file-hint"><span>Optional. Override the emulator’s prepared flash and boot support files.</span> <a href="https://cmf.arnv.dev/emulator/#base-firmware-files">What each file does</a>.</small>
+          <small id="stock-file-hint"><span>Optional. Override the emulator’s prepared flash and boot support files.</span> <a href="https://cmf.arnv.dev/emulator/#base-firmware-files" target="_blank" rel="noopener noreferrer" title="Opens documentation in a new tab">What each file does</a>.</small>
         </div>
       </details>
+      <small><a href="https://cmf.arnv.dev/emulator/ota-recovery/" target="_blank" rel="noopener noreferrer" title="Opens documentation in a new tab">Test an OTA update on desktop</a>. File selection here boots the app directly.</small>
       <p id="image-error" role="status"></p>
       <div class="panel-actions"><button id="hard-reset" type="button" title="Discard this session and boot stock">Hard reset to stock</button></div>
+      <small><a href="https://cmf.arnv.dev/emulator/browser-guide/#return-to-stock" target="_blank" rel="noopener noreferrer" title="Opens documentation in a new tab">Reset behavior</a> · <a href="https://cmf.arnv.dev/getting-started/troubleshooting/#the-browser-emulator-freezes-goes-black-or-has-broken-audio" target="_blank" rel="noopener noreferrer" title="Opens documentation in a new tab">Troubleshooting</a></small>
     </section>
   </aside>
   <section class="diagnostics" aria-label="Emulator logs">

@@ -227,7 +227,7 @@ Caveats:
 `0x101F4DA4` (names at `0x10229250`, handlers Thumb pointers).
 `GETVERSION = 0x100EA50C`, `GETGPSVERSION = 0x100E8BD0`; replies go
 through the transport switch `0x100E895C` (0 = UART, 1 = BLE).
-Full list in `protocol.md`.
+See the [BLE protocol reference](/devices/cmf-watch-pro-2/protocol/ble/).
 
 ## 8. RE pitfalls (Ghidra)
 
@@ -256,10 +256,5 @@ Full list in `protocol.md`.
 - `album.cfg` field offsets (166-byte struct); the `.wfdl` body is the
   FMC `.bin` TLV format (see `watchface.md`).
 - Whether the running firmware checksums `app.bin` at runtime.
-- `.ajs` is mapped: prelude `+0x07` is fps (0 => 25), record `+0x0E` is the
-  tile count, and `+0x1A` is the first tile's JPEG length (see
-  `watchface.md` §5).
 - `.sty` ids are opaque builder-assigned values; scene/node tree is mapped
   (see `style.md`); type 2 `+0x18` font/style encoding remains open.
-- RES `0x05`/`0x0E` bitmap codecs are mapped (LZ4 HC 12; see
-  `pictures.md`).

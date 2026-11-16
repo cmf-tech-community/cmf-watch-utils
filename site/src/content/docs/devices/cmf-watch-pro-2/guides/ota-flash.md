@@ -1,124 +1,108 @@
 ---
 title: Flash an AOTA image
-description: A careful, checkpointed procedure for a full firmware update over BLE.
+description: Prepare, transfer and check a Watch Pro 2 firmware update with the stock BLE client.
 ---
 
-This is the procedure that worked on a `1.0.0.73` / `JX402` unit. The prerequisites are
-[AOTA OTA flow](/devices/cmf-watch-pro-2/protocol/ota/) and
-[Limitations & risks](/devices/cmf-watch-pro-2/limitations/). This procedure uses the stock
-CMF service. For the Actions service use [Actions SDK OTA](/tooling/actions-ota/). For
-a run without a physical watch use [Emulator CLI](/emulator/).
+This guide uses the stock Watch Pro 2 Bluetooth update service, tested with
+board JX402 and reference firmware 1.0.0.73. Read the
+[flashing risks](/devices/cmf-watch-pro-2/limitations/) first. For custom firmware
+exposing the Actions service, use [Actions SDK OTA](/tooling/actions-ota/).
+For testing without a watch, use [virtual OTA](/emulator/ota-recovery/).
 
-## 0. Rollback preparation
+<span id="0-rollback-preparation"></span>
+<span id="1-charging-and-disconnection"></span>
 
-```bash
-mkdir -p backups
-cp dumps/binaries/firmware/JX402_V1.0.0.73.bin backups/stock.bin
-uv run fwkit verify backups/stock.bin
+## Prepare the files and connection
+
+Complete [workspace setup](/getting-started/setup/) and run commands from the
+repository root. Keep an untouched, matching stock image on your computer.
+In these examples, `firmware/custom.bin` is the package you intend to install;
+replace that path with your file. Check it before connecting:
+
+```text
 uv run fwkit verify firmware/custom.bin
 ```
 
-The stock image is kept somewhere outside the watch. There is no guaranteed BLE unbrick.
+This checks package integrity, not hardware compatibility. Start with a charged
+watch and stable power. Keep the computer awake and close to the watch. Turn off
+phone Bluetooth and close other watch clients to prevent competing connections.
 
-## 1. Charging and disconnection
+<span id="2-pairing-state"></span>
 
-- The watch is charged; the procedure does not start below ~50%.
-- The watch is disconnected from the phone app and phone Bluetooth is turned off.
-- The host stays awake and close to the watch, with sleep disabled.
+## Pair and check the watch
 
-## 2. Pairing state
+For your first connection, follow [pairing setup](/tooling/ble-tools/#pair-a-watch-pro-2).
 
-If the watch was reset or the factory menu cleared app data, the old authkey is stale.
-
-```bash
+```text
 uv run python tools/cmf_watch.py pair
-```
-
-The session is checked before any write:
-
-```bash
 uv run python tools/cmf_watch.py info
 ```
 
-## 3. Live negotiation to `A040`
+Pairing exchanges credentials and saves them locally. If the watch was reset,
+the old credentials may no longer work. Check that `info` reports the expected
+watch before starting the update.
 
-This step sends OTA commands to the watch and stops before serving firmware data.
+<span id="3-live-negotiation-to-a040"></span>
+<span id="4-full-transfer"></span>
 
-```bash
-uv run python tools/ota_client.py --image dumps/binaries/firmware/JX402_V1.0.0.73.bin --stop-after-a040 --version 0100005a -v
+## Transfer the update
+
+This command sends firmware to the physical watch:
+
+```text
+uv run python tools/ota_client.py --image firmware/custom.bin -v
 ```
 
-Required checkpoints:
+Leave the connection and power undisturbed until the watch finishes installing
+and restarts. The watch requests the parts it needs; requests can jump between
+file offsets. The client's reported percentage is bytes served relative to the
+whole file and may finish below 100%.
 
-- `A052 01` after INIT1.
-- `A040 01` immediately after INIT2.
-- No immediate disconnect.
+The client handles the final acknowledgement automatically. For protocol work,
+see [the stock OTA sequence](/devices/cmf-watch-pro-2/protocol/ota/).
+`--dry-run` and `--stop-after-a040` are diagnostic negotiation options: both
+connect and send commands to the watch, although neither sends firmware bytes.
+They are not offline file checks.
 
-An `A052` without a following `A040` can indicate stale pairing. Check that INIT2 went
-to the OTA characteristic `...ff01`. Sending it to `CMD_W` can cause a reboot before
-the data phase.
+<span id="5-verification"></span>
+<span id="interpreting-the-summary"></span>
 
-## 4. Full transfer
+## Check the result
 
-```bash
-uv run python tools/ota_client.py \
-  --image firmware/custom.bin \
-  --version 0100005a \
-  -v
-```
+After the watch restarts, check its About screen and the feature you changed.
+Reconnect and run `info` if the installed firmware still provides the stock
+service. A custom app may expose a different service, so its own instructions
+must explain subsequent updates.
 
-Expected behaviour:
+A completed transfer alone does not establish that the new app boots. Keep the
+log together with the exact firmware file used. If the watch returns to pairing,
+loses its display or cannot reconnect, follow [Troubleshooting](/getting-started/troubleshooting/).
 
-- The watch requests ranges; offsets can jump.
-- Progress is relative to the whole image and may finish well under 100%.
-- `A041 01` can arrive before the zero-length `A042`. The client sends `0x9041 A5`
-  immediately.
-- The watch reboots when the update is committed.
+<span id="rollback"></span>
+<span id="failure-modes"></span>
 
-The transfer is left undisturbed: power stays connected, the lid stays open and no other BLE
-client is started.
+## Restoring stock
 
-## 5. Verification
+Identify the firmware currently running on the watch before choosing the updater:
 
-After the watch reboots:
+- If it still exposes the stock CMF service, follow this guide using the
+  [Watch Pro 2 stock package](/dumps/#jx402_v10073bin-stock-factory-firmware)
+  instead of your custom package. Repeat the file check, pairing, transfer and
+  post-restart checks.
+- If it runs a custom app with Actions OTA, follow that app's restoration
+  instructions and the [Actions client reference](/tooling/actions-ota/).
+  Do not assume a full stock package is accepted by an app-only updater.
+- If it exposes neither service, these Bluetooth clients cannot restore it.
+  See [failed-update troubleshooting](/getting-started/troubleshooting/#an-update-stopped-or-reported-failure).
 
-```bash
-uv run python tools/cmf_watch.py info
-uv run python tools/cmf_watch.py ota-state --duration 5
-```
+A raw `app.bin` is not a complete stock update package. For a downloaded custom
+app, use the author's model-specific packaging and installation instructions;
+renaming it does not turn it into an AOTA package. It can instead be tried
+through the emulator's [raw application input](/emulator/browser-guide/#load-custom-firmware).
 
-The changed item (animation, scene, string, picture) is then checked. A watch that does not
-come back is not reflashed; see
-[Recovery](/devices/cmf-watch-pro-2/internals/recovery/).
 
-## Interpreting the summary
-
-A successful run can end at 70–75% of the file because the watch only requests changed
-partitions. The important signals are:
-
-- `A041` and the end ack were sent.
-- Frames were served with no long idle gap.
-- The watch rebooted and answers `info` on the new image.
-
-## Rollback
-
-A published rollback image for firmware `1.0.0.57` is available under `dumps/binaries/`, so a
-unit that was flashed with a modified build has an older firmware to return to. Its structure
-matches the `1.0.0.73` image and every CRC verifies.
-
-```bash
-uv run fwkit verify dumps/binaries/firmware/JX402_V1.0.0.57.bin
-uv run python tools/ota_client.py --image dumps/binaries/firmware/JX402_V1.0.0.57.bin --version 0100005a
-```
-
-The downgrade path has not been tested on hardware, and the image is a reconstruction from
-extracted parts rather than a vendor download. The risks of a full-image flash apply unchanged.
-
-## Failure modes
-
-- **Disconnect during data:** the watch is allowed to reboot, `info` is checked, and the retry
-  starts from pairing.
-- **`A041` but no commit:** the `0x9041` payload `A5` is confirmed written; the end sequence
-  is retried only after reconnecting and re-authenticating.
-- **`no frames` after a few requests:** the watch aborted or rebooted. The log tail is
-  inspected; repeated full transfers are avoided.
+If a compatible update service remains available, use its update procedure with
+a known-good stock package for the same model. The older reconstructed 1.0.0.57
+image in the data archive is not a verified hardware downgrade procedure.
+If the watch no longer exposes an update service, this client cannot establish
+a recovery connection. See [recovery limits](/devices/cmf-watch-pro-2/internals/recovery/).

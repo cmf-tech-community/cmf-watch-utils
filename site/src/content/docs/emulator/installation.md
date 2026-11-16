@@ -7,6 +7,10 @@ QEMU runs the watch on your computer. The compatibility ROM in the shared
 archive starts the firmware. Both are required before you can create the
 watch's storage or boot the emulator.
 
+A **profile** selects the model and starting state. The **runtime** is the QEMU
+program that runs it; **fixtures** are files representing the watch’s storage.
+Installation prepares the tools, and the next page creates that storage.
+
 ## Workspace
 
 Follow [Setup](/getting-started/setup/) through step 2. That installs the CLI
@@ -22,7 +26,11 @@ Use `wp2-stock` for Watch Pro 2, `wp2-onboarding` for its setup screens, or `wp3
 
 ## Runtime archives
 
-Download **two** archives from the same [preview release](https://github.com/cmf-tech-community/cmf-watch-utils/releases):
+Use a current checkout and matching runtime. The automatic stock texture index
+and Watch 3 Pro preview controls described here require the preview 9 generation
+or later. Older checkouts may lack these CLI options even with a newer QEMU binary.
+
+Download **two** archives from the same [preview release](https://github.com/fmctools/cmf-watch-utils/releases):
 
 - The archive named `cmf-emulator-windows-x64.tar.gz`, `cmf-emulator-linux-x64.tar.gz`,
   or `cmf-emulator-macos-arm64.tar.gz` for your computer. It contains the project's
@@ -43,7 +51,7 @@ Get-ChildItem runtime
 Check that you see `qemu-system-arm.exe`, `compat.bin` and `provision-nand.elf`.
 On Linux or macOS, use `mkdir -p runtime` and substitute your host's archive in
 the first `tar` command. The QEMU executable on those hosts has no `.exe` suffix.
-If a release archive is unavailable, see the [source build instructions](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/emulator/README.md).
+If a release archive is unavailable, see the [source build instructions](https://github.com/fmctools/cmf-watch-utils/blob/main/emulator/README.md).
 
 ## Host dependencies
 
@@ -55,6 +63,9 @@ then switch back to PowerShell:
 ```bash
 pacman -S --needed mingw-w64-ucrt-x86_64-glib2 mingw-w64-ucrt-x86_64-pixman mingw-w64-ucrt-x86_64-dtc mingw-w64-ucrt-x86_64-libwinpthread mingw-w64-ucrt-x86_64-zlib mingw-w64-ucrt-x86_64-tk
 ```
+
+UCRT64 is the MSYS2 environment used by the Windows runtime. Its terminal
+installs the libraries; the remaining examples run in PowerShell.
 
 The last package provides `wish.exe`, which opens the watch window. For `--runtime-dir`, use the `ucrt64/bin` folder from your MSYS2 installation.
 
@@ -90,7 +101,7 @@ running PulseAudio server or PipeWire's PulseAudio compatibility service.
 
 The Linux archive is built and smoke-tested on Ubuntu 22.04. Arch has not
 had an end-to-end firmware boot test. If a rolling library update prevents
-the archive from loading, follow the [Arch source build instructions](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/emulator/README.md#arch-linux).
+the archive from loading, follow the [Arch source build instructions](https://github.com/fmctools/cmf-watch-utils/blob/main/emulator/README.md#arch-linux).
 The distribution's standard QEMU package does not include this watch model.
 
 ### Ubuntu and macOS
@@ -107,6 +118,9 @@ Run this check from the checkout. Apply the command differences above on Linux a
 ```text
 uv run cmf-watch-utils emu doctor --qemu runtime/qemu-system-arm.exe --rom runtime/compat.bin --runtime-dir "PATH_TO_UCRT64_BIN"
 ```
+
+Replace `PATH_TO_UCRT64_BIN` with your actual MSYS2 `ucrt64/bin` directory;
+keep the quotation marks if the path contains spaces.
 
 Look for `"machine": "ats3089c-wp2"` and `"viewer_available": true`. If only the
 viewer is missing, you can still run the headless check in [First boot](/emulator/first-boot/).

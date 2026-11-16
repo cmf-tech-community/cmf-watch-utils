@@ -16,17 +16,11 @@ description: How the formats and protocol were recovered, and how to reproduce o
 
 ## Static analysis
 
-The app image (`app.bin`, base `0x10000000`, Thumb-2) was loaded into Ghidra and analysed with
-the scripts in `tooling/ghidra_scripts/`. The scripts dump functions, callers, string xrefs,
-immediates and selected decompilations to text so findings can be diffed and reviewed.
-
-Conventions:
-
-- Base address: `0x10000000`; file offset = `addr - 0x10000000`.
-- Function boundaries and the ACTH header are documented in
-  [app.bin internals](/devices/cmf-watch-pro-2/internals/appbin/).
-- The BLE dispatcher, OTA state machine and UI message queue were traced by cross-referencing
-  command constants (`0x9052`, `0x9040`, `0xA042`, ...) and queue calls.
+The shared [firmware analysis guide](/contributing/firmware-analysis/) covers
+Ghidra import, script exports and address conventions. Device references hold
+build-specific addresses and structures. Cross-reference command constants,
+strings and callers, then validate the interpretation against a byte-level
+check or observed behavior. Decompilation alone does not prove a hardware path.
 
 ## Dynamic analysis
 
@@ -58,7 +52,7 @@ legitimate firmware image supplied locally.
 
 ## Cross-checking
 
-The public [`cmf-tech-community/fmc`](https://github.com/cmf-tech-community/fmc) project (AGPL-3.0) was used
+The public [`fmctools/fmc`](https://github.com/fmctools/fmc) project (AGPL-3.0) was used
 as an independent reference for the frame header, AES/CRC rules, `.wfdl` layout and the
 watch-face upload handshake. Where older assumptions differed, live-verified FMC behaviour took
 precedence. The watch-face uploader is a behavioural port, which is why this repository is
@@ -68,7 +62,7 @@ AGPL-3.0.
 
 - Offline: the selftest is run against a locally held firmware image, followed by
   `fwkit info/verify`.
-- BLE read-only: `ota-state`, `info` or shell commands.
+- BLE read-only: `ota-state`, `info` or explicitly read-only shell queries.
 - BLE OTA: check the package offline and exercise the protocol over loopback when possible. Retain the previous image.
 - Firmware OTA: the [AOTA OTA flow](/devices/cmf-watch-pro-2/protocol/ota/) is followed exactly; INIT2
   is not reordered and the end acknowledgement is not skipped.

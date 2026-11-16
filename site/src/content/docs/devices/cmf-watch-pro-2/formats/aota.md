@@ -20,9 +20,10 @@ Header:
 
 | off | meaning |
 |---|---|
-| `0x00` | magic `ACTHHTCA` |
+| `0x00` | four-byte magic `AOTA` |
 | `0x04` | `crc32(file[0x08:0x400])` |
-| `0x08` | build/version string (32 B area) |
+| `0x08` | 16-bit header version (`0x0100` in the reference image) |
+| `0x0A` | 16-bit header size (`0x0400`) |
 | `0x0C` | partition count |
 | `0x14` | AGPS offset |
 | `0x18` | unknown (preserved as-is) |
@@ -90,7 +91,7 @@ Used inside `res.bin`, `sdfs_k.bin`, and the small tail blob of
 
 Entry: `name[12] | offset(u32) | size(u32) | 0 | 0 | hash(u32)`.
 `hash = sum32(file data)` where `sum32` is the sum of little-endian u32
-words mod 2^32 (trailing bytes treated as a partial word). Data starts
+words mod 2^32 (trailing bytes that do not form a complete word are ignored). Data starts
 at `align(0x20 + count*32, 0x40)`; files are `0x40`-aligned.
 
 ## 6. RES resource files
@@ -108,8 +109,9 @@ Header (0x14 B):
 Entries at `0x14`, 16 B each:
 `u16 len | u8 type | name[9] | u32 end_offset`.
 
-The payload is `blob[end-len : end]` and **includes the trailing NUL**
-for strings. Names are NUL-terminated within the 9-byte field.
+For string entries, the payload is `blob[end-len : end]` and includes the
+trailing NUL. Picture entries use aligned boundaries instead; see the
+[picture entry layout](/devices/cmf-watch-pro-2/formats/pictures/). Names are NUL-terminated within the 9-byte field.
 
 **Overlap quirk:** the pool starts at `0x10 + count*16`, i.e. 4 bytes
 before the natural end of the table (`0x14 + count*16`). The **last
@@ -120,7 +122,7 @@ round-trips `bt_watch.zht` / `bt_watch.eng` byte-identically.
 ### Picture resources (`bt_watch.res`, 6.6 MB, `0xC0000890`)
 
 2192 entries, names `PIC1 … PIC2192`, **three payload types**
-(an earlier note that all were JPEG was wrong). Every entry is
+in this reference build. Every entry is
 `u16 w | u16 h | body`; the firmware skips the 4-byte prefix and picks
 the decoder from `body`:
 
@@ -144,7 +146,7 @@ bpp), matching the `.sty` node's `bpp`. The frequent `1f 00 01 00` at the
 start of LZ4 bodies is stream data (a flat run), **not** a magic.
 
 Full details, verified decode of all 2,192 entries, and edit recipes:
-**`pictures.md`**.
+[Picture codecs](/devices/cmf-watch-pro-2/formats/pictures/).
 
 `.sty` image nodes point into this file by **1-based PIC index**
 (`node[0xC]`: 0x1F…0x890 = PIC31…PIC2192).

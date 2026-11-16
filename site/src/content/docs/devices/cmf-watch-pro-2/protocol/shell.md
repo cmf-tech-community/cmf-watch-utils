@@ -46,7 +46,10 @@ Serial and MAC are personal data; raw output does not belong in issues or commit
 
 ## Notes
 
-- The shell is a normal authenticated channel, not a root shell.
+- This text command channel is distinct from the encrypted CMF command frames.
+  The client uses it to obtain the pairing secret before establishing its session.
+  Command availability depends on the running firmware.
 - `AT GETFLASH` reports flash size, but there is no general file-read command.
-- The UART shell exists on the physical debug pads (`nand logic read/write`, `devboot`, etc.);
-  it is not reachable over BLE and requires hardware access.
+- Firmware contains a separate UART command registry (`nand logic read/write`,
+  `devboot`, etc.). Physical access and recovery through that interface remain
+  unverified. Do not assume these commands are available through the BLE AT channel.
