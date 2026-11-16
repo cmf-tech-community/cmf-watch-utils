@@ -9,7 +9,7 @@ export default defineConfig({
     starlight({
       title: 'CMF Watch Utils',
       description:
-        'CMF Watch Utils ? tooling and documentation for the CMF Watch Pro 2: AOTA/SDFS/WFDL/AJS firmware containers, BLE tooling and reverse-engineering notes.',
+        'Firmware tools, Bluetooth utilities and emulation for CMF watches.',
       logo: {
         src: './public/logo.svg',
         alt: 'CMF Watch Utils logo',
@@ -39,7 +39,7 @@ export default defineConfig({
         {
           label: 'About',
           items: [
-            { label: 'Roadmap & devices', slug: 'about/roadmap' },
+            { label: 'Device support and contributions', slug: 'about/roadmap' },
             { label: 'Methodology', slug: 'about/methodology' },
             { label: 'Legal & attribution', slug: 'about/legal' },
           ],
@@ -119,10 +119,18 @@ export default defineConfig({
           ],
         },
         {
+          label: 'CMF Watch 3 Pro',
+          items: [
+            { label: 'Device profile', slug: 'devices/cmf-watch-pro-3' },
+            { label: 'Firmware and watch faces', slug: 'devices/cmf-watch-pro-3/formats' },
+            { label: 'Hardware and emulation', slug: 'devices/cmf-watch-pro-3/hardware' },
+          ],
+        },
+        {
           label: 'For AI agents',
           items: [
             { label: 'Agent context', slug: 'ai/context' },
-            { label: 'Prompt recipes', slug: 'ai/prompts' },
+            { label: 'Agent task examples', slug: 'ai/prompts' },
           ],
         },
         {

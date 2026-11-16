@@ -48,7 +48,8 @@
 | Stock CMF firmware OTA | verified on hardware and over virtual BLE |
 | Actions SDK OTA | offline validation and full virtual transfer through image acceptance |
 | Watch Pro 2 QEMU | stock, onboarding, Bad Apple and Tilt Mouse booted to the panel on Windows |
-| Virtual recovery | stock OTA reset and staged install booted Bad Apple. Modeled crown + charger restored stock after app corruption |
+| Watch 3 Pro QEMU | stock 1.0.1.77 boots in the browser and on desktop. See the [device profile](https://cmf.arnv.dev/devices/cmf-watch-pro-3/). |
+| Watch Pro 2 virtual recovery | stock OTA reset and staged install booted Bad Apple. Modeled crown + charger restored stock after app corruption |
 | Custom animation flashed and played | verified on hardware, 202-frame proof of concept |
 | Firmware `1.0.0.57` rollback image | published, rebuilt from extracted parts, all CRCs verify |
 
@@ -132,7 +133,7 @@ Linux and macOS are build targets whose runtime integration remains unverified.
 
 ## Downloads
 
-For the Watch Pro 2 emulator preview, see the [emulator build guide](emulator/README.md).
+Open the browser emulator for [Watch Pro 2](https://cmf.arnv.dev/emulator/watch-pro-2/) or [Watch 3 Pro](https://cmf.arnv.dev/emulator/watch-pro-3/). For native builds, see the [emulator build guide](emulator/README.md).
 
 The repository stores images with Git LFS. Use Git LFS to fetch them from a checkout or download
 individual files below.
@@ -252,7 +253,7 @@ See the [full contributor graph](https://github.com/cmf-tech-community/cmf-watch
 
 - [Arnav Kumar](https://github.com/arnav-kr) — [arnv.dev](https://arnv.dev)
 - The watch-face upload behaviour was informed by the AGPL-3.0
-  [`freethinkel/fmc`](https://github.com/freethinkel/fmc) project.
+  [`cmf-tech-community/fmc`](https://github.com/cmf-tech-community/fmc) project.
 - Bad Apple is a copyrighted work; no animation frames are published in the documentation.
   The proof-of-concept image contains them, so the redistribution terms of that work apply to
   that file.

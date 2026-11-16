@@ -69,13 +69,12 @@ dumps/                  manifests and redacted notes (no binaries)
 
 ## Emulator and Actions OTA
 
-- Use the [browser emulator](/emulator/watch-pro-2/) to check firmware boot,
+- Use the [browser emulator](/emulator/) to check firmware boot,
   watch faces, controls, sensors and sound. Use desktop QEMU for Bluetooth OTA
   and modeled recovery. The bundled Bad Apple demo uses playback timing, so use
   a custom firmware boot for browser tests that depend on guest timing.
 - Start with `uv run cmf-watch-utils emu profiles` and `emu preflight --image FILE`.
-  The only profiles are `wp2-stock` and `wp2-onboarding`, both for JX402 stock
-  `1.0.0.73`. For a boot, provide the project-built ATS3089C QEMU, the matching
+  The profiles are `wp2-stock`, `wp2-onboarding` and `wp3-stock`. Use the model-specific reference package and fixture directory. For a boot, provide the project-built ATS3089C QEMU, the matching
   compatibility ROM and local virtual flash. Use `emu prepare-fixtures` to create flash
   from the reference AOTA, pinned NAND ID file and Arm GDB, or import existing fixtures.
 - `emu ota` uses loopback H4 with an isolated controller. Use synthetic pairing
@@ -96,6 +95,14 @@ dumps/                  manifests and redacted notes (no binaries)
 
 See [Emulator CLI](/emulator/), [Actions SDK OTA](/tooling/actions-ota/) and
 [Recovery & boot modes](/devices/cmf-watch-pro-2/internals/recovery/).
+
+## Watch 3 Pro
+
+Use [Watch 3 Pro firmware and formats](/devices/cmf-watch-pro-3/formats/) and
+[hardware and emulation](/devices/cmf-watch-pro-3/hardware/) for stock
+`1.0.1.77`. This profile uses board `jx402_08` and its own fixture directory.
+Browser results include stock passcode setup and raw optical measurement.
+Keep WP2 OTA and recovery results scoped to WP2.
 
 ## Known unknowns
 

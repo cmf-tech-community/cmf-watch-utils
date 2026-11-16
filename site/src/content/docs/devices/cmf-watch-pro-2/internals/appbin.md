@@ -3,8 +3,6 @@ title: app.bin internals
 description: Vector table, ACTH header, address map, OTA/UI/BLE functions and Ghidra pitfalls.
 ---
 
-# app.bin internals — CMF Watch Pro 2 (0.73)
-
 Reverse-engineering notes for the application image that lives inside the
 `TEMP.bin` partition of `JX402_V1.0.0.73.bin`. All addresses are virtual
 (`load_base + file_offset`).
@@ -66,9 +64,7 @@ Entries from index 80 on are not vector-table entries.
 | `0x20` | `0x7929C5D6` | unknown checksum (not crc32/sum32) |
 | `0x24` | `0x200` | header size |
 
-The image ends with a small `sdfs.bin` (128 B, `sdfs.txt` +
-`ZEPHYR_TOOLS=D:\ProgramData\Actions\ZEPHYR_SDK`). It is not validated by
-the updater.
+The image ends with a 128-byte `sdfs.bin` containing `sdfs.txt` and an embedded SDK build path.
 
 ## 4. Static analysis (Ghidra 12.1, Thumb LE)
 
@@ -222,8 +218,7 @@ produces an image that passes `fwkit verify`, changes exactly 7 bytes of
 Caveats:
 - Fixed-length patches only; growing code requires relocating data and is
   not supported.
-- The device does not appear to re-validate `app.bin` at boot (the 0.57
-  resource patch booted), but this has not been tested with a code patch.
+- The literal edit above establishes the container rebuild and checksum result. The stock resource-patch boot exercised a separate partition.
 - `0x1C`/`0x20` in the ACTH header are not verified by the updater.
 
 ## 7. AT command registry

@@ -3,8 +3,6 @@ title: BLE protocol
 description: Frame format, authentication, AES/CRC, shell commands, file upload and the OTA state machine.
 ---
 
-# Watch communication protocol (0.73)
-
 The watch exposes two framed command channels that share the same
 11-byte header:
 

@@ -20,6 +20,17 @@ leave the LFS files as pointers.
 - [Download](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73.bin) ·
   [manifest](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/dumps/manifests/firmware-1.0.0.73.json)
 
+### `JX402_w3pro_V1.0.1.77.bin` (stock firmware)
+
+- Board and version: `jx402_08`, `1.0.1.77`
+- Size: 45,069,312 bytes
+- SHA-256: `cf381188eb5fe26a14047a03697e68b58785bdcd01c4baf8703d4624650c6352`
+- [Download](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_w3pro_V1.0.1.77.bin) · [Device profile](/devices/cmf-watch-pro-3/)
+
+```text
+git lfs pull --include=dumps/binaries/firmware/JX402_w3pro_V1.0.1.77.bin --exclude=""
+```
+
 ### `JX402_V1.0.0.57.bin` (rollback target)
 
 - Size: 56,065,096 bytes
@@ -55,9 +66,7 @@ From an existing checkout, fetch just the application image:
 git lfs pull --include="dumps/binaries/app/app_073.bin"
 ```
 
-The proof-of-concept image contains third-party animation frames. Redistribution rights for
-vendor firmware and for those frames are the responsibility of whoever redistributes them;
-before making the repository public, either remove `dumps/binaries/` or confirm the rights.
+The proof-of-concept image contains third-party animation frames. See [Legal and attribution](/about/legal/) for licensing and redistribution boundaries.
 
 ## Manifests
 
@@ -149,7 +158,7 @@ git-ignored map (`internal/redactions.json`) so that the values themselves are n
 | Path | Contents |
 |---|---|
 | `samples/bt_watch.sty` | A STY scene bundle, extracted from the resource partition |
-| `samples/wf1.bin` | A WFDL watch-face package, the sample used in the dial editing guide |
+| `samples/watchfaces/wf1.bin` | A WFDL watch-face package, the sample used in the dial editing guide |
 | `samples/*.png` | Pictures decoded from the picture resources, showing the codecs in output |
 
 ## Redacted notes
@@ -159,5 +168,4 @@ git-ignored map (`internal/redactions.json`) so that the values themselves are n
 
 ## Personal data
 
-Published artifacts contain no MAC address, serial number, pairing secret, authkey, session
-key, GPS track or notification content. The manifests carry hashes only.
+The logs use placeholder identifiers. Keep raw captures and device-owned identifiers out of documentation changes. The firmware manifests identify builds with file hashes.

@@ -3,8 +3,6 @@ title: Hardware notes
 description: SoC, RAM, flash, display, UART shell, factory mode and recovery notes.
 ---
 
-# Hardware, app model and factory mode
-
 Findings for `JX402_V1.0.0.73` (CMF Watch Pro 2).  Addresses are for the
 0.73 `app.bin` (`0x10000000` base).
 

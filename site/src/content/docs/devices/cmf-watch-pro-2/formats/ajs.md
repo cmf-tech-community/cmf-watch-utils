@@ -38,7 +38,7 @@ byte-identical for the shipped files.
 ## Warm-up mapping
 
 The app table at `0x101ED708` has 19 16-byte records: `[sport_type, seconds, category, ajs_index]`.
-All 19 `.ajs` files are warm-up animations. `9.ajs` is sport type **22**, an **8-second** warm-up.
+All 19 `.ajs` files are warm-up animations. The stock app maps sport type **22** to animation index **9** and an **8-second** warm-up timer. The encoded file can have a different duration.
 See [Watch faces & animations](/devices/cmf-watch-pro-2/formats/watchface/) for the full table.
 
 ## Capacity
@@ -49,8 +49,8 @@ more deletions or a smaller encode.
 
 ## Pitfalls
 
-- 240×240 and a sane fps are kept; the player assumes the frame rate from `+0x07` (0 means 25).
+- Keep the 240×240 frame size. The player reads the frame rate from `+0x07` (0 means 25).
 - Trailing bytes are not added after the last record; the last frame ends at EOF.
 - Repacking goes through the toolkit rather than concatenating JPEGs; the record prelude and
   tile table must match what the player expects.
-- The Bad Apple frames are copyrighted; no animation assets are included in this repository.
+- See [Legal and attribution](/about/legal/) before redistributing a modified image.

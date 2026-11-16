@@ -37,4 +37,4 @@ The host requests an upgrade and negotiates the unit size. During transfer it se
 | `negotiated_only` | The peer accepted negotiation. No image bytes were sent. |
 | `watch_reported_image_valid` | The peer accepted the transferred image. Confirm installation separately by checking the reboot and running firmware. |
 
-The integrated client negotiated with the Bad Apple QEMU guest at a 230-byte unit size and completed a transfer of the rollback image through validation. The integrated client's physical transfer and boot outcome remain unverified. The Actions service and its update screen alone do not establish an app-independent recovery mode. See [Recovery & boot modes](/devices/cmf-watch-pro-2/internals/recovery/).
+The integrated client reached guest validation in desktop QEMU. The physical transfer and post-update boot remain unverified for this client. The Actions service and its update screen alone do not establish an app-independent recovery mode. See [Recovery & boot modes](/devices/cmf-watch-pro-2/internals/recovery/).

@@ -3,12 +3,12 @@ title: Requirements
 description: Minimum dependencies by task, from offline inspection to a virtual or physical OTA.
 ---
 
-Start with Git, uv and Python 3.12 or later. Install additional tools only for the
-task you are doing.
+The local command line tools use Git, uv and Python 3.12 or later. The browser emulator runs without a checkout.
 
 | Task | Additional requirements |
 |---|---|
-| List profiles or read command help | None |
+| Run stock firmware in the browser | Recent desktop Chrome or Edge and a connection for the initial download. No local tools required. |
+| List profiles or read command help | None beyond the workspace |
 | Inspect a firmware file or preflight an update | The local firmware file. Git LFS is optional if you use a direct download. |
 | Create emulator fixtures | Project QEMU, compatibility ROM bundle with the provisioner, Arm-capable GDB, exact stock package and pinned NAND ID table |
 | Boot firmware in QEMU | Project QEMU, compatibility ROM, host runtime libraries and prepared virtual flash fixtures |

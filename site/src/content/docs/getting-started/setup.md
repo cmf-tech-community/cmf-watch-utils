@@ -39,7 +39,7 @@ uv run fwkit --help
 uv run cmf-watch-utils emu profiles
 ```
 
-You should see the firmware toolkit help and two Watch Pro 2 profiles. Keep
+You should see the firmware toolkit help and `wp2-stock`, `wp2-onboarding` and `wp3-stock`. Keep
 running the following commands from the repository root unless a step says otherwise.
 
 The checkout also includes `scripts/install.ps1` and `scripts/install.sh`. Run them
@@ -57,14 +57,14 @@ git lfs pull --include=dumps/binaries/firmware/JX402_V1.0.0.73.bin --exclude=""
 uv run fwkit info dumps/binaries/firmware/JX402_V1.0.0.73.bin
 ```
 
-The image is about 57 MB. If `fwkit` sees a tiny text file instead, Git still has
+This fetches the Watch Pro 2 reference image. Fetch the [Watch 3 Pro image](/dumps/#jx402_w3pro_v10177bin-stock-firmware) as well for Watch 3 Pro fixture preparation. If `fwkit` sees a tiny text file instead, Git still has
 the LFS pointer. See [Dumps & data](/dumps/) for the direct download and checksum.
 Use a separate copy for edits.
 
 ## 3. Choose a task
 
 - **Inspect firmware** with the [quick start](/getting-started/quickstart/) and [fwkit reference](/tooling/fwkit/).
-- **Boot firmware without a watch** with the [emulator installation](/emulator/installation/). Start with a headless stock boot.
+- **Boot firmware without a watch** with the [emulator installation](/emulator/installation/). Use the browser for a stock boot with no local setup, or install desktop QEMU when you need local fixtures.
 - **Talk to your watch** with the [BLE tools](/tooling/ble-tools/). Start with `scan`. Pairing and OTA negotiation are live operations.
 - **Check an Actions OTA package** offline with the [Actions OTA guide](/tooling/actions-ota/).
 - **Build the docs** from `site/` with Node.js 22.22 or later and pnpm 12. Run `pnpm install --frozen-lockfile` and `pnpm build`. Use `pnpm dev` to preview.

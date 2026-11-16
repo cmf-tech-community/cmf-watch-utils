@@ -64,7 +64,7 @@ preflight or boot test is evidence for that fixture and test path. See
 - **Watch:** CMF Watch Pro 2, board `JX402`, SoC Actions ATS3089C, firmware `1.0.0.73`.
 - **Host:** Windows 11 with Python 3.12 and Bleak. Bleak is cross-platform, but macOS/Linux BLE
   behaviour and MTU negotiation were not validated.
-- **These addresses, UUIDs, keys and layouts apply to the tested scope only.** The Pro 3, a
+- **These addresses, UUIDs, keys and layouts apply to the tested scope only.** Watch 3 Pro, a
   different firmware build, or a regional variant may differ; a diff is required before any
   write.
 

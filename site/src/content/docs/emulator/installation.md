@@ -18,9 +18,7 @@ and puts the reference firmware at
 uv run cmf-watch-utils emu profiles
 ```
 
-You should see `wp2-stock` and `wp2-onboarding`. Use `wp2-stock` for your first
-run. It starts after the language selection screen. The second profile starts
-at first-time setup.
+Use `wp2-stock` for Watch Pro 2, `wp2-onboarding` for its setup screens, or `wp3-stock` for Watch 3 Pro. See [Watch 3 Pro storage](/emulator/first-boot/#watch-3-pro-storage) for the additional package.
 
 ## Runtime archives
 
@@ -28,7 +26,7 @@ Download **two** archives from the same [preview release](https://github.com/cmf
 
 - The archive named `cmf-emulator-windows-x64.tar.gz`, `cmf-emulator-linux-x64.tar.gz`,
   or `cmf-emulator-macos-arm64.tar.gz` for your computer. It contains the project's
-  QEMU executable. This build understands the Watch Pro 2 hardware.
+  QEMU executable. Use a release that lists your model or build the current runtime from source.
 - `cmf-emulator-wp2-rom.tar.gz`. It contains `compat.bin`, which starts the
   virtual watch, and the small programs used to prepare and read its storage.
 
@@ -58,8 +56,7 @@ then switch back to PowerShell:
 pacman -S --needed mingw-w64-ucrt-x86_64-glib2 mingw-w64-ucrt-x86_64-pixman mingw-w64-ucrt-x86_64-dtc mingw-w64-ucrt-x86_64-libwinpthread mingw-w64-ucrt-x86_64-zlib mingw-w64-ucrt-x86_64-tk
 ```
 
-The last package provides `wish.exe`, which opens the watch window. If you
-installed MSYS2 somewhere other than `C:/msys64`, use that path in the check below.
+The last package provides `wish.exe`, which opens the watch window. For `--runtime-dir`, use the `ucrt64/bin` folder from your MSYS2 installation.
 
 ### Arch Linux
 
@@ -86,7 +83,7 @@ arm-none-eabi-gdb --version
 ```
 
 In [First boot](/emulator/first-boot/), use
-`--qemu runtime/qemu-system-arm`, omit `--runtime-dir C:/msys64/ucrt64/bin`,
+`--qemu runtime/qemu-system-arm`, omit `--runtime-dir`,
 and keep `--gdb arm-none-eabi-gdb`. The viewer needs a graphical desktop;
 on Wayland, it also needs XWayland (`xorg-xwayland`). Audio playback needs a
 running PulseAudio server or PipeWire's PulseAudio compatibility service.
@@ -108,7 +105,7 @@ The distribution's standard QEMU package does not include this watch model.
 Run this check from the checkout. Apply the command differences above on Linux and macOS:
 
 ```text
-uv run cmf-watch-utils emu doctor --qemu runtime/qemu-system-arm.exe --rom runtime/compat.bin --runtime-dir C:/msys64/ucrt64/bin
+uv run cmf-watch-utils emu doctor --qemu runtime/qemu-system-arm.exe --rom runtime/compat.bin --runtime-dir "PATH_TO_UCRT64_BIN"
 ```
 
 Look for `"machine": "ats3089c-wp2"` and `"viewer_available": true`. If only the

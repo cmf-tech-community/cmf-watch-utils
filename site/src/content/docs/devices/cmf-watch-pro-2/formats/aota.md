@@ -3,8 +3,6 @@ title: AOTA container
 description: Outer AOTA image, XML, LZMA chunks, TEMP, SDFS and rebuild recipes.
 ---
 
-# AOTA firmware container — format and patching
-
 Everything here was verified byte-for-byte against
 `JX402_V1.0.0.73.bin` (56,903,752 B) with `fwkit`.
 
@@ -207,5 +205,4 @@ Full details, verified decode of all 2,192 entries, and edit recipes:
   the `TEMP`/`res` write phase aborts the write.
 - **`AT+GETVERSION` is a compile-time constant**, not read from XML —
   changing the XML version does not change the reported version.
-- The device boots an image whose `app.bin` got a 7-byte code patch
-  (verified: resource patch booted; code patch not yet flashed).
+- The application-literal edit was verified offline. The separate resource edit was exercised on hardware.

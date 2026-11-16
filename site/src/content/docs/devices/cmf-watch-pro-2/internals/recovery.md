@@ -46,7 +46,7 @@ The watch has a hidden factory/test menu. Entering its shutdown/reset option cle
 and pairing state on the tested unit. That is why a stale authkey can produce `A052` but no
 `A040`; re-pairing restores the OTA path.
 
-Factory-menu options are destructive unless their exact effect is known.
+Factory-menu reset options can erase local settings and pairing state.
 
 ## UART / physical debug
 
@@ -67,6 +67,4 @@ connected.
 
 ## Bootloop warning
 
-Other CMF/Pro devices have community reports of bootloop modes that are not recoverable over
-BLE. No recovery combo has been validated for the Pro 2. Critical units are not exposed to
-experimental full-firmware writes.
+If the stock app never starts, its BLE update service may be unavailable. The virtual crown and charger test does not verify a physical recovery procedure.

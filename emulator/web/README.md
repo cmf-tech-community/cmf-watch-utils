@@ -113,7 +113,7 @@ with `--profile wp2-stock --model-selector`. Serve that directory to open either
 between the two routes. Pass `--model-selector` when both pages are present.
 
 Watch 3 Pro opens the stock watch face with the virtual charger disconnected.
-The stock browser preview bypasses first-time setup and stays awake while idle.
+The stock browser preview starts with local setup complete and stays awake while idle. The [emulator guide](https://cmf.arnv.dev/emulator/#watch-3-pro-passcodes-and-optical-measurements) covers stock passcodes and synthetic optical measurements.
 For the first-time language and QR screens, run `wp3-stock` in desktop QEMU.
 Choose **Custom firmware** to
 boot a Watch 3 Pro AOTA with application and SDFS images, or supply its raw

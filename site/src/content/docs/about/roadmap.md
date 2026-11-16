@@ -1,59 +1,37 @@
 ---
-title: Roadmap
-description: How devices are added to the project and which models are planned.
+title: Device support and contributions
+description: Where to document a device and how to establish the scope of support.
 ---
 
-## Structure
+## Device coverage
 
-The project separates device-specific research from shared tooling:
+| Model | Documented scope |
+|---|---|
+| [Watch Pro 2](/devices/cmf-watch-pro-2/) | Firmware and formats, stock BLE and OTA, desktop and browser emulation |
+| [Watch 3 Pro](/devices/cmf-watch-pro-3/) | Firmware and formats, desktop and browser emulation |
+| Other models | No device profile or verified workflow |
 
-```text
-site/src/content/docs/
-  index.mdx               project home and device matrix
-  about/                  project-wide documentation (methodology, legal, this page)
-  getting-started/        host setup and first steps
-  tooling/                fwkit and BLE tool references
-  devices/<model>/        protocol, formats, internals, guides for one device
-  ai/                     agent-facing briefings
-  dumps/                  manifests and downloadable images
-```
+## Documentation structure
 
-Tooling in `tooling/` and `tools/` is device-agnostic. Everything that depends on a specific
-firmware build — protocol constants, container layouts, addresses, verified results — lives
-under `devices/<model>/`.
+| Area | Content |
+|---|---|
+| [Getting started](/getting-started/quickstart/) | First tasks and required tools |
+| [Tooling](/tooling/fwkit/) | Shared command line tools and file inputs |
+| [Emulator](/emulator/) | Browser and desktop workflows, virtual controls, and recovery limits |
+| Device pages | Per-build identifiers, formats, protocol details and results |
+| [Dumps](/dumps/) | Reference packages, checksums and supporting data |
+| [Methodology](/about/methodology/) | How to verify and document findings |
 
-A device section is identified by a slug such as `cmf-watch-pro-2`, matching the model name
-used in product documentation. The header carries a device switcher so that pages for
-different models stay one click apart.
+## Add or extend a device
 
-## Adding a device
+Identify the model, board and firmware version first. A device can have an
+offline format or emulator profile before it has a verified BLE route. State
+which part of a workflow was exercised and label the evidence as offline,
+emulated or physical. See the [contribution guide](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/CONTRIBUTING.md)
+for repository tests and how to submit changes.
 
-The criteria for a new device section:
-
-1. A firmware image is available and its AOTA container parses with `fwkit`.
-2. At least one read-only BLE path works (pairing plus a status or shell command).
-3. The device-specific facts are recorded as offsets, constants and UUIDs, not as impressions.
-
-The section then contains the device overview, protocol details, format notes, internal
-layout, verified results and the open questions that remain.
-
-## Planned models
-
-| Model | Status | Notes |
-|---|---|---|
-| CMF Watch Pro 3 | Not started | Expected to share the `AOTA` container family; every constant still has to be re-derived |
-| CMF Watch Pro (1st generation) | Not started | Older baseband and UI stack; likely a different OTA path |
-| CMF Watch (1st generation) | Not started | Same caveat |
-
-Nothing in this table is verified. The CMF Watch Pro 2 section documents one device; the
-constants, offsets and BLE behaviour described there apply to that device only, and the same
-code paths are not assumed to exist elsewhere.
-
-## Known scope boundaries
-
-- The container formats are shared across devices from the same vendor generation, but the
-  layouts are re-verified per image rather than assumed.
-- The BLE command set is device-specific in detail; the shared tooling is a transport, not a
-  protocol abstraction.
-- No cross-device compatibility is claimed, and no device without a verified page is
-  represented as supported.
+For watch-face work, record the model, package type, codec and the view used
+for verification. An import, a render and a physical upload are separate
+checks. Use the [Watch Pro 2 WFDL reference](/devices/cmf-watch-pro-2/formats/watchface/)
+or the [Watch 3 Pro face notes](/devices/cmf-watch-pro-3/formats/#watch-face-resources)
+for the relevant format.

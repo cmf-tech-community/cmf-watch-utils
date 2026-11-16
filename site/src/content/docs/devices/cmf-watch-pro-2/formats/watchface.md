@@ -3,8 +3,6 @@ title: Watch faces and animations
 description: NAND layout, WFDL packages, album.cfg, .ajs animations and warm-up mapping.
 ---
 
-# Watch-face subsystem
-
 Reverse-engineered from `WFManager.c`, `WfmPara.c`, `WFRes.c` and the
 string/address map of the 0.73 app. File formats below are the ones the
 firmware actually reads; field meanings marked *(?)` are inferred.
@@ -346,20 +344,7 @@ frames; at ~4 KB each that is ~21 MB, so a Bad Apple test replaces one or
 more existing `.ajs` files (or repacks `res_e.bin` without them) rather
 than appending.
 
-Proof of concept: `out/badapple_poc.ajs` is a 202-frame (8.1 s), 240x240,
-25 fps clip made from archive.org `TouhouBadApple` at 45 s, cropped to
-square and encoded `-q:v 4`.  It is 756,479 B (3,745 B/frame); extract ->
-repack is byte-identical.  A full 5,250-frame clip extrapolates to
-**18.75 MiB**.  Preview: `out/badapple_poc_sheet.png`.
-
-Offline install candidate: `out/JX402_V1.0.0.73_badapple9.bin` is based
-on `JX402_V1.0.0.73_pwned.bin` (the running resource-patched image), so
-**only `res_e.bin` differs**.  It replaces `9.ajs` (sport type 22,
-8-second warm-up) with the PoC and keeps `res_e` at its original
-58,777,088-byte size.  `out/res_e_badapple9.bin` is the padded SDFS
-partition.  Verified: AOTA header and all entries, SDFS total/hashes, the
-other 18 files byte-identical, and all other partitions byte-identical to
-the pwned image.  **Not flashed.**
+The [Bad Apple case study](/devices/cmf-watch-pro-2/guides/bad-apple/) records the encoded excerpt, resource replacement and on-watch playback. See [AJS animations](/devices/cmf-watch-pro-2/formats/ajs/) for the practical editing steps.
 
 ## 6. Pitfalls
 

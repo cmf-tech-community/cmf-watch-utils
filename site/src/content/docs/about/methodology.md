@@ -32,9 +32,16 @@ Conventions:
 
 - BLE traffic was captured and replayed against the watch with a Python/Bleak client.
 - Shell/AT commands were used for identity, battery and sensor checks.
-- The stock OTA flow was tested with live negotiation (`--stop-after-a040`) before transferring data.
+- Watch Pro 2 stock OTA was verified in separate negotiation, transfer and post-reboot checks.
 - A successful full flash was accepted only after the watch rebooted and the new animation
   played on the UI.
+
+## Emulated hardware
+
+Record the stock version, model, fixture and interaction. Compare the guest’s
+visible behaviour with register, serial or storage evidence. A synthesized
+sensor input can verify driver and app behaviour in QEMU. Report physical
+measurements and validation separately.
 
 ## Format recovery
 
@@ -51,7 +58,7 @@ legitimate firmware image supplied locally.
 
 ## Cross-checking
 
-The public [`freethinkel/fmc`](https://github.com/freethinkel/fmc) project (AGPL-3.0) was used
+The public [`cmf-tech-community/fmc`](https://github.com/cmf-tech-community/fmc) project (AGPL-3.0) was used
 as an independent reference for the frame header, AES/CRC rules, `.wfdl` layout and the
 watch-face upload handshake. Where older assumptions differed, live-verified FMC behaviour took
 precedence. The watch-face uploader is a behavioural port, which is why this repository is

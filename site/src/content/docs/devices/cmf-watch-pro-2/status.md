@@ -3,8 +3,7 @@ title: What works
 description: Verified functionality, hardware-tested results and known-good paths.
 ---
 
-This page separates **verified on hardware** from **verified in QEMU**, **offline verified** and **theory**. The read-only
-paths are the safest starting point.
+The table identifies where each Watch Pro 2 workflow was verified. Watch 3 Pro has a [separate device profile](/devices/cmf-watch-pro-3/).
 
 ## Status summary
 

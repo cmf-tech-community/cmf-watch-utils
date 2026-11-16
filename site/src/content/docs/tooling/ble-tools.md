@@ -3,7 +3,7 @@ title: BLE tools
 description: Reference for cmf_watch.py and ota_client.py, the host-side tools that talk to the watch.
 ---
 
-The existing stock scripts use [Bleak](https://github.com/hbldh/bleak). Physical tests ran
+The stock scripts on this page target [Watch Pro 2](/devices/cmf-watch-pro-2/) and use [Bleak](https://github.com/hbldh/bleak). Physical tests ran
 on Windows. For the separate Actions SDK protocol, see [Actions SDK OTA](/tooling/actions-ota/).
 For OTA over a simulated radio, see [OTA and recovery](/emulator/ota-recovery/).
 
@@ -19,7 +19,7 @@ uv run python tools/ota_client.py --help
 | Command | Purpose |
 |---|---|
 | `scan` | List nearby BLE advertisements |
-| `at <command>` | Send an AT command over the shell channel and print the reply |
+| `at <command>` | Query with a known read-only [AT command](/devices/cmf-watch-pro-2/protocol/shell/) |
 | `info` | Version, serial, name, PID, battery, temperature, accelerometer |
 | `sync` | Observe the notification stream for a while |
 | `workouts` | Dump the workout/sport configuration tables |
@@ -39,6 +39,8 @@ uv run python tools/ota_client.py --help
 | `ota-push`, `ota-arm`, `ota-dtry`, `ota-resume`, `ota-run` | Experiment variants used while the OTA flow was being mapped |
 
 ### Local state
+
+Pair once with `uv run python tools/cmf_watch.py pair` before authenticated commands. If the host cannot connect, disconnect Nothing X and rerun a scan.
 
 `tools/.watch_state.json` holds the pairing secret and authkey. It is gitignored. A stale
 authkey still produces an `A052` reply after INIT1, so `A052` alone does not prove the session

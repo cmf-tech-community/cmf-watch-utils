@@ -4,11 +4,11 @@
 [11:26:59.746] notify chars: 10
 [11:26:59.754]   (notify 00002a05-0000-1000-8000-00805f9b34fb failed: Could not start notify on 0002: Access Denied)
 [11:27:01.002]   (notify 0000ffd2-0000-1000-8000-00805f9b34fb failed: (15, 'GATT Protocol Error: Insufficient Encryption'))
-[11:27:01.242] authkey=0e6848e79004057d2048006402e34a94
+[11:27:01.242] authkey=[redacted]
 [11:27:01.288]   < cmd2=0x0049 cc=1 ci=1 enc=True 5aaabbccddeeff
 [11:27:01.332]   < cmd2=0x004c cc=1 ci=1 enc=True d662eb3dc3b19fb188ef5dc8fa98aef9
 [11:27:01.337] nonce=d662eb3dc3b19fb188ef5dc8fa98aef9
-[11:27:01.341] sessionKey=9008c78dffc6c8ecc864c393ffeb01d0
+[11:27:01.341] sessionKey=[redacted]
 [11:27:01.377]   < cmd2=0x0004 cc=1 ci=1 enc=True 5a
 [11:27:01.407] INIT1 0x9052 (OTA begin)
 [11:27:01.437]   < cmd2=0x0001 cc=1 ci=1 enc=True 1a00

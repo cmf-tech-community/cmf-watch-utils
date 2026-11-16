@@ -28,7 +28,7 @@ offset 0, so file offset `X` maps to address `0x10000000 + X`.
 ## Headless example
 
 ```bash
-analyzeHeadless <projdir> wp2 \
+analyzeHeadless analysis-projects wp2 \
   -import app.bin \
   -processor ARM:LE:32:Cortex \
   -loader BinaryLoader \
@@ -38,10 +38,10 @@ analyzeHeadless <projdir> wp2 \
   -analysisTimeoutPerFile 900
 ```
 
-A single function is decompiled with:
+Create the `analysis-projects` directory before import. To decompile one function:
 
 ```bash
-analyzeHeadless <projdir> wp2 -process app.bin -noanalysis \
+analyzeHeadless analysis-projects wp2 -process app.bin -noanalysis \
   -scriptPath tooling/ghidra_scripts \
   -postScript DecompileAt.java 0x101F4D70
 ```

@@ -28,7 +28,7 @@ Both smoke tests generate their own boot images. They need no stock firmware, ph
 
 ## Documentation changes
 
-Install Node.js 22 and pnpm 12. From `site/`, run `pnpm install --frozen-lockfile` and `pnpm dev` to preview changes. Run `pnpm build` before opening a PR.
+Install Node.js 22 and pnpm 12. From `site/`, run `pnpm install --frozen-lockfile` and `pnpm dev` to preview changes. Run `pnpm build` before opening a PR. Use the [device documentation map](https://cmf.arnv.dev/about/roadmap/) to place results. Record the model and build, and distinguish offline, emulator and physical evidence.
 
 ## Opening a pull request
 

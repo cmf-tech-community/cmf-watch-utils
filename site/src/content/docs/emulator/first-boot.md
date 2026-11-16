@@ -4,10 +4,9 @@ description: Create the watch's virtual storage, boot stock firmware, and open t
 ---
 
 Complete [Installation](/emulator/installation/) first. The commands
-below use Windows paths. On Linux and macOS, use the executable names and
-debugger options from the installation guide.
+use paths relative to the checkout. On Windows, use `runtime/qemu-system-arm.exe` and add `--runtime-dir` with the path to your MSYS2 `ucrt64/bin` folder. On Ubuntu, use `--gdb gdb-multiarch`.
 
-## Prepare the storage
+## Watch Pro 2 storage
 
 QEMU needs files that stand in for the watch's storage. They contain the app,
 its fonts and images, and the language setting. The CLI uses the reference
@@ -23,7 +22,7 @@ firmware to create these files on your computer.
 3. Leave at least 250 MiB free on the drive. Run this from the checkout:
 
 ```text
-uv run cmf-watch-utils emu prepare-fixtures --fixtures fixtures --stock dumps/binaries/firmware/JX402_V1.0.0.73.bin --nand-id runtime/nand_id_all.bin --qemu runtime/qemu-system-arm.exe --rom runtime/compat.bin --runtime-dir C:/msys64/ucrt64/bin --provisioner runtime --gdb arm-none-eabi-gdb
+uv run cmf-watch-utils emu prepare-fixtures --fixtures fixtures --stock dumps/binaries/firmware/JX402_V1.0.0.73.bin --nand-id runtime/nand_id_all.bin --qemu runtime/qemu-system-arm --rom runtime/compat.bin --provisioner runtime --gdb arm-none-eabi-gdb
 ```
 
 The command prints where it saved the storage files and logs. The
@@ -31,13 +30,28 @@ The command prints where it saved the storage files and logs. The
 `nand-defaults.bin`. Keep them for future runs. If you already have these
 three files from a previous setup, reuse them and go to [Headless boot](#headless-boot).
 
+## Watch 3 Pro storage
+
+Fetch both stock packages from the [data index](/dumps/). Watch 3 Pro supplies
+the guest files. Watch Pro 2 supplies the virtual NAND writer. Use the same
+ROM, NAND ID file and debugger as above.
+
+```text
+uv run cmf-watch-utils emu prepare-fixtures --profile wp3-stock --fixtures fixtures-wp3 --stock dumps/binaries/firmware/JX402_w3pro_V1.0.1.77.bin --provisioning-stock dumps/binaries/firmware/JX402_V1.0.0.73.bin --nand-id runtime/nand_id_all.bin --qemu runtime/qemu-system-arm --rom runtime/compat.bin --provisioner runtime --gdb arm-none-eabi-gdb
+```
+
+Add `--profile wp3-stock` and substitute `fixtures-wp3` for `fixtures` in
+the commands below. Keep `wfc-index.txt` beside the flash files. Native
+stock fixtures can show the language screen. The [browser preview](/emulator/watch-pro-3/)
+starts at the face.
+
 ## Headless boot
 
 First run without opening a window. This checks that the virtual watch starts
 and draws something:
 
 ```text
-uv run cmf-watch-utils emu run --fixtures fixtures --qemu runtime/qemu-system-arm.exe --rom runtime/compat.bin --runtime-dir C:/msys64/ucrt64/bin --headless --output runs/first-boot
+uv run cmf-watch-utils emu run --fixtures fixtures --qemu runtime/qemu-system-arm --rom runtime/compat.bin --headless --output runs/first-boot
 ```
 
 Look for `"panel_frame_captured": true` in the output. QEMU saves a screenshot
@@ -48,10 +62,10 @@ as `runs/first-boot/frame.ppm` and its result as `report.json`.
 Run again with a new output folder:
 
 ```text
-uv run cmf-watch-utils emu run --fixtures fixtures --qemu runtime/qemu-system-arm.exe --rom runtime/compat.bin --runtime-dir C:/msys64/ucrt64/bin --output runs/first-window
+uv run cmf-watch-utils emu run --fixtures fixtures --qemu runtime/qemu-system-arm --rom runtime/compat.bin --output runs/first-window
 ```
 
-You should see a window titled **CMF Watch Pro 2**. For the first-run language
+The window title shows the selected model. For the first-run language
 screen, repeat the storage preparation with `--profile wp2-onboarding`,
 then add that flag to your boot command. Every boot command needs a new output
 folder. Use a different name to keep older results.
@@ -70,7 +84,7 @@ Use `--allow-reboot` to follow the stock firmware through a restart. The
 factory menu's DUT confirmation and Exit Factory actions both restart the watch.
 
 In stock firmware, **Advanced → Ambient light (lux)** sets the simulated
-ambient light from 0 to 100,000 lux. In the browser, use **Simulation →
+ambient light (the range depends on the profile). In the browser, use **Simulation →
 Ambient light**. The factory light test displays the simulated value after you
 start the measurement.
 

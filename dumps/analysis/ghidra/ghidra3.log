@@ -1,6 +1,6 @@
-INFO  Using log config file: jar:file:/C:/Users/arnav/scoop/apps/ghidra/12.1.4-20260921/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
-INFO  Using log file: C:\Users\arnav\AppData\Roaming\ghidra\ghidra_12.1.4_PUBLIC\application.log (LoggingInitialization)  
-INFO  Loading user preferences: C:\Users\arnav\AppData\Roaming\ghidra\ghidra_12.1.4_PUBLIC\preferences (Preferences)  
+INFO  Using log config file: jar:file:/[local path] (LoggingInitialization)
+INFO  Using log file: [local path] (LoggingInitialization)
+INFO  Loading user preferences: [local path] (Preferences)
 INFO  Searching for classes... (ClassSearcher)  
 INFO  Class search complete (564 ms) (ClassSearcher)  
 INFO  Initializing SSL Context (DefaultSSLContextInitializer)  
@@ -10,39 +10,39 @@ INFO  Trust manager disabled, cacerts have not been set (DefaultTrustManagerFact
 INFO  Headless startup complete (2072 ms) (AnalyzeHeadless)  
 INFO  Class searcher loaded 59 extension points (20 false positives) (ClassSearcher)  
 WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::staticFieldOffset has been called by org.apache.felix.framework.util.SecureAction (file:/C:/Users/arnav/scoop/apps/ghidra/12.1.4-20260921/Ghidra/Features/Base/lib/org.apache.felix.framework-7.0.5.jar)
+WARNING: sun.misc.Unsafe::staticFieldOffset has been called by org.apache.felix.framework.util.SecureAction (file:/[local path])
 WARNING: Please consider reporting this to the maintainers of class org.apache.felix.framework.util.SecureAction
 WARNING: sun.misc.Unsafe::staticFieldOffset will be removed in a future release
 INFO  HEADLESS Script Paths:
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\Decompiler\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\FileFormats\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Debug\Debugger\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\SwiftDemangler\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\BSim\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\PDB\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\SystemEmulation\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Processors\DATA\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\MicrosoftCodeAnalyzer\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\FunctionID\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\GnuDemangler\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Processors\Atmel\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Processors\PIC\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Processors\8051\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Processors\JVM\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\VersionTracking\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Debug\Debugger-rmi-trace\ghidra_scripts
-    D:\upitest\fwsdk\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\BytePatterns\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\DecompilerDependent\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\WildcardAssembler\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\Base\ghidra_scripts
-    C:\Users\arnav\scoop\apps\ghidra\12.1.4-20260921\Ghidra\Features\PyGhidra\ghidra_scripts (HeadlessAnalyzer)  
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path]
+    [local path] (HeadlessAnalyzer)
 INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
-INFO  Opening existing project: D:\upitest\fwsdk\proj_test\t1 (HeadlessAnalyzer)  
-INFO  Opening project: D:\upitest\fwsdk\proj_test\t1 (HeadlessProject)  
+INFO  Opening existing project: [local path] (HeadlessAnalyzer)
+INFO  Opening project: [local path] (HeadlessProject)
 INFO  REPORT: Processing project file: /app.bin (HeadlessAnalyzer)  
 INFO  REPORT: Execute script: MarkVectors.java  (HeadlessAnalyzer)  
-INFO  SCRIPT: D:\upitest\fwsdk\ghidra_scripts\MarkVectors.java (HeadlessAnalyzer)  
+INFO  SCRIPT: [local path] (HeadlessAnalyzer)
 INFO  MarkVectors.java> WP2_VECTORS seeded=74 (GhidraScript)  
 INFO  ANALYZING all memory and code: /app.bin (HeadlessAnalyzer)  
 WARN  Decompiling 101ecdec, pcode error at 101ed014: Unable to resolve constructor at 101ed014 (DecompileCallback)  
@@ -50,7 +50,7 @@ WARN  Decompiling 101fcede: Unable to read bytes at ram:00000004 (DecompileCallb
 WARN  Decompiling 100513fc, pcode error at 1004f678: Unable to resolve constructor at 1004f678 (DecompileCallback)  
 WARN  Decompiling 101789a4, pcode error at 10178a3c: Unable to resolve constructor at 10178a3c (DecompileCallback)  
 WARN  Decompiling 101789a4, pcode error at 101790b6: Unable to resolve constructor at 101790b6 (DecompileCallback)  
-INFO  Packed database cache: C:\Users\arnav\AppData\Local\ghidra\packed-db-cache (PackedDatabaseCache)  
+INFO  Packed database cache: [local path] (PackedDatabaseCache)
 INFO  Applied data type archive: generic_clib (ApplyDataArchiveAnalyzer)  
 INFO  -----------------------------------------------------
     ARM Constant Reference Analyzer           10.023 secs
@@ -87,7 +87,7 @@ INFO  -----------------------------------------------------
  (AutoAnalysisManager)  
 INFO  REPORT: Analysis succeeded for file: /app.bin (HeadlessAnalyzer)  
 INFO  REPORT: Execute script: DumpApp.java  (HeadlessAnalyzer)  
-INFO  SCRIPT: D:\upitest\fwsdk\ghidra_scripts\DumpApp.java (HeadlessAnalyzer)  
+INFO  SCRIPT: [local path] (HeadlessAnalyzer)
 INFO  DumpApp.java> WP2_DUMP functions=8832 strings=9233 (GhidraScript)  
 INFO  ANALYZING changes made by post scripts: /app.bin (HeadlessAnalyzer)  
 INFO  REPORT: Post-analysis succeeded for file: /app.bin (HeadlessAnalyzer)  

@@ -3,13 +3,11 @@ title: Bad Apple case study
 description: How a 202-frame animation was built, packed into res_e, flashed and verified on hardware.
 ---
 
-This is the end-to-end proof that the format and OTA work is correct. It is documented as a
-case study; **no Bad Apple frames or prebuilt firmware are distributed here**.
+This case study covers the stock-resource experiment. The [separate Zephyr application](https://github.com/cmf-tech-community/firmware-wp2-badapple) builds from source with its own media assets and is the basis of the browser preset.
 
 ## Why `9.ajs`
 
-`9.ajs` is the 8-second sport warm-up animation for sport type 22. It is small enough to
-replace without rebuilding the whole resource set:
+`9.ajs` is a stock warm-up animation for sport type 22. The table gives encoded durations at the nominal frame rate.
 
 | | Stock `9.ajs` | PoC |
 |---|---|---|
@@ -39,8 +37,6 @@ The PoC is silent, 240×240, baseline JPEG, and fits in a single-tile-per-frame 
   were skipped.
 - The watch reported `0xA041 01`; the client sent `0x9041 A5`.
 - It rebooted, booted the new image and **played the animation in the UI**.
-- A second short transfer (1.63 MB, 3.0%) completed after the first had already staged most
-  data; it also ended with the commit ack.
 
 ## Capacity ceiling
 
@@ -57,6 +53,4 @@ unless content is removed.
 
 ## Legal note
 
-Bad Apple is copyrighted. Frames, a built `.ajs` and a firmware image containing them are not
-published. The method is described, the tooling is shipped, and the media is supplied by the
-user.
+Bad Apple is a third-party work. The [data index](/dumps/) lists the published resource experiment. See [Legal and attribution](/about/legal/) for redistribution boundaries.

@@ -90,8 +90,8 @@ the Linux release runner uses Ubuntu 22.04.
 
 The experimental `wp3-stock` profile boots stock Watch 3 Pro `1.0.1.77` in the shared native QEMU runtime. It uses a synthetic flash layout and the compatibility ROM. Prepare it with `emu prepare-fixtures --profile wp3-stock --stock <watch-3-pro-package> --provisioning-stock <watch-pro-2-1.0.0.73-package>` and the usual QEMU, Arm GDB, NAND ID and provisioner options. The Watch Pro 2 package supplies the virtual NAND writer. Run the resulting fixtures with `emu run --profile wp3-stock`. The stock guest starts on virtual charger power during first boot. Disconnect it through Advanced after initialization to use the watch screen.
 
-The [Watch 3 Pro browser preview](https://cmf.arnv.dev/emulator/watch-pro-3/) boots stock firmware. Watch 3 Pro pairing, recovery, and full factory suite coverage are still in development.
+The [Watch 3 Pro browser preview](https://cmf.arnv.dev/emulator/watch-pro-3/) boots stock firmware. See the [Watch 3 Pro device profile](https://cmf.arnv.dev/devices/cmf-watch-pro-3/) for verified workflows and limits.
 
-The optional `stock-audio.bin` sound bank works with both models’ verified stock builds. Place the bank in the model’s fixture directory. The Watch 3 Pro aging test produced a non-silent WAV capture and accepted live microphone input with `--host-mic --audio dsound` on Windows. The Advanced panel can set GPS, ambient light, acceleration, gyroscope readings, and simulated values for the stock heart rate and blood oxygen screens.
+The optional `stock-audio.bin` sound bank works with both models’ verified stock builds. Place the bank in the model’s fixture directory. A desktop preview can record guest audio as WAV and use host microphone input through a supported backend. The Advanced panel can set GPS, ambient light, acceleration, gyroscope readings, and simulated values for the stock heart rate and blood oxygen screens.
 
 Use `emu faces --profile wp3-stock` to list published Watch 3 Pro faces from FMC. Start a stock run with `--fmc-face <id>` or `--watch-face <file>` to replace Duskscape in that session’s virtual NAND.

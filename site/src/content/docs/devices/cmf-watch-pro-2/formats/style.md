@@ -3,8 +3,6 @@ title: Style bundles (.sty)
 description: Scene tables, node graphs, RES pools and loader behaviour.
 ---
 
-# UI style bundles (`.sty`, `.res`, `.font`)
-
 The watch UI is **not** LVGL-XML - it is a small compiled scene format in
 `/NAND:A/bt_watch.sty`, paired at runtime with three other files:
 
@@ -197,7 +195,7 @@ scene 88 id=5BBE3E12 410x502 group=1 alpha=255 items=1 data=0x1D63C
 ```
 
 ```
-$ fwkit sty-tree out\bt_watch.sty 125
+uv run fwkit sty-tree out/bt_watch.sty 125
 scene 125 id=66977E99 410x502 group=1 alpha=255 items=1 data=0x2329C
   list id=79C22D30 xy=0,0 wh=220x220 cell=16/2 kids=6
     image id=79C22D30 pic=1534 220x220 ... res=0x33A49C+0x1528
@@ -268,17 +266,16 @@ scene 125 id=66977E99 410x502 group=1 alpha=255 items=1 data=0x2329C
 
 ## 7. Tooling (`fwkit`)
 
-```powershell
-$fw = "fwkit"
-& $fw sty-info   out\bt_watch.sty --scenes
-& $fw sty-nodes  out\bt_watch.sty --type 4
-& $fw sty-tree   out\bt_watch.sty 125
-& $fw sty-add-scene out\bt_watch.sty 125 0x76543210 -o out.sty --fresh-node-ids
-& $fw sty-del-scene out.sty 0x76543210 -o trimmed.sty
-& $fw sty-set-pic out\bt_watch.sty 0xDEFBE0D9 332 -o out.sty --from-pic 333
-& $fw app-scene-refs out\app_073.bin 0x5D695BF2
-& $fw app-patch-scene out\app_073.bin 0x5D695BF2 0x5D695BF3 -o out\app_new.bin
-& $fw edit-sty-pic IMG res.bin bt_watch.sty 0xDEFBE0D9 332 out.bin --from-pic 333
+```text
+uv run fwkit sty-info   out/bt_watch.sty --scenes
+uv run fwkit sty-nodes  out/bt_watch.sty --type 4
+uv run fwkit sty-tree   out/bt_watch.sty 125
+uv run fwkit sty-add-scene out/bt_watch.sty 125 0x76543210 -o out.sty --fresh-node-ids
+uv run fwkit sty-del-scene out.sty 0x76543210 -o trimmed.sty
+uv run fwkit sty-set-pic out/bt_watch.sty 0xDEFBE0D9 332 -o out.sty --from-pic 333
+uv run fwkit app-scene-refs out/app_073.bin 0x5D695BF2
+uv run fwkit app-patch-scene out/app_073.bin 0x5D695BF2 0x5D695BF3 -o out/app_new.bin
+uv run fwkit edit-sty-pic firmware.bin res.bin bt_watch.sty 0xDEFBE0D9 332 out.bin --from-pic 333
 ```
 
 Python API (`fwkit.sty`):

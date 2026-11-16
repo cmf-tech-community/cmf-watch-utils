@@ -9,12 +9,12 @@ This repository is licensed under the **GNU Affero General Public License v3.0 (
 See [`LICENSE`](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/LICENSE).
 
 Rationale: the BLE/frame behaviour and watch-face upload flow were informed by, and in part
-ported from, the AGPL-3.0 licensed [`freethinkel/fmc`](https://github.com/freethinkel/fmc)
+ported from, the AGPL-3.0 licensed [`cmf-tech-community/fmc`](https://github.com/cmf-tech-community/fmc)
 project. Keeping the combined work under AGPL-3.0 is the simplest way to respect that license.
 
 ## Third-party attribution
 
-- [`freethinkel/fmc`](https://github.com/freethinkel/fmc) — independent watch-face editor and
+- [`cmf-tech-community/fmc`](https://github.com/cmf-tech-community/fmc) — independent watch-face editor and
   protocol reference (AGPL-3.0). Used for cross-checking frame headers, AES/CRC rules, WFDL
   layout and the upload handshake.
 - Nothing/CMF and the CMF Watch Pro 2 name are trademarks of their respective owners. This is
@@ -25,11 +25,9 @@ project. Keeping the combined work under AGPL-3.0 is the simplest way to respect
 
 ## Published artifacts
 
-The repository is published as a private research repository, and the following material is
-included for reproducibility:
+The [data index](/dumps/) lists the artifacts available from this repository.
 
-- The stock firmware image and the `app.bin` extracted from it, under `dumps/binaries/`,
-  stored with Git LFS.
+- Stock firmware packages and selected application extracts are tracked under `dumps/binaries/` using Git LFS.
 - The rebuilt proof-of-concept image under `dumps/binaries/`, which contains third-party
   animation frames.
 - Manifests with sizes and hashes, and redacted notes.
@@ -41,9 +39,7 @@ The following is intentionally excluded:
 - Captured personal data: MAC addresses, serial numbers, pairing secrets, authkeys, session
   keys, GPS tracks and notification contents.
 
-Before a public release, `dumps/binaries/` is either removed or the redistribution rights for
-the vendor firmware and for the third-party frames are confirmed. The tooling, documentation
-and manifests carry no such restriction.
+The repository license applies to the project code. Firmware and third-party media have their own terms.
 
 Locally obtained images are placed under `firmware/`; that path is gitignored.
 
@@ -54,6 +50,3 @@ testing. Bypassing ownership/account protections, attacking hardware that is not
 redistributing vendor firmware or copyrighted media fall outside the intended use. Firmware
 modification can permanently damage a device. No warranty is provided; see the AGPL-3.0 for
 the full disclaimer.
-
-This page is not legal advice. Distribution of firmware, media or a commercial product based on
-this work warrants independent legal review.

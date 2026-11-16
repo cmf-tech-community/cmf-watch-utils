@@ -3,7 +3,7 @@ title: OTA and recovery
 description: Transfer a firmware update between virtual devices and check what happens after reboot.
 ---
 
-Start with the [First boot](/emulator/first-boot/). This guide uses two
+This workflow uses Watch Pro 2. Start with [First boot](/emulator/first-boot/). Watch 3 Pro OTA and recovery remain unverified. This guide uses two
 local programs. QEMU runs the virtual watch. Netsim gives it a simulated
 Bluetooth radio so the OTA client can talk to it without a physical adapter.
 
@@ -40,7 +40,7 @@ to `local/paired-nor.bin`, and closes QEMU.
 
 These examples use the same paths as the first-boot walkthrough. On Windows,
 use `runtime/qemu-system-arm.exe` and add
-`--runtime-dir C:/msys64/ucrt64/bin` when launching QEMU.
+`--runtime-dir "PATH_TO_UCRT64_BIN"` when launching QEMU.
 
 ```text
 uv run cmf-watch-utils emu run --fixtures fixtures --qemu runtime/qemu-system-arm --rom runtime/compat.bin --headless --hci-port 17310 --qmp-port 17320 --seconds 120 --output runs/pairing
