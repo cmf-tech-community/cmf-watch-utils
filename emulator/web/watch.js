@@ -1,4 +1,5 @@
 import {downloadCatalogFace, setupFaceCatalog} from './catalog.mjs';
+import {fetchFixture} from './fixtures.mjs';
 import {installWatchFace} from './face.mjs';
 import {speakerSlice} from './speaker.mjs';
 
@@ -1073,24 +1074,23 @@ async function loadFixtures(nandOverride, useStockAudio) {
   const names = [...requiredFixtures];
   if (available.includes(textureIndex) || selected.has(textureIndex)) names.push(textureIndex);
   if (useStockAudio && available.includes(stockAudio)) names.push(stockAudio);
-  return Promise.all(names.map(async name => {
-    const override = selected.get(name);
-    const compressed = bundledStock && name === nandName;
-    let data;
-    if (override) {
-      data = await override.arrayBuffer();
-    } else {
-      const url = new URL(`./fixtures/${name}${compressed ? '.gz' : ''}`, import.meta.url);
-      const response = await fetch(url);
-      if (!response.ok) throw Error(`Could not load the stock file ${name}.`);
-      data = compressed
-        ? await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()
-        : await response.arrayBuffer();
-    }
-    const sizes = { [nandName]: 2112 * 65536, 'nor.bin': 0x400000, 'nand-id.bin': 790, 'compat.bin': 65536 };
-    if (name in sizes && data.byteLength !== sizes[name]) throw Error(`Invalid size for ${name}.`);
-    return [name, new Uint8Array(data)];
-  }));
+  const sizes = { [nandName]: 2112 * 65536, 'nor.bin': 0x400000, 'nand-id.bin': 790, 'compat.bin': 65536 };
+  const download = new AbortController();
+  try {
+    return await Promise.all(names.map(async name => {
+      const override = selected.get(name);
+      if (override) {
+        if (name in sizes && override.size !== sizes[name]) throw Error(`Invalid size for ${name}.`);
+        return [name, new Uint8Array(await override.arrayBuffer())];
+      }
+      const gzip = bundledStock && name === nandName;
+      const url = new URL(`./fixtures/${name}${gzip ? '.gz' : ''}`, import.meta.url);
+      return [name, await fetchFixture(url, {name, size: sizes[name], gzip, signal: download.signal})];
+    }));
+  } catch (error) {
+    download.abort(error);
+    throw error;
+  }
 }
 
 $('stop').onclick=()=>{
@@ -1149,6 +1149,7 @@ $('start').onclick=async()=>{
     }
     const runtimeURL = new URL('./runtime/', import.meta.url);
     const scriptURL = new URL('qemu-system-arm.js', runtimeURL).href;
+    status('Starting the emulator runtime…', false, 'loading');
     const {default:createQemu} = await import(scriptURL);
     const mediaClock = builtInPresets.has('bad-apple') && bootPreset.value === 'bad-apple';
     const clock = mediaClock ? 'shift=6,align=on' : 'shift=3,align=off';

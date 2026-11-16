@@ -50,7 +50,9 @@ uv run cmf-watch-utils emu pair-fixture --hci-port 17310 --qmp-port 17320 --outp
 Port `17320` is QEMU's local control connection. The CLI uses it to save
 the virtual storage. Keep the exported file local.
 
-## Stock update
+For Watch 3 Pro, add `--profile wp3-stock` to both commands and use Watch 3 Pro fixtures. Start a new guest with `emu run --profile wp3-stock --nor local/paired-nor.bin` before negotiating OTA. The stock app loads the synthetic secret into its authentication state during boot.
+
+## Watch Pro 2 stock update
 
 Run these commands in order, each in a separate terminal. Give the first
 command time to start, then start the recovery command before transferring.
@@ -69,9 +71,23 @@ sends the update. Boot the new file with `emu run --nor runs/install/nor.bin`
 and a fresh output directory. A panel frame confirms that the installed
 app started and drew something.
 
+## Watch 3 Pro modeled recovery
+
+Use `emu recover --profile wp3-stock` with Watch 3 Pro fixtures. The emulator can install an extracted `--pending-temp` payload when the supplied virtual NOR contains a valid pending OTA record. With `--crown-held --charger-connected`, it can restore the stock app and resources to a broken virtual NOR. Each operation writes a new NOR file that you can boot in QEMU.
+
+In the Watch 3 Pro OTA test, the stock app received an app/SDFS update over
+simulated Bluetooth, validated the TEMP payload and requested an OTA reboot.
+The test recovered the exact TEMP bytes from the NAND snapshot and passed
+them to the modeled installer along with the pending record captured from
+NOR. The installed app drew its test screen on the next boot.
+
+Automatic TEMP extraction with `emu recover --pending-nand` is currently
+available for Watch Pro 2. For Watch 3 Pro, use `--pending-temp` with an
+extracted payload.
+
 ## Verification and limits
 
-- In the stock test, the guest accepted the update, rebooted, and started
+- In the Watch Pro 2 stock test, the guest accepted the update, rebooted, and started
   Bad Apple after the emulator installed the staged package. The recorded test
   used a QEMU-only package with an empty AGPS trailer.
 - In the Actions test, the guest accepted the image after transfer.

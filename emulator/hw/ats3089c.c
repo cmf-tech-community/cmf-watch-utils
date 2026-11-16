@@ -1142,6 +1142,9 @@ static bool acts_vg_blit(ActsState *s, uint32_t origin, uint32_t size,
     const uint32_t *state = s->vg_state;
     unsigned x = origin & 0xffff, y = origin >> 16;
     unsigned width = size & 0xffff, height = size >> 16;
+    if (!width || !height) {
+        return true;
+    }
     unsigned sw = state[0xa2f] & 0xffff, sh = state[0xa2f] >> 16;
     unsigned pitch = state[0xa12], spitch = state[0xa2b];
     uint32_t src = state[0xa29], dst = state[0xa11];
@@ -1186,7 +1189,7 @@ static bool acts_vg_blit(ActsState *s, uint32_t origin, uint32_t size,
         state[0xa10] != 0x101 ||
         (state[0xa27] && !pattern) || state[0xa2d] ||
         state[0xa1a] != 0x3f800000 || state[0xa1e] || state[0xa22] ||
-        !width || !height || !sw || !sh || sw > 2047 || sh > 2047 ||
+        !sw || !sh || sw > 2047 || sh > 2047 ||
         x + width > 466 || y + height > 466 || pitch < (x + width) * 2 ||
         spitch < row_bytes || spitch > 8192 || pitch > 8192 ||
         src < 0x18000000 || dst < 0x18000000 ||
