@@ -4,43 +4,14 @@ import json
 from pathlib import Path
 import shutil
 import socket
-import struct
 import subprocess
 import time
 
 from cmf_watch_utils.emu.profiles import PROFILES
+from cmf_watch_utils.emu.preview import watch_face_preview
+from cmf_watch_utils.emu.prepare import STOCK_SHA256, stock_faces, write_texture_index
 from cmf_watch_utils.emu.vm import child, executable, runtime_env
-from fwkit.aota import sum32
 from page import FRAME_FILES, OG_IMAGES, ROUTES, render_page
-
-
-def watch_face_preview(app, rom):
-    preview = bytearray(app)
-    launcher_entry = 0x45154
-    setup_stub = 0x7f80
-    autosleep_timeout = 0x155b4a
-    # Mark local setup complete with the stock state 0x59 setter, call the
-    # original state 0x58 getter, then continue the launcher.
-    setup_code = bytes.fromhex(
-        "10b5 0120 03b4 6846 034b 9847 02b0 5820 024b 9847 024a 1047"
-    ) + struct.pack("<3I", 0x100dba49, 0x101c6ec3, 0x1004515d)
-    setup_end = setup_stub + len(setup_code)
-    if rom[setup_stub:setup_end] != bytes(len(setup_code)):
-        raise ValueError("Watch 3 Pro preview setup stub needs unused compatibility ROM space")
-    for offset, expected, replacement in (
-        (launcher_entry, bytes.fromhex("10b5 5820 81f1b3fe"),
-         struct.pack("<2I", 0xf000f8df, setup_stub | 1)),
-        (autosleep_timeout, bytes.fromhex("02fb00f4"), bytes.fromhex("6ff00004")),
-    ):
-        if app[offset:offset + len(expected)] != expected:
-            raise ValueError(f"Unexpected Watch 3 Pro preview instruction at {offset:#x}")
-        preview[offset:offset + len(expected)] = replacement
-    size = struct.unpack_from("<I", preview, 24)[0]
-    struct.pack_into("<I", preview, 28, 0xffffffff - sum32(preview[512:512 + size]))
-    struct.pack_into("<I", preview, 32, 0)
-    struct.pack_into("<I", preview, 32, 0xffffffff - sum32(preview[:512]))
-    rom[setup_stub:setup_end] = setup_code
-    return preview
 
 
 def initialize_watch3_storage(args, model, nor, nand, nand_id, target):
@@ -115,7 +86,7 @@ if args.frames_dir:
     for name in frame_names:
         shutil.copyfile(args.frames_dir / name, frames / name)
 web = Path(__file__).resolve().parent
-for name in ("watch.js", "style.css", "face.mjs", "catalog.mjs", "speaker.mjs", "favicon.svg"):
+for name in ("watch.js", "style.css", "face.mjs", "catalog.mjs", "speaker.mjs", "fixtures.mjs", "favicon.svg"):
     shutil.copyfile(web / name, args.output / name)
 shutil.copyfile(web / OG_IMAGES[args.profile], args.output / OG_IMAGES[args.profile])
 (args.output / "index.html").write_text(render_page(args.profile), encoding="utf-8")
@@ -134,34 +105,21 @@ stock_audio = args.fixtures / "stock-audio.bin"
 if stock_audio.is_file():
     shutil.copyfile(stock_audio, fixtures / stock_audio.name)
     files.append(stock_audio.name)
-if args.profile == "wp3-stock":
-    shutil.copyfile(args.fixtures / "wfc-index.txt", fixtures / "wfc-index.txt")
-    files.append("wfc-index.txt")
-elif args.wfc_dir or args.stock_image:
-    from fwkit import lz4, wfdl
+texture_index = args.fixtures / "wfc-index.txt"
+if args.wfc_dir or args.stock_image:
     if args.stock_image:
-        from cmf_watch_utils.emu.prepare import STOCK_SHA256
-        from fwkit import Image, sdfs
+        from fwkit import Image
 
         stock = args.stock_image.read_bytes()
         if hashlib.sha256(stock).hexdigest() != STOCK_SHA256:
             parser.error("--stock-image needs the published Watch Pro 2 1.0.0.73 image")
-        fonts = sdfs.unpack(Image(stock).decompressed("fonts.bin"))
-        faces = (data for name, data in fonts.items() if name.endswith(".wfc"))
+        faces = stock_faces(Image(stock), profile.model.name).values()
     else:
         faces = (path.read_bytes() for path in args.wfc_dir.glob("*_local*.wfc"))
-
-    textures = set()
-    for face in faces:
-        for entry in wfdl.parse(face).resources:
-            if entry.cf == 5:
-                pixels = lz4.decompress(entry.data, entry.raw_size)
-                if len(pixels) != entry.w * entry.h * 3:
-                    raise ValueError(f"Invalid WFC texture in {face}")
-                textures.add(f"{entry.w}:{entry.h}:{hashlib.sha256(pixels).hexdigest()}")
-    if not textures:
-        raise ValueError("No packed WFC textures found")
-    (fixtures / "wfc-index.txt").write_text("\n".join(sorted(textures)) + "\n", encoding="ascii", newline="\n")
+    write_texture_index(faces, fixtures / "wfc-index.txt")
+    files.append("wfc-index.txt")
+elif texture_index.is_file():
+    shutil.copyfile(texture_index, fixtures / "wfc-index.txt")
     files.append("wfc-index.txt")
 (fixtures / "manifest.json").write_text(json.dumps({"profile": args.profile, "files": files}), encoding="utf-8")
 print(args.output.resolve())

@@ -73,19 +73,20 @@ proc pill_release {w x y action} {
     }
 }
 
-proc check {w caption var} {
+proc check {w caption var {command {}}} {
     canvas $w -width 280 -height 26 -background #1a1a1a -highlightthickness 0 -cursor hand2
     round_rect $w 4 5 20 21 4 -width 1 -tags box
     $w create line 8 13 11 17 17 9 -fill white -width 2 -tags tick
     $w create text 30 13 -text $caption -anchor w -fill #d8d8d8 -font {TkDefaultFont 12}
-    bind $w <ButtonRelease-1> [list check_toggle $w $var]
+    bind $w <ButtonRelease-1> [list check_toggle $w $var $command]
     check_draw $w $var
 }
 
-proc check_toggle {w var} {
+proc check_toggle {w var command} {
     upvar #0 $var value
     set value [expr {!$value}]
     check_draw $w $var
+    if {$command ne {}} {uplevel #0 $command}
 }
 
 proc check_draw {w var} {
@@ -285,6 +286,7 @@ set gyroX 0
 set gyroY 0
 set gyroZ 0
 set battery 4000
+set batteryPercent 69
 set charging [expr {[llength $argv] > 6 ? [lindex $argv 6] : 0}]
 set virtualHealth 0
 set rawOptical 0
@@ -297,8 +299,17 @@ set gpsLongitude 0
 set brightness 100
 set ambientLux 0
 
+proc send_power {args} {
+    global battery batteryPercent charging watchModel virtualHealthControls
+    if {$watchModel eq "wp2" && $virtualHealthControls} {
+        send_event "p 4000 $charging $batteryPercent"
+    } else {
+        send_event "p $battery $charging"
+    }
+}
+
 proc apply_sensors {} {
-    global accelX accelY accelZ battery charging virtualHealth heartRate spo2 stock
+    global accelX accelY accelZ virtualHealth heartRate spo2
     global gyroX gyroY gyroZ watchModel
     global virtualGps gpsLatitude gpsLongitude
     global virtualHealthControls rawOptical opticalWorn
@@ -323,7 +334,6 @@ proc apply_sensors {} {
         send_event "w [expr {$gyroX * 1000}] [expr {$gyroY * 1000}] [expr {$gyroZ * 1000}]"
     }
     send_event "a $accelX $accelY $accelZ"
-    send_event "p $battery $charging"
     if {$virtualHealthControls} {
         if {$watchModel eq "wp3"} {
             send_event "o [expr {$rawOptical ? 1 + $opticalWorn : 0}]"
@@ -349,8 +359,12 @@ proc open_sensors {} {
     foreach axis {X Y Z} {
         slider .advanced.accel$axis "$axis acceleration (mg)" accel$axis -2000 2000 10
     }
-    slider .advanced.battery "Battery voltage (mV)" battery 3300 4400 10
-    check .advanced.charger "Charger connected" charging
+    if {$watchModel eq "wp2" && $virtualHealthControls} {
+        slider .advanced.battery "Battery level (%)" batteryPercent 0 100 1 send_power
+    } else {
+        slider .advanced.battery "Battery voltage (mV)" battery 3300 4400 10 send_power
+    }
+    check .advanced.charger "Charger connected" charging send_power
     pack .advanced.brightness .advanced.accelX .advanced.accelY .advanced.accelZ .advanced.battery \
         -fill x -pady 5
     pack .advanced.charger -fill x -pady {4 8}

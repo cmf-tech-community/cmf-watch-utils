@@ -31,11 +31,14 @@ uv run python emulator/web/stage.py --fixtures fixtures --rom runtime/compat.bin
 ```
 
 The output directory must be new. Staging validates the stock application and
-copies the browser page and virtual storage. For correct rendering of the local
-stock watch faces, add `--wfc-dir PATH` pointing to the extracted stock WFC files
-named `*_local*.wfc`. This generates texture-format metadata from those files;
-it does not modify the stock application. Without it, some watch-face graphics
-are incorrectly decoded. The ordinary stock app list does not need that index.
+copies the page and virtual storage. Current fixture preparation generates
+`wfc-index.txt`; staging copies it automatically. Keep it with the matching
+flash files so stock watch-face textures render correctly.
+
+For older Watch Pro 2 fixtures, regenerate them or pass `--stock-image PATH`
+with the reference 1.0.0.73 package to generate the index during staging.
+`--wfc-dir PATH` accepts extracted `*_local*.wfc` files as an alternative.
+Watch 3 Pro uses the index from its prepared fixtures.
 
 Download `wp2-wasm-experimental` from the **Experimental browser emulator**
 workflow. Copy `qemu-system-arm.wasm` and `qemu-system-arm.worker.js` into
@@ -89,7 +92,8 @@ select a different build, set both `WP2_BAD_APPLE_TAG` and
   device view. Neither changes the guest's 466 x 466 display resolution.
 - The camera button saves the circular display as a transparent PNG. Turn on
   **Include frame in screenshots** to include the selected watch frame.
-- **Stop & reset** reloads the page. Guest storage changes are discarded.
+- The square stop control reloads into an idle session. **Hard reset to stock**
+  returns to the bundled starting state. Unsaved guest storage changes are discarded.
 - Open **Watch log** to inspect recent guest UART output or save the full captured UART log. Add `?debug` to the URL for
   verbose GPU/MMIO diagnostics; this increases logging and memory use.
 

@@ -132,7 +132,7 @@ jobs:
         run: |
           sha256sum -- *.tar.gz > SHA256SUMS
           cat > "$RUNNER_TEMP/emulator-preview.md" <<'EOF'
-          Preview for CMF Watch Pro 2 (JX402). Use the archive for your host plus the
+          Desktop preview for CMF Watch Pro 2 and Watch 3 Pro. Use the archive for your host plus the
           shared ROM and NAND tools archive. See the [setup guide](https://cmf.arnv.dev/emulator/)
           for runtime libraries, fixture preparation, and headless boot.
 
@@ -141,16 +141,16 @@ jobs:
           virtual flash are supplied separately. Crown + charger rescue uses the
           emulator's recovery model. Physical recovery remains unverified.
 
-          The checkout includes the uv-managed emulator CLI, Watch Pro 2 model
-          profiles, and Actions SDK OTA. Follow [Installation](https://cmf.arnv.dev/emulator/installation/)
-          and [First boot](https://cmf.arnv.dev/emulator/first-boot/)
-          to prepare storage and open the viewer. Arch Linux runtime and source-build
-          instructions are included; Arch-specific firmware boot is not yet tested.
+          Watch Pro 2 fixture preparation now generates the stock watch-face texture
+          index. Watch 3 Pro adds an optional stock watch-face preview and supports
+          stock OTA pairing with simulated Bluetooth. A Watch 3 Pro app/SDFS test update
+          completed transfer and reboot, then booted after modeled installation.
+          See [First boot](https://cmf.arnv.dev/emulator/first-boot/) and
+          [OTA and recovery](https://cmf.arnv.dev/emulator/ota-recovery/) for setup.
 
-          This is a development preview, not a guarantee that firmware will boot or
-          recover on physical hardware. Nothing X integration requires the separate
-          lab setup and is not included in the runtime archives.
+          Firmware boot and recovery on physical hardware require separate testing.
+          Nothing X integration uses a separate lab setup.
           EOF
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
-            --verify-tag --prerelease --latest=false --title "Watch Pro 2 emulator preview" \
+            --verify-tag --prerelease --latest=false --title "CMF Watch emulator ${GITHUB_REF_NAME#emulator-}" \
             --notes-file "$RUNNER_TEMP/emulator-preview.md" -- *.tar.gz SHA256SUMS

@@ -91,6 +91,8 @@ def read_temp(args, profile, nor, nand, nand_id, output):
 
 def recover(args, profile):
     model = profile.model
+    require(not (profile.experimental and args.pending_nand),
+            "Raw NAND OTA recovery is unverified for this profile. Supply an extracted --pending-temp.")
     stock, _, nand_id = profile.fixtures(args.fixtures)
     rescue = args.crown_held and args.charger_connected
     require(rescue or not (args.crown_held or args.charger_connected), "Rescue requires both crown and charger")
