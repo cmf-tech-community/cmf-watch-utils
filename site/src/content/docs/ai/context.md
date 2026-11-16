@@ -3,12 +3,15 @@ title: Agent context
 description: A compact, factual briefing for AI coding agents working in this repository.
 ---
 
+For documentation changes, follow [Documentation guidelines](/ai/documentation/).
+
+
 ## Mission
 
 The scope of the project is open tooling and documentation for the **CMF Watch Pro 2**
 (`JX402`, Actions ATS3089C, firmware `1.0.0.73`). The project parses and rebuilds
 AOTA/SDFS/RES/STY/WFDL/AJS containers and talks to the watch over BLE (auth, shell/AT,
-watch faces, firmware OTA). It also runs firmware in a Watch Pro 2 QEMU model.
+watch faces, firmware OTA). It also runs Watch Pro 2 and Watch 3 Pro firmware in desktop and browser QEMU.
 
 ## Hard rules
 
@@ -18,8 +21,9 @@ watch faces, firmware OTA). It also runs firmware in a Watch Pro 2 QEMU model.
 2. `Interceptor.attach` on Dart AOT (`libapp.so`) crashes the target and is therefore excluded.
 3. Blanket termination of Python processes is excluded; termination applies only to the specific
    process that was started.
-4. Commits exclude firmware binaries, vendor resources, animation/watch-face assets and any
-   personal data: MAC, serial, secret, authkeys, session keys, logs with device ids.
+4. Follow AGENTS.md for binary handling, including its exception for published
+   reference dumps under Git LFS. Never commit personal data: MAC, serial, secret,
+   authkeys, session keys or logs containing device identifiers.
 5. Preserve the stock CMF OTA sequence. INIT2 goes to the OTA characteristic and END requires acknowledgement.
 6. Comments are added to code only on request. The surrounding style is matched.
 
@@ -39,7 +43,7 @@ tools/spp_ota.py        SPP/RFCOMM experiments
 tools/rfcomm.py         RFCOMM helper
 tools/maputil.py        address/offset helpers
 site/                   Astro Starlight documentation
-dumps/                  manifests and redacted notes (no binaries)
+dumps/                  manifests, reference binaries via Git LFS and redacted notes
 ```
 
 ## Environment
@@ -64,18 +68,16 @@ dumps/                  manifests and redacted notes (no binaries)
 - Sending INIT2 on `CMD_W` first with a valid session can reboot the watch.
 - Watch-face update: delete + append is the reliable path.
 - `.ajs`: 240×240 JPEG frames, fps at `+0x07` (0 => 25); `9.ajs` is sport type 22, 8 s.
-- Full Bad Apple (~18.75 MiB) does not fit the ~3.85 MiB free after replacing `9.ajs`.
 - No proven universal recovery; bootloader is not in AOTA.
 
 ## Emulator and Actions OTA
 
-- Use the [browser emulator](/emulator/watch-pro-2/) to check firmware boot,
+- Use the [browser emulator](/emulator/) to check firmware boot,
   watch faces, controls, sensors and sound. Use desktop QEMU for Bluetooth OTA
   and modeled recovery. The bundled Bad Apple demo uses playback timing, so use
   a custom firmware boot for browser tests that depend on guest timing.
 - Start with `uv run cmf-watch-utils emu profiles` and `emu preflight --image FILE`.
-  The only profiles are `wp2-stock` and `wp2-onboarding`, both for JX402 stock
-  `1.0.0.73`. For a boot, provide the project-built ATS3089C QEMU, the matching
+  The profiles are `wp2-stock`, `wp2-onboarding` and `wp3-stock`. Use the model-specific reference package and fixture directory. For a boot, provide the project-built ATS3089C QEMU, the matching
   compatibility ROM and local virtual flash. Use `emu prepare-fixtures` to create flash
   from the reference AOTA, pinned NAND ID file and Arm GDB, or import existing fixtures.
 - `emu ota` uses loopback H4 with an isolated controller. Use synthetic pairing
@@ -96,6 +98,14 @@ dumps/                  manifests and redacted notes (no binaries)
 
 See [Emulator CLI](/emulator/), [Actions SDK OTA](/tooling/actions-ota/) and
 [Recovery & boot modes](/devices/cmf-watch-pro-2/internals/recovery/).
+
+## Watch 3 Pro
+
+Use [Watch 3 Pro firmware and formats](/devices/cmf-watch-pro-3/formats/) and
+[hardware and emulation](/devices/cmf-watch-pro-3/hardware/) for stock
+`1.0.1.77`. This profile uses board `jx402_08` and its own fixture directory.
+Browser results include stock passcode setup and raw optical measurement.
+Keep WP2 OTA and recovery results scoped to WP2.
 
 ## Known unknowns
 
@@ -125,3 +135,25 @@ physical watch and require approval.
 The placeholder MAC is `AA:BB:CC:DD:EE:FF`. Real MAC/serial/secret/authkey/GPS/notification
 data is absent from logs, screenshots, issues and commits. `tools/.watch_state.json` is
 gitignored and never published.
+
+
+## Documentation evidence and current emulator scope
+
+Use current code and recorded results when changing support claims. Explain
+inputs before commands, define model-specific terms, and keep historical run
+sizes in the evidence archive. Troubleshooting belongs under Getting started;
+do not describe emulator recovery as a physical recovery procedure.
+
+Current fixture preparation generates stock texture indexes for both models.
+Watch 3 Pro has a verified small app/SDFS virtual OTA transfer, guest reset and
+host-modeled install. Automatic extraction from arbitrary WP3 NAND snapshots,
+physical recovery and full factory-test parity remain unverified. See the
+site's OTA and recovery page for the precise boundary.
+
+## Documentation structure
+
+Setup and troubleshooting are shared under Getting started. Emulator guides
+cover both model profiles. Device sections separate task guides, format and
+hardware references, and verification status. Shared Ghidra instructions live
+in [Firmware analysis](/contributing/firmware-analysis/). Preserve existing
+page URLs and section anchors when consolidating material.

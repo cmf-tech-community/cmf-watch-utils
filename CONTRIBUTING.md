@@ -18,7 +18,7 @@ Use the [native build guide](emulator/README.md) to install the compiler and sys
 uv run --locked python emulator/build.py --component qemu
 ```
 
-For the browser, download the `wp2-wasm-experimental` artifact from the [WASM workflow](https://github.com/cmf-tech-community/cmf-watch-utils/actions/workflows/emulator-wasm.yml) for the revision you want to test. Unpack it to `wasm-output` and run the same smoke test as CI with Chrome installed. Use `--channel msedge` for Microsoft Edge.
+For the browser, download the `wp2-wasm-experimental` artifact from the [WASM workflow](https://github.com/fmctools/cmf-watch-utils/actions/workflows/emulator-wasm.yml) for the revision you want to test. Unpack it to `wasm-output` and run the same smoke test as CI with Chrome installed. Use `--channel msedge` for Microsoft Edge.
 
 ```sh
 uv run --locked --with playwright==1.55.0 python emulator/smoke_browser.py wasm-output
@@ -28,10 +28,23 @@ Both smoke tests generate their own boot images. They need no stock firmware, ph
 
 ## Documentation changes
 
-Install Node.js 22 and pnpm 12. From `site/`, run `pnpm install --frozen-lockfile` and `pnpm dev` to preview changes. Run `pnpm build` before opening a PR.
+Install Node.js 22.22 or later and pnpm 12. From `site/`, run `pnpm install --frozen-lockfile` and `pnpm dev` to preview changes. Run `pnpm build` before opening a PR. Use the [device documentation map](https://cmf.arnv.dev/about/roadmap/) to place results. Record the model and build, and distinguish offline, emulator and physical evidence.
 
 ## Opening a pull request
 
 Open a PR against `main` from a branch or a fork. Explain what changed and how you tested it. If your change affects the emulator, include the watch profile and runtime. A screenshot or short UART excerpt helps for behavior that a reviewer needs to reproduce. Remove real device identifiers, pairing data, and personal data from attachments. Follow the repository's [working rules](AGENTS.md#working-rules-for-changes) for device testing and commits.
 
 Every PR gets an **Emulator smoke** check. It runs the applicable native and browser jobs when their files change and records a pass for unrelated changes. The desktop release workflow runs the full Windows, Linux, and macOS builds separately.
+
+## Writing documentation
+
+Put complete tasks in guides, exact layouts and commands in references, and
+symptoms with next steps in Troubleshooting. Explain what an input file is and
+where it comes from before using it. Commands run from the repository root
+unless the page states otherwise. Mark shell-specific syntax and keep local
+machine paths and personal data out of examples.
+
+Name the model and reference firmware for technical claims. A parser check,
+a virtual boot and a physical test prove different things. Preserve useful
+historical evidence in the data archive rather than presenting an intermediate
+experiment as the current workflow. Keep externally linked page URLs stable.

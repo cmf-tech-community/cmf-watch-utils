@@ -32,6 +32,11 @@ uv run fwkit sdfs-extract work/res_e.bin work/res_e
 uv run fwkit sdfs-pack    work/res_e work/res_e_new.bin
 ```
 
+The following example replaces `9.ajs`, the stock warm-up animation for sport
+type 22, with a prepared animation at `work/9.ajs`. It writes a new firmware
+package to `out/custom.bin`. Create the output directory first. This changes
+the animation resource, not the app or its warm-up timer.
+
 Replacing one file inside an AOTA partition without unpacking everything:
 
 ```bash

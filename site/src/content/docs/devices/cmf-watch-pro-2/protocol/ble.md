@@ -3,8 +3,6 @@ title: BLE protocol
 description: Frame format, authentication, AES/CRC, shell commands, file upload and the OTA state machine.
 ---
 
-# Watch communication protocol (0.73)
-
 The watch exposes two framed command channels that share the same
 11-byte header:
 
@@ -274,35 +272,11 @@ Handler signature is roughly `(frame_ctx, has_data)`. Replies go through
 
 ## 6. OTA over BLE (AOTA path)
 
-The phone uploads a full `JX402_*.bin` through a second, encrypted BLE
-channel:
-
-| role | UUID |
-|---|---|
-| OTA data write | `02f00000-0000-0000-0000-00000000ff01` |
-| OTA data notify | `02f00000-0000-0000-0000-00000000ff02` |
-| control write | `0000fff2-…` (`CMD_W`) |
-| control notifies | `CMD_N` and `DAT_N` characteristics |
-
-Control commands (`CMD_W` → `CMD_N`):
-
-- `INIT1` — session nonce (`0x804C`).
-- `INIT2` — starts the upgrade. It is sent on `ff01`, not on `CMD_W`.
-  With a valid session, `CMD_W` can reboot the watch and drop the link
-  before the data phase; on `ff01` the `A040` reply arrives in ~30 ms.
-- `A041` — commit prompt. The end acknowledgement is `0x9041` with
-  payload `A5`; without it the staged update is not committed.
-- `A042` — write data. Plaintext is 13 bytes:
-  `offset(u32 BE) | length(u32 BE) | 4 bytes | 1 byte`, then AES-CBC
-  (fixed IV, PKCS#7) with `key = sha256(nonce || authkey)[:16]`.
-  Watch replies on `ff02`; the host then sends the next chunk.
-- `A040`/`A041` — progress/status.
-
-The watch drives the transfer: it requests byte ranges from the host
-and writes them to flash. In practice it only asks for the ranges it
-needs, so a successful run can serve well under the whole image
-(70-75% was typical). CRC checks are per-partition only
-(see `aota.md`).
+The [OTA protocol reference](/devices/cmf-watch-pro-2/protocol/ota/)
+defines the characteristics, authentication, range requests and mandatory END
+acknowledgement. The watch requests byte ranges; the host serves those ranges
+rather than assuming a sequential transfer. The application-side functions
+below describe how the reference build handles that protocol.
 
 On-device side:
 

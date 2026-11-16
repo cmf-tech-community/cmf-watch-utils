@@ -1,4 +1,4 @@
-const origin = 'https://fmc.freethinkel.dev';
+const origin = 'https://fmc.tools';
 const compatible = {
   wp2: 'published=true && (device="watch_pro_2" || device="")',
   wp3: 'published=true && device="watch_3_pro"',

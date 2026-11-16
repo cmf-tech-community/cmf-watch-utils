@@ -1,4 +1,4 @@
-# Watch Pro 2 emulator builds
+# Watch emulator builds
 
 These preview archives contain the ATS3089C QEMU machine or its
 host-independent compatibility ROM, virtual NAND provisioner and staged OTA reader. Stock firmware,
@@ -36,10 +36,10 @@ DSP programs are outside this model.
 Build from the repository root with Python 3.12 or later.
 
 ```text
-python emulator/build.py --component qemu --audio pa
-python emulator/build.py --component qemu --audio dsound
-python emulator/build.py --component qemu --audio coreaudio
-python emulator/build.py --component rom
+uv run --locked python emulator/build.py --component qemu --audio pa
+uv run --locked python emulator/build.py --component qemu --audio dsound
+uv run --locked python emulator/build.py --component qemu --audio coreaudio
+uv run --locked python emulator/build.py --component rom
 ```
 
 The commands use the native compiler and Ninja for the host. Use UCRT64 on
@@ -53,11 +53,9 @@ source files from a pinned Actions SDK commit. Use `--qemu-archive` and
 `--sdk-root` for local source inputs. `--work-dir`, `--output-dir`, `--jobs`,
 `--arm-prefix` and repeatable `--configure-arg=...` are configurable. Select a
 fresh work directory when changing QEMU configure flags. The default audio
-configuration supports headless testing. Stock fixture preparation writes
-`wfc-index.txt` from the reference firmware. Keep it with the fixture NOR and
-NAND so the desktop runtime can identify packed watch-face textures. For an
-older Watch Pro 2 setup without the index, prepare the fixtures in a new
-directory and use that directory on the next run.
+configuration supports headless testing. Current fixture preparation generates `wfc-index.txt` from stock watch faces
+for both models. Keep it beside the flash files; it tells the renderer how to
+decode packed textures. Older fixture folders may need to be regenerated.
 
 GitHub Actions builds Linux x64, Windows x64, macOS ARM64, and one shared ROM
 and NAND-reader bundle. Each native build must execute a small synthetic ARM
@@ -90,12 +88,12 @@ the Linux release runner uses Ubuntu 22.04.
 
 ## Watch 3 Pro desktop preview
 
-The experimental `wp3-stock` profile boots stock Watch 3 Pro `1.0.1.77` in the shared native QEMU runtime. It uses a synthetic flash layout and the compatibility ROM. Prepare it with `emu prepare-fixtures --profile wp3-stock --stock <watch-3-pro-package> --provisioning-stock <watch-pro-2-1.0.0.73-package>` and the usual QEMU, Arm GDB, NAND ID and provisioner options. The Watch Pro 2 package supplies the virtual NAND writer. Run the resulting fixtures with `emu run --profile wp3-stock`. The virtual charger disconnects during startup by default. Use `--charger-connected` to keep it attached, or change the charger state through Advanced while running.
+The experimental `wp3-stock` profile boots stock Watch 3 Pro `1.0.1.77` in the shared native QEMU runtime. It uses a synthetic flash layout and the compatibility ROM. Prepare it with `emu prepare-fixtures --profile wp3-stock --stock <watch-3-pro-package> --provisioning-stock <watch-pro-2-1.0.0.73-package>` and the usual QEMU, Arm GDB, NAND ID and provisioner options. The Watch Pro 2 package supplies the virtual NAND writer. Run the resulting fixtures with `emu run --profile wp3-stock`. Current runs leave the virtual charger disconnected unless `--charger-connected`
+is supplied. Add `--watch-face-preview` to a Watch 3 Pro stock run to start at the
+watch face with local setup complete; omit it to examine first-time setup.
 
-Add `--watch-face-preview` to `emu run --profile wp3-stock` to start at the watch face with the same local setup as the browser. The command stages its own NOR and compatibility ROM in the run directory. Omit the flag to test the stock onboarding screens.
+The [Watch 3 Pro browser preview](https://cmf.arnv.dev/emulator/watch-pro-3/) boots stock firmware. See the [Watch 3 Pro device profile](https://cmf.arnv.dev/devices/cmf-watch-pro-3/) for verified workflows and limits.
 
-The [Watch 3 Pro browser preview](https://cmf.arnv.dev/emulator/watch-pro-3/) boots stock firmware. Watch 3 Pro pairing, recovery, and full factory suite coverage are still in development.
-
-The optional `stock-audio.bin` sound bank works with both models’ verified stock builds. Place the bank in the model’s fixture directory. The Watch 3 Pro aging test produced a non-silent WAV capture and accepted live microphone input with `--host-mic --audio dsound` on Windows. The Advanced panel can set GPS, ambient light, acceleration, gyroscope readings, and simulated values for the stock heart rate and blood oxygen screens.
+The optional `stock-audio.bin` sound bank works with both models’ verified stock builds. Place the bank in the model’s fixture directory. A desktop preview can record guest audio as WAV and use host microphone input through a supported backend. The Advanced panel can set GPS, ambient light, acceleration, gyroscope readings, and simulated values for the stock heart rate and blood oxygen screens.
 
 Use `emu faces --profile wp3-stock` to list published Watch 3 Pro faces from FMC. Start a stock run with `--fmc-face <id>` or `--watch-face <file>` to replace Duskscape in that session’s virtual NAND.

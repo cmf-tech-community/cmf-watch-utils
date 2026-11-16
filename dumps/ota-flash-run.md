@@ -1,5 +1,10 @@
 # Successful AOTA flash run (redacted)
 
+Historical evidence from a Watch Pro 2 resource-update experiment. This is
+not a setup guide or an expected transfer-size benchmark. Use the
+[current flashing guide](https://cmf.arnv.dev/devices/cmf-watch-pro-2/guides/ota-flash/)
+for instructions.
+
 Shape of a successful full-firmware OTA over BLE. Device identifiers, MAC, serial, keys and
 timestamps are removed. Line contents are paraphrased where they carried personal data.
 

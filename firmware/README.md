@@ -1,12 +1,16 @@
-# firmware/
+# Local firmware files
 
-Place your own legally obtained firmware image here, for example:
+Use this directory for firmware files you are testing. Run tool commands from
+the repository root and supply the path explicitly, for example:
 
 ```text
-firmware/JX402_V1.0.0.73.bin
+uv run fwkit verify firmware/custom.bin
 ```
 
-This directory is **gitignored**. Firmware images are not redistributed in this repository.
+Local firmware files here are ignored by Git. Published reference images live
+under [`dumps/binaries/`](../dumps/README.md), with checksums in
+[`dumps/manifests/`](../dumps/manifests/). Download instructions are in the
+[setup guide](https://cmf.arnv.dev/getting-started/setup/).
 
-Reference hashes for the image this project was developed against are in
-[`dumps/manifests/firmware-1.0.0.73.json`](dumps/manifests/firmware-1.0.0.73.json).
+Keep an untouched copy before modifying an image. Valid checksums confirm file
+integrity, not compatibility or recoverability on a physical watch.

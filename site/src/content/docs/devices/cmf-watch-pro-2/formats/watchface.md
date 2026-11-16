@@ -1,13 +1,11 @@
 ---
-title: Watch faces and animations
-description: NAND layout, WFDL packages, album.cfg, .ajs animations and warm-up mapping.
+title: Watch faces and WFDL
+description: Watch-face storage, WFDL packages, resource trees and album configuration.
 ---
-
-# Watch-face subsystem
 
 Reverse-engineered from `WFManager.c`, `WfmPara.c`, `WFRes.c` and the
 string/address map of the 0.73 app. File formats below are the ones the
-firmware actually reads; field meanings marked *(?)` are inferred.
+firmware actually reads; field meanings marked `(?)` are inferred.
 
 ## 1. NAND layout
 
@@ -230,14 +228,13 @@ received data to `/NAND:C/` and then invoke the replace above.
 
 ### 4.1 Flashing from the host (verified)
 
-`watools/cmf_watch.py` drives the whole flow over BLE (`protocol.md`
-§4.1 for the frames): it authenticates with the stored authkey, reads
+`tools/cmf_watch.py` drives the whole flow over BLE (see the
+[BLE protocol reference](/devices/cmf-watch-pro-2/protocol/ble/)): it authenticates with the stored authkey, reads
 `0xA055`, and streams the file the watch pulls in `0xC00` chunks.
 Appending uses `--old-id 0`. Finish `01` = activated, `0x0A` = stored but
 not activated (unknown id, `new_wf_id == old_wf_id`, or all slots full).
-An 89 KB append returned `finish: 01`, and the LZ4-fixed rebuild
-(`uptime_inv3`, 87,899 B) was confirmed **rendering on the watch** — the
-end-of-block fix in §6 is validated on hardware.
+Rebuilt watch faces using the corrected LZ4 encoder have rendered on hardware.
+See the compression constraints in §6.
 
 Slot management is delete + append, not replace:
 
@@ -256,110 +253,9 @@ Slot management is delete + append, not replace:
 
 ## 5. `.ajs` animation files (`/NAND:E`)
 
-A `.ajs` is **not** a plain concatenation of JPEGs: each frame is preceded
-by a tile descriptor and the chain is driven by a length field, not marker
-scanning.  There are 8 prelude bytes, then repeated records:
-
-```
-0x00  u32 0
-0x04  bytes 00 00 00 <fps>    (0.73 files: 0x19 = 25 fps; 0 => 25)
-0x07  u8   fps               <-- not a version field
-
-record at p (first record p = 0x08):
-p+0x00  u16  size            bytes after this field
-p+0x02  "JPEG"               Allwinner tile descriptor magic
-p+0x06  u16  width           (240)
-p+0x08  u16  height          (240)
-p+0x0A  u16  tile_width      (240)
-p+0x0C  u16  tile_height     (240)
-p+0x0E  u16  tile_count N    (1 in every shipped file)
-p+0x10  N * (u16 offset, u16 length)   offsets from the "JPEG" magic
-p+...   tile JPEG streams    (each FF D8 … FF D9)
-next record p' = p + 2 + size
-```
-
-For one tile the table is `(18, jpeg_len)`, the JPEG starts at
-`p+0x14` (file `0x1C` for the first frame), and
-`size = 14 + 4*N + sum(tile lengths)` (= `18 + jpeg_len` for `N=1`).
-File `+0x1A` is the first tile's JPEG length.  There is no trailing record:
-the last frame ends at EOF.
-
-Tile offsets are relative to the descriptor magic, so a multi-tile frame is
-a normal table; the player computes `cols = ceil(width/tile_width)`,
-`rows = ceil(height/tile_height)` and blits every tile at
-`(col*tile_width, row*tile_height)`, clipped to the canvas.
-
-All 19 files are **sport warm-up animations**, not menu entries.  The
-app table at `0x101ED708` (file `0x1ED708`) has 19 16-byte records:
-`[sport_type, seconds, category, ajs_index]`.
-
-| `.ajs` | sport type | seconds | category |
-|---|---|---|---|
-| 1 | 14 | 20 | 9 |
-| 2 | 15 | 20 | 9 |
-| 3 | 16 | 30 | 9 |
-| 4 | 17 | 30 | 9 |
-| 5 | 18 | 30 | 9 |
-| 6 | 19 | 30 | 9 |
-| 7 | 20 | 20 | 9 |
-| 8 | 21 | 20 | 9 |
-| 9 | 22 | 8 | 11 |
-| 10 | 23 | 30 | 9 |
-| 11 | 24 | 20 | 9 |
-| 12 | 25 | 30 | 9 |
-| 13 | 26 | 8 | 11 |
-| 14 | 27 | 8 | 11 |
-| 15 | 28 | 6 | 11 |
-| 16 | 29 | 6 | 11 |
-| 17 | 30 | 6 | 11 |
-| 18 | 31 | 20 | 11 |
-| 19 | 32 | 20 | 9 |
-
-Replacing `N.ajs` only changes the warm-up preview/animation for that
-sport; it does not add a dial or menu item.  `9.ajs` (sport type 22,
-8-second warm-up) is the closest duration match for the 8.1-second PoC.
-
-Player (`simple_video_8` = open/parse, `simple_video_7` = timer tick,
-`simple_video_6` = rewind):
-
-1. 0x16 bytes are read from offset 0, `"JPEG"` is required at `+0x0A`,
-   width/height are parsed, and the fps byte is taken from prelude `+0x07`;
-2. the seek goes to `0x0A` (descriptor start) and `size + 2` bytes are read;
-3. every tile is decoded at `buffer + offset` with `length` bytes via the
-   Allwinner JPEG decoder (`FUN_100ffcc4` → `FUN_100ffa70`);
-4. the next `size` comes from the two bytes at `buffer[size]`.  At EOF the
-   short read yields 0, and `simple_video_6` seeks back to `0x08` to loop.
-
-`simple_video_9` creates `lv_timer_2(cb, 1000 / fps, ...)`; fps 0 is
-coerced to 25.  Observed frame counts: 1.ajs = 500, 8.ajs = 500,
-9.ajs = 1124, 16.ajs = 1397.  Frames are ~1.5–4.9 KB each; all 19 shipped
-files use 240×240 with a single 240×240 tile, and they fill `res_e.bin`
-(58,776,014 of 58,777,088 bytes; only 1,074 bytes free).
-
-Unlike `bt_watch.res` pictures, which have a 22-byte
-header with `"JPEG"` at `+0x04` and the same 14-byte tile descriptor after
-it, `.ajs` stores the descriptor after a 2-byte `size` field.
-
-Tools: `ajs-info`, `ajs-extract`, `ajs-repack`, `ajs-set-frame`
-(`fwkit.ajs.build/set_frame/extract`).  At 25 fps a 3:30 clip needs 5,250
-frames; at ~4 KB each that is ~21 MB, so a Bad Apple test replaces one or
-more existing `.ajs` files (or repacks `res_e.bin` without them) rather
-than appending.
-
-Proof of concept: `out/badapple_poc.ajs` is a 202-frame (8.1 s), 240x240,
-25 fps clip made from archive.org `TouhouBadApple` at 45 s, cropped to
-square and encoded `-q:v 4`.  It is 756,479 B (3,745 B/frame); extract ->
-repack is byte-identical.  A full 5,250-frame clip extrapolates to
-**18.75 MiB**.  Preview: `out/badapple_poc_sheet.png`.
-
-Offline install candidate: `out/JX402_V1.0.0.73_badapple9.bin` is based
-on `JX402_V1.0.0.73_pwned.bin` (the running resource-patched image), so
-**only `res_e.bin` differs**.  It replaces `9.ajs` (sport type 22,
-8-second warm-up) with the PoC and keeps `res_e` at its original
-58,777,088-byte size.  `out/res_e_badapple9.bin` is the padded SDFS
-partition.  Verified: AOTA header and all entries, SDFS total/hashes, the
-other 18 files byte-identical, and all other partitions byte-identical to
-the pwned image.  **Not flashed.**
+Sport warm-up animations use a separate format from watch faces. The
+[AJS reference](/devices/cmf-watch-pro-2/formats/ajs/) contains the record layout,
+tile tables, sport mapping and editing commands.
 
 ## 6. Pitfalls
 
@@ -388,13 +284,11 @@ the pwned image.  **Not flashed.**
   `LZ4_decompress_safe` fails the whole resource otherwise and the dial
   renders **pitch black**, even though the lenient decoder and the
   uploader's CRC checks accept it. Fixed in `fwkit.lz4.compress`
-  (matches now stop at `n-5`); `tests/selftest.py` asserts it for both
-  the vendor blocks and freshly compressed ones. Verified on hardware:
-  the pre-fix rebuilds (`uptime_rebuild`, `uptime_all_inverted`) rendered
-  black; `uptime_inv3` (87,899 B) renders correctly.
-- Editing an existing dial (swap a resource, rename) is safe; synthesising
-  a new widget graph is not — the tree must be cloned from a real
-  package.
+  (matches now stop at `n-5`); `tooling/tests/selftest.py` asserts it for both
+  the vendor blocks and freshly compressed ones. The corrected encoder has been verified on hardware.
+- Resource editing preserves an existing widget graph. A newly constructed
+  graph needs separate validation; a valid resource checksum does not establish
+  that the firmware can load the layout.
 - `new_wf_id` is read signed: ids ≥ 0x80000000 are rejected. Capacity is
   6 dials.
 - Only 6 slots: an append to a full watch is accepted at init2 and only
@@ -402,10 +296,5 @@ the pwned image.  **Not flashed.**
 - `album.cfg` is 166 bytes and validated by magic `0xAC67BD45` at `+0x6C`
   plus a non-zero style count at `+0x71`; a malformed file makes the
   manager fall back to "no album" (`no album.cfg file,skip`).
-- `.ajs` frames are baseline JPEG wrapped in a tile descriptor.  When
-  re-encoding, the record `size` (`14 + 4*N + sum(tile lengths)`) and
-  every tile length are updated; a stale length makes the player read the
-  next descriptor from the middle of a frame.  Shipped files are 240×240
-  with one 240×240 tile, but the format supports a tile grid.
 - Watch-face IDs 1..6 are special-cased in `WfmCheck_CheckFast`
   (built-in dials).

@@ -1,11 +1,12 @@
 ---
-title: Prompts & working agreements
+title: Agent task examples
 description: Copy-paste prompts that keep an AI agent inside the project's safety and verification rules.
 ---
 
-The blocks below are reusable prompts for a coding agent operating in this repository. Each
-block is quoted material, reproduced as written; the surrounding notes state what each prompt
-covers.
+For documentation changes, follow [Documentation guidelines](/ai/documentation/).
+
+
+These examples supplement the repository’s `AGENTS.md`. Include the device model and firmware version in each task.
 
 ## System preamble
 
@@ -13,12 +14,12 @@ Scope, device-write approval and data handling:
 
 > You are working in `cmf-watch-utils`, an unofficial CMF Watch research repo. Read
 > `AGENTS.md` and `site/src/content/docs/ai/context.md` first. Never flash, upload, delete or
-> change device settings without explicit approval. Never commit firmware, vendor assets,
-> animation/watch-face media, MAC/serial/secret/authkey data, or personal logs. Prove format
+> change device settings without explicit approval. Follow AGENTS.md for binary assets
+> and its published-dumps exception. Never commit personal identifiers or keys. Prove format
 > work with byte-identical round-trips. Prefer read-only commands. Explain risky commands
 > before running them.
 
-## Task: parse or edit a container
+## parse or edit a container
 
 Container inspection and editing, with a round-trip proof ahead of any change:
 
@@ -27,7 +28,7 @@ Container inspection and editing, with a round-trip proof ahead of any change:
 > Only then make the requested edit. Report the exact command, byte sizes and any fields you
 > could not explain. Do not modify firmware under `firmware/` in place.
 
-## Task: add a CLI command
+## add a CLI command
 
 Addition of a CLI subcommand following the existing parser/cmd_* pattern:
 
@@ -36,7 +37,7 @@ Addition of a CLI subcommand following the existing parser/cmd_* pattern:
 > to `tooling/tests/selftest.py` that does not require redistributing vendor files. Run the
 > selftest against the local firmware image and report results.
 
-## Task: BLE debugging
+## BLE debugging
 
 BLE investigation, read-only until a write is approved:
 
@@ -45,7 +46,7 @@ BLE investigation, read-only until a write is approved:
 > Stock `--dry-run` and `--stop-after-a040` both contact the watch. Test INIT2 on
 > the OTA characteristic and END acknowledgement in QEMU first.
 
-## Task: emulator and OTA verification
+## emulator and OTA verification
 
 > Run `uv run cmf-watch-utils emu profiles` and preflight the package for the selected
 > profile. Use prepared virtual fixtures and an isolated H4 controller for OTA.
@@ -54,7 +55,7 @@ BLE investigation, read-only until a write is approved:
 > whether the package passed, the guest validated the transfer, the guest rebooted,
 > and the installed app rendered. Label crown + charger results as host-modeled rescue.
 
-## Task: docs
+## docs
 
 Documentation edits under the Astro content tree:
 
@@ -62,7 +63,7 @@ Documentation edits under the Astro content tree:
 > `description`. Use root-relative links with a trailing slash for internal pages. Do not include real device identifiers. Run
 > `pnpm build` in `site/` and fix broken links.
 > For browser emulator changes, build the standalone page with
-> `emulator/web/publish.py` and check the resulting `/emulator/watch-pro-2/` page.
+> `emulator/web/publish.py` and check the browser route for the affected model.
 
 ## Review checklist
 

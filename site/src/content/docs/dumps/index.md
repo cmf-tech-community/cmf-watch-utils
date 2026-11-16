@@ -17,37 +17,48 @@ leave the LFS files as pointers.
 - Size: 56,903,752 bytes
 - SHA-256: `30903fc8ce6db4f8860bb554366635db3d2bcbb2d43827b3b50fbbac22b59353`
 - Contents: the unmodified image shipped for the CMF Watch Pro 2 (`JX402`), firmware 1.0.0.73
-- [Download](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73.bin) ·
-  [manifest](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/dumps/manifests/firmware-1.0.0.73.json)
+- [Download](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73.bin) ·
+  [manifest](https://github.com/fmctools/cmf-watch-utils/blob/main/dumps/manifests/firmware-1.0.0.73.json)
+
+### `JX402_w3pro_V1.0.1.77.bin` (stock firmware)
+
+- Board and version: `jx402_08`, `1.0.1.77`
+- Size: 45,069,312 bytes
+- SHA-256: `cf381188eb5fe26a14047a03697e68b58785bdcd01c4baf8703d4624650c6352`
+- [Download](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/firmware/JX402_w3pro_V1.0.1.77.bin) · [Device profile](/devices/cmf-watch-pro-3/)
+
+```text
+git lfs pull --include=dumps/binaries/firmware/JX402_w3pro_V1.0.1.77.bin --exclude=""
+```
 
 ### `JX402_V1.0.0.57.bin` (rollback target)
 
 - Size: 56,065,096 bytes
 - SHA-256: `cd4574f1f9fa31106e3a0490a12069adf5a99c59cf0e4d7f52d58be60cd55716`
 - Contents: firmware 1.0.0.57 for the same board, rebuilt from extracted parts
-- [Download](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.57.bin) ·
-  [manifest](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/dumps/manifests/firmware-1.0.0.57.json)
+- [Download](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.57.bin) ·
+  [manifest](https://github.com/fmctools/cmf-watch-utils/blob/main/dumps/manifests/firmware-1.0.0.57.json)
 
 ### `JX402_V1.0.0.73_badapple9.bin` (rebuilt proof of concept)
 
 - Size: 54,117,960 bytes
 - SHA-256: `4933e593d14bef6f013db5f6d0a9760e36aaff63f052cf83a2dc54696ccff1ff`
-- Contents: the 1.0.0.73 image with a 202-frame animation in `res_e`
-- [Download](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73_badapple9.bin)
+- Contents: historical stock animation experiment, replacing a sport warm-up in `res_e`. This is separate from the source-built [Bad Apple firmware](/devices/cmf-watch-pro-2/guides/bad-apple/).
+- [Download](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/firmware/JX402_V1.0.0.73_badapple9.bin)
 
 ### `app_073.bin` (application image for 1.0.0.73)
 
 - Size: 2,465,920 bytes
 - SHA-256: `30e7978c39d8fb79b825c7ebf69b4377d214e9cc6739a52f06dbb5ff7f13b490`
 - Contents: `app.bin`, extracted from the `TEMP` partition of the 1.0.0.73 image
-- [Download](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/app/app_073.bin)
+- [Download](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/app/app_073.bin)
 
 ### `app_057.bin` (application image for 1.0.0.57)
 
 - Size: 2,445,440 bytes
 - SHA-256: `26fbe34c10343949fec53575021e8ab559e33aff13b6efa9974a34ae33ca1399`
 - Contents: `app.bin`, extracted from the `TEMP` partition of the 1.0.0.57 image
-- [Download](https://media.githubusercontent.com/media/cmf-tech-community/cmf-watch-utils/main/dumps/binaries/app/app_057.bin)
+- [Download](https://media.githubusercontent.com/media/fmctools/cmf-watch-utils/main/dumps/binaries/app/app_057.bin)
 
 From an existing checkout, fetch just the application image:
 
@@ -55,13 +66,11 @@ From an existing checkout, fetch just the application image:
 git lfs pull --include="dumps/binaries/app/app_073.bin"
 ```
 
-The proof-of-concept image contains third-party animation frames. Redistribution rights for
-vendor firmware and for those frames are the responsibility of whoever redistributes them;
-before making the repository public, either remove `dumps/binaries/` or confirm the rights.
+The proof-of-concept image contains third-party animation frames. See [Legal and attribution](/about/legal/) for licensing and redistribution boundaries.
 
 ## Manifests
 
-[`manifests/firmware-1.0.0.73.json`](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/dumps/manifests/firmware-1.0.0.73.json)
+[`manifests/firmware-1.0.0.73.json`](https://github.com/fmctools/cmf-watch-utils/blob/main/dumps/manifests/firmware-1.0.0.73.json)
 records the size, SHA-256, header fields and per-entry CRC status of the stock image, plus the
 published binaries. It serves as the reference for checking that a locally obtained image
 matches the structure the tooling was written against:
@@ -92,8 +101,8 @@ uv run fwkit unpack dumps/binaries/firmware/JX402_V1.0.0.73.bin work/aota
 
 ## Rollback target
 
-The `1.0.0.57` image is published so that a unit flashed to a modified build has a known-good
-older firmware to return to. It carries the same board string (`jx402_01_3089c`) and the same
+The `1.0.0.57` image is a reconstructed older reference for offline comparison.
+It is not a verified physical downgrade or recovery procedure. It carries the same board string (`jx402_01_3089c`) and the same
 partition layout as the `1.0.0.73` image, and its application reports `1.0.0.57`.
 
 | Property | Value |
@@ -102,7 +111,7 @@ partition layout as the `1.0.0.73` image, and its application reports `1.0.0.57`
 | Size | 56,065,096 bytes |
 | SHA-256 | `cd4574f1f9fa31106e3a0490a12069adf5a99c59cf0e4d7f52d58be60cd55716` |
 | Provenance | Rebuilt from the unpacked parts with `tooling/rebuild_aota.py`; the header CRC and every entry CRC match the recorded metadata, and the result is byte-identical to earlier local rebuilds of the same image |
-| Manifest | [`manifests/firmware-1.0.0.57.json`](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/dumps/manifests/firmware-1.0.0.57.json) |
+| Manifest | [`manifests/firmware-1.0.0.57.json`](https://github.com/fmctools/cmf-watch-utils/blob/main/dumps/manifests/firmware-1.0.0.57.json) |
 
 Two caveats apply. The image is a reconstruction from extracted parts rather than a vendor
 download, and the hardware downgrade remains unverified. Use the offline check below to
@@ -149,15 +158,14 @@ git-ignored map (`internal/redactions.json`) so that the values themselves are n
 | Path | Contents |
 |---|---|
 | `samples/bt_watch.sty` | A STY scene bundle, extracted from the resource partition |
-| `samples/wf1.bin` | A WFDL watch-face package, the sample used in the dial editing guide |
+| `samples/watchfaces/wf1.bin` | A WFDL watch-face package, the sample used in the dial editing guide |
 | `samples/*.png` | Pictures decoded from the picture resources, showing the codecs in output |
 
 ## Redacted notes
 
-- [`ota-flash-run.md`](https://github.com/cmf-tech-community/cmf-watch-utils/blob/main/dumps/ota-flash-run.md) —
+- [`ota-flash-run.md`](https://github.com/fmctools/cmf-watch-utils/blob/main/dumps/ota-flash-run.md) —
   the shape of a successful flash log with device identifiers removed.
 
 ## Personal data
 
-Published artifacts contain no MAC address, serial number, pairing secret, authkey, session
-key, GPS track or notification content. The manifests carry hashes only.
+The logs use placeholder identifiers. Keep raw captures and device-owned identifiers out of documentation changes. The firmware manifests identify builds with file hashes.

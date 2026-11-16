@@ -6,9 +6,9 @@ description: Unpack a WFDL watch face, replace resources, rebuild and install it
 ## Inspection
 
 ```bash
-uv run fwkit wf-info  watchfaces/wf1.bin --tree
-uv run fwkit wf-res   watchfaces/wf1.bin
-uv run fwkit wf-unpack watchfaces/wf1.bin work/wf1
+uv run fwkit wf-info  dumps/samples/watchfaces/wf1.bin --tree
+uv run fwkit wf-res   dumps/samples/watchfaces/wf1.bin
+uv run fwkit wf-unpack dumps/samples/watchfaces/wf1.bin work/wf1
 ```
 
 `wf-unpack` writes `header.bin`, `tree.bin`, `resources/` (decoded PNGs) and raw LZ4 blocks
@@ -16,10 +16,12 @@ unless `--no-png` is used.
 
 ## Editing
 
+For this sample, resource 0 is 270 × 270 pixels. Supply a replacement PNG at that size as `icon.png`, or edit the corresponding PNG from the unpacked resources.
+
 Replacing a single resource by index:
 
 ```bash
-uv run fwkit wf-set-res watchfaces/wf1.bin 0 icon.png -o work/wf1_new.bin
+uv run fwkit wf-set-res dumps/samples/watchfaces/wf1.bin 0 icon.png -o work/wf1_new.bin
 ```
 
 Rebuilding from a directory of `NNN_*.png` replacements:
@@ -30,6 +32,10 @@ uv run fwkit wf-build work/wf1 work/wf1_new.bin --resources work/new_pngs --name
 
 The toolkit keeps the original compression format unless `--cf` is forced. Images stay inside
 the original dimensions; the watch does not scale arbitrary layouts.
+
+## Virtual check
+
+Load `work/wf1_new.bin` into the [Watch Pro 2 browser emulator](/emulator/watch-pro-2/) using **Watch face** before trying the physical upload.
 
 ## Installation
 
@@ -51,18 +57,20 @@ Appending to a free slot:
 uv run python tools/cmf_watch.py wf-flash --file work/wf1_new.bin
 ```
 
-Replacing an existing dial by id:
+To update a face already installed, delete it and then append the new file.
+Direct replacement by ID has produced inconsistent results on hardware.
+Replace `FACE_ID` below with the ID recorded when that face was installed;
+do not guess an ID. Some side-loaded faces are missing from `wf-dials`.
+Deletion removes the installed face, so keep its original file.
 
-```bash
-uv run python tools/cmf_watch.py wf-flash --file work/wf1_new.bin --old-id 0x12345678
+```text
+uv run python tools/cmf_watch.py wf-delete --id FACE_ID --file work/wf1_new.bin
+uv run python tools/cmf_watch.py wf-flash --file work/wf1_new.bin
 ```
 
-The reliable update path observed on hardware is **delete + append**:
-
-```bash
-uv run python tools/cmf_watch.py wf-delete --id 0x12345678 --file work/wf1_new.bin
-uv run python tools/cmf_watch.py wf-flash  --file work/wf1_new.bin
-```
+Check that the new face can actually be selected after upload. A successful
+transfer does not always mean the face was activated. For black screens or
+failed uploads, see [Troubleshooting](/getting-started/troubleshooting/).
 
 ## Known quirks
 

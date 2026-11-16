@@ -3,13 +3,12 @@ title: Picture codecs
 description: JPEG, raw LZ4, RGB888/RGB565 and all verified picture decoders.
 ---
 
-# WP2 pictures: `bt_watch.res`, `logo.res` (LZ4 / JPEG)
-
-Status: **fully reversed and verified against all 2,192 entries of
-`bt_watch.res`** (2026-10). Every entry decodes; every `.sty` type-4
+The codecs below were verified against all 2,192 entries of
+`bt_watch.res` from Watch Pro 2 firmware 1.0.0.73. Every entry decodes; every `.sty` type-4
 node's `w/h/bpp` matches the decoded image (0 mismatches).
 
-This document supersedes the "unknown codec" notes in `aota.md` §RES.
+See the [AOTA reference](/devices/cmf-watch-pro-2/formats/aota/) for the
+firmware package containing this resource file.
 
 ---
 
@@ -152,9 +151,8 @@ Same decoder; `logo.sty` (1 scene, 466×466) references them.
 * Node cross-check: 1,342 node-referenced pictures — `w/h` and `bpp`
   match in 100 % of cases.
 * Rendered samples (host PNG; JPEG decode uses Pillow):
-  `out/pic333.png` = 72×72 gears (the Settings icon; the label patched
-  to `PWNED!!!`), `out/pic335.png` = 120×120 trash-can button,
-  `out/pic332.png` = 466×466 yellow-on-blue test frame (RGB888).
+  `dumps/samples/pic333.png` shows the 72×72 Settings icon, `dumps/samples/pic335.png` = 120×120 trash-can button,
+  `dumps/samples/pic332.png` = 466×466 yellow-on-blue test frame (RGB888).
 
 ---
 
@@ -179,17 +177,16 @@ Same decoder; `logo.sty` (1 scene, 466×466) references them.
 `fwkit` implements all of it (`fwkit/picres.py`, `fwkit/lz4.py`,
 `fwkit/png.py`):
 
-```powershell
-$fw = "fwkit"
-& $fw pic-list   out\bt_watch.res
-& $fw pic-decode out\bt_watch.res PIC335 icon.png
-& $fw pic-set    out\bt_watch.res PIC335 icon.png -o res_new.bin
-& $fw edit-pic   IMG res.bin bt_watch.res PIC335 icon.png out.bin
+```text
+uv run fwkit pic-list   out/bt_watch.res
+uv run fwkit pic-decode out/bt_watch.res PIC335 icon.png
+uv run fwkit pic-set    out/bt_watch.res PIC335 icon.png -o res_new.bin
+uv run fwkit edit-pic   firmware.bin res.bin bt_watch.res PIC335 icon.png out.bin
 ```
 
 `parse()`/`build()` of `bt_watch.res` and `logo.res` are byte-identical.
 Verified end-to-end: replacing `logo.res` PIC1 with an inverted PNG and
-rebuilding the whole image (4.5 s) passes `fwkit verify`, and the picture
+rebuilding the whole image passes `fwkit verify`, and the picture
 decodes back correctly. `pic-set` now re-compresses with LZ4 HC 12, so an
 unchanged image reproduces the vendor body exactly; changed pixels still
 get a valid block and the RES table absorbs any size change.

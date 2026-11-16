@@ -1,4 +1,4 @@
-# Watch Pro 2 in the browser
+# Watch emulators in the browser
 
 The [browser preview](https://cmf.arnv.dev/emulator/watch-pro-2/) runs stock 1.0.0.73 using
 our existing ATS3089C model and compatibility ROM. The hosted preview downloads
@@ -31,11 +31,14 @@ uv run python emulator/web/stage.py --fixtures fixtures --rom runtime/compat.bin
 ```
 
 The output directory must be new. Staging validates the stock application and
-copies the browser page and virtual storage. For correct rendering of the local
-stock watch faces, add `--wfc-dir PATH` pointing to the extracted stock WFC files
-named `*_local*.wfc`. This generates texture-format metadata from those files;
-it does not modify the stock application. Without it, some watch-face graphics
-are incorrectly decoded. The ordinary stock app list does not need that index.
+copies the page and virtual storage. Current fixture preparation generates
+`wfc-index.txt`; staging copies it automatically. Keep it with the matching
+flash files so stock watch-face textures render correctly.
+
+For older Watch Pro 2 fixtures, regenerate them or pass `--stock-image PATH`
+with the reference 1.0.0.73 package to generate the index during staging.
+`--wfc-dir PATH` accepts extracted `*_local*.wfc` files as an alternative.
+Watch 3 Pro uses the index from its prepared fixtures.
 
 Download `wp2-wasm-experimental` from the **Experimental browser emulator**
 workflow. Copy `qemu-system-arm.wasm` and `qemu-system-arm.worker.js` into
@@ -59,8 +62,8 @@ The hosted preview accepts local firmware packages,
 application files and watch faces. Open **FMC watch faces** to browse community
 faces by name or author and sort by newest, downloads, or flashes. Choose a
 face and select **Apply watch face** to install it on the next boot. The same
-picker is available when serving local stock files. Select **Bad Apple** to
-provide your own built firmware. Under
+picker is available when serving local stock files. On Watch Pro 2, select **Bad Apple** to run the bundled release. Use
+**Custom firmware** for a build of your own. Under
 **Display**, you can choose a built-in frame color or replace its artwork with
 an image file.
 
@@ -89,7 +92,8 @@ select a different build, set both `WP2_BAD_APPLE_TAG` and
   device view. Neither changes the guest's 466 x 466 display resolution.
 - The camera button saves the circular display as a transparent PNG. Turn on
   **Include frame in screenshots** to include the selected watch frame.
-- **Stop & reset** reloads the page. Guest storage changes are discarded.
+- The square stop control reloads into an idle session. **Hard reset to stock**
+  returns to the bundled starting state. Unsaved guest storage changes are discarded.
 - Open **Watch log** to inspect recent guest UART output or save the full captured UART log. Add `?debug` to the URL for
   verbose GPU/MMIO diagnostics; this increases logging and memory use.
 
@@ -113,7 +117,7 @@ with `--profile wp2-stock --model-selector`. Serve that directory to open either
 between the two routes. Pass `--model-selector` when both pages are present.
 
 Watch 3 Pro opens the stock watch face with the virtual charger disconnected.
-The stock browser preview bypasses first-time setup and stays awake while idle.
+The stock browser preview starts with local setup complete and stays awake while idle. The [emulator guide](https://cmf.arnv.dev/emulator/#watch-3-pro-passcodes-and-optical-measurements) covers stock passcodes and synthetic optical measurements.
 For the first-time language and QR screens, run `wp3-stock` in desktop QEMU.
 Choose **Custom firmware** to
 boot a Watch 3 Pro AOTA with application and SDFS images, or supply its raw
@@ -185,9 +189,10 @@ settings. **Hard reset to stock** discards the running session and selected
 files, then starts a fresh stock session.
 
 Open **Optical sensors** to set the heart rate and blood oxygen shown by
-the stock measurement apps. On Watch 3 Pro this supplies the values those
-screens read. The raw optical waveform and measurement history are outside
-that simulation. Open **Gyroscope** on Watch 3 Pro to enter X, Y and Z angular
+the stock measurement apps. On Watch 3 Pro, **Simulate readings** supplies display values directly.
+Enable **Feed raw optical samples** and **Watch is worn** to have stock calculate
+measurements from a synthetic signal. Stock has displayed these results in its
+history screens; persistence across browser reloads remains unverified. Open **Gyroscope** on Watch 3 Pro to enter X, Y and Z angular
 velocity in degrees per second. Open **GPS** to send a stationary fix at a
 latitude and longitude in decimal degrees. The guest must start its GPS
 receiver, for example when starting an outdoor workout.

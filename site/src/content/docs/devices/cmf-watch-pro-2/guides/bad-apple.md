@@ -1,62 +1,47 @@
 ---
-title: Bad Apple case study
-description: How a 202-frame animation was built, packed into res_e, flashed and verified on hardware.
+title: Bad Apple on Watch Pro 2
+description: The source-built Zephyr app and the earlier stock warm-up animation experiment.
 ---
 
-This is the end-to-end proof that the format and OTA work is correct. It is documented as a
-case study; **no Bad Apple frames or prebuilt firmware are distributed here**.
+## Source-built firmware
 
-## Why `9.ajs`
+The [Bad Apple project](https://github.com/fmctools/firmware-wp2-badapple)
+builds a Zephyr application with its own media assets. This is the version
+available as the **Bad Apple** boot preset in the
+[Watch Pro 2 browser emulator](/emulator/watch-pro-2/). It plays video and
+audio and uses the watch's touch and crown controls. The project repository
+contains the source, build instructions and a downloadable firmware package.
 
-`9.ajs` is the 8-second sport warm-up animation for sport type 22. It is small enough to
-replace without rebuilding the whole resource set:
+<span id="why-9ajs"></span>
+<span id="build-outline"></span>
+<span id="flash-result"></span>
 
-| | Stock `9.ajs` | PoC |
-|---|---|---|
-| Frames | 1,124 | 202 |
-| FPS | 25 | 25 |
-| Duration | ~45 s | ~8.1 s |
-| Size | 4,795,064 B | 756,479 B |
-| Video | 240×240 | 240×240 |
+## Stock warm-up animation experiment
 
-The PoC is silent, 240×240, baseline JPEG, and fits in a single-tile-per-frame layout.
+An earlier test replaced a sport warm-up animation inside stock firmware.
+It verified that the stock application could play a rebuilt
+[AJS animation](/devices/cmf-watch-pro-2/formats/ajs/) after a Bluetooth
+firmware update. AJS stores JPEG frames and their playback rate. The watch
+selects a file from its sport table and uses a separate timer for the
+warm-up screen.
 
-## Build outline
+The test used `9.ajs`, the file assigned to sport type 22 with an
+eight-second warm-up timer. A short, silent clip encoded at 240×240 and
+25 fps fit that screen. Its frame bytes matched after extraction and rebuild,
+and playback was verified on the physical watch.
 
-1. Extract `res_e.bin` from the stock AOTA image.
-2. Extract `9.ajs`, confirm the record layout and fps.
-3. Encode 202 frames at 240×240/25 fps as baseline JPEG.
-4. Repack with `fwkit ajs-repack` so the prelude and tile table are correct.
-5. Verify: extract the new `.ajs` again and compare frame bytes.
-6. Replace `9.ajs` in `res_e.bin` with `fwkit edit-sdfs` (or rebuild SDFS and
-   `pad_to` the original 58,777,088-byte partition).
-7. Rebuild the AOTA image with `fwkit pack`; `fwkit verify` must pass.
-8. Flash over BLE using the [OTA guide](/devices/cmf-watch-pro-2/guides/ota-flash/).
+<span id="capacity-ceiling"></span>
 
-## Flash result
+The edit replaced one file in `res_e.bin`, the fixed-size resource
+partition that holds the stock warm-up animations. Because the stock
+partition is almost full, a replacement must fit in the space reclaimed
+by the removed file and the small amount of unused space. See the
+[SDFS capacity reference](/devices/cmf-watch-pro-2/formats/sdfs/#capacity)
+for the partition size and [AJS animations](/devices/cmf-watch-pro-2/formats/ajs/#tools)
+for commands to inspect or rebuild an animation.
 
-- The image was ~54 MB; the watch requested ~38.08 MB (70.4%) because unchanged partitions
-  were skipped.
-- The watch reported `0xA041 01`; the client sent `0x9041 A5`.
-- It rebooted, booted the new image and **played the animation in the UI**.
-- A second short transfer (1.63 MB, 3.0%) completed after the first had already staged most
-  data; it also ended with the commit ack.
+<span id="legal-note"></span>
 
-## Capacity ceiling
-
-Full Bad Apple at 5,250 frames is ~19.7 MB (~18.75 MiB). After replacing `9.ajs` with the PoC,
-`res_e` has only ~3.85 MiB free. Options:
-
-- deleting other warm-up `.ajs` files to reclaim space;
-- lowering resolution/fps or using stronger JPEG compression;
-- splitting the clip and swapping files (not supported by the stock UI);
-- accepting a shorter excerpt.
-
-`res_e` total is 58,777,088 B; stock usage is 58,776,014 B, so headroom is essentially zero
-unless content is removed.
-
-## Legal note
-
-Bad Apple is copyrighted. Frames, a built `.ajs` and a firmware image containing them are not
-published. The method is described, the tooling is shipped, and the media is supplied by the
-user.
+The [data index](/dumps/) identifies the archived stock-resource image.
+Read the [flashing limitations](/devices/cmf-watch-pro-2/limitations/)
+before using a firmware image on hardware.

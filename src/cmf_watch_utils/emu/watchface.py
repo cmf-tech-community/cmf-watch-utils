@@ -14,7 +14,7 @@ FACE_PARTITIONS = {
     "wp3": (0x2a4, 24, "local274.wfc", "local822.wfc"),
 }
 MAX_FACE = 3021359
-FMC = "https://fmc.freethinkel.dev/api"
+FMC = "https://fmc.tools/api"
 FMC_SORTS = {"newest": "-created,id", "downloads": "-downloads,-created,id",
              "flashes": "-flashes,-created,id"}
 FMC_HEADERS = {"User-Agent": "cmf-watch-utils (+https://cmf.arnv.dev/)"}

@@ -3,7 +3,7 @@ title: BLE tools
 description: Reference for cmf_watch.py and ota_client.py, the host-side tools that talk to the watch.
 ---
 
-The existing stock scripts use [Bleak](https://github.com/hbldh/bleak). Physical tests ran
+The stock scripts on this page target [Watch Pro 2](/devices/cmf-watch-pro-2/) and use [Bleak](https://github.com/hbldh/bleak). Physical tests ran
 on Windows. For the separate Actions SDK protocol, see [Actions SDK OTA](/tooling/actions-ota/).
 For OTA over a simulated radio, see [OTA and recovery](/emulator/ota-recovery/).
 
@@ -12,6 +12,30 @@ uv run python tools/cmf_watch.py --help
 uv run python tools/ota_client.py --help
 ```
 
+## Pair a Watch Pro 2
+
+Complete [Setup](/getting-started/setup/) first. Run these commands from the
+`cmf-watch-utils` folder with computer Bluetooth enabled. Wake the watch, keep
+it nearby and turn phone Bluetooth off so Nothing X does not take the connection.
+
+```text
+uv run python tools/cmf_watch.py scan
+uv run python tools/cmf_watch.py pair
+uv run python tools/cmf_watch.py info
+```
+
+The scan should list the watch. Pairing should end with `saved state ->` and a
+local file path. `info` should then report device information. Check the identity
+before sending an update. The pairing output contains keys: do not share it
+unredacted.
+
+Here, `pair` establishes the tool's authenticated connection. It is not the
+Nothing X add-device flow, and a Windows Bluetooth pairing alone does not
+replace it. If the tool cannot find or connect to the watch, follow
+[connection troubleshooting](/getting-started/troubleshooting/#the-updater-cannot-find-or-connect-to-the-watch)
+before attempting an update. A watch reset can invalidate the saved credentials;
+repeat this pairing step after a reset.
+
 ## cmf_watch.py
 
 ### Read-only commands
@@ -19,7 +43,7 @@ uv run python tools/ota_client.py --help
 | Command | Purpose |
 |---|---|
 | `scan` | List nearby BLE advertisements |
-| `at <command>` | Send an AT command over the shell channel and print the reply |
+| `at <command>` | Query with a known read-only [AT command](/devices/cmf-watch-pro-2/protocol/shell/) |
 | `info` | Version, serial, name, PID, battery, temperature, accelerometer |
 | `sync` | Observe the notification stream for a while |
 | `workouts` | Dump the workout/sport configuration tables |
@@ -40,13 +64,17 @@ uv run python tools/ota_client.py --help
 
 ### Local state
 
+Pair once with `uv run python tools/cmf_watch.py pair` before authenticated commands. If the host cannot connect, disconnect Nothing X and rerun a scan.
+
 `tools/.watch_state.json` holds the pairing secret and authkey. It is gitignored. A stale
 authkey still produces an `A052` reply after INIT1, so `A052` alone does not prove the session
 is usable; the data phase only starts with a fresh pairing.
 
 ## ota_client.py
 
-The dedicated AOTA OTA client.
+Use this client for stock firmware updates. The `ota-*` commands in
+`cmf_watch.py` are research tools, not alternative recommended flashing procedures.
+See the [flashing guide](/devices/cmf-watch-pro-2/guides/ota-flash/) for the complete workflow.
 
 | Flag | Purpose |
 |---|---|

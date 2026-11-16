@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import legacyDocumentationUrls from './integrations/legacy-urls.mjs';
 
 export default defineConfig({
   site: 'https://cmf.arnv.dev',
@@ -9,7 +10,7 @@ export default defineConfig({
     starlight({
       title: 'CMF Watch Utils',
       description:
-        'CMF Watch Utils ? tooling and documentation for the CMF Watch Pro 2: AOTA/SDFS/WFDL/AJS firmware containers, BLE tooling and reverse-engineering notes.',
+        'Firmware tools, Bluetooth utilities and emulation for CMF watches.',
       logo: {
         src: './public/logo.svg',
         alt: 'CMF Watch Utils logo',
@@ -17,10 +18,12 @@ export default defineConfig({
       customCss: ['/src/styles/custom.css'],
       favicon: '/favicon.svg',
       social: [
+        { icon: 'discord', label: 'FMC Community on Discord', href: 'https://discord.gg/KnAFruMabJ' },
+        { icon: 'reddit', label: 'r/CMFWatchMods on Reddit', href: 'https://www.reddit.com/r/CMFWatchMods/' },
         {
           icon: 'github',
           label: 'GitHub',
-          href: 'https://github.com/cmf-tech-community/cmf-watch-utils',
+          href: 'https://github.com/fmctools/cmf-watch-utils',
         },
         {
           icon: 'external',
@@ -29,7 +32,7 @@ export default defineConfig({
         },
       ],
       editLink: {
-        baseUrl: 'https://github.com/cmf-tech-community/cmf-watch-utils/edit/main/site/',
+        baseUrl: 'https://github.com/fmctools/cmf-watch-utils/edit/main/site/',
       },
       components: {
         SocialIcons: './src/components/SocialIcons.astro',
@@ -37,33 +40,19 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'About',
-          items: [
-            { label: 'Roadmap & devices', slug: 'about/roadmap' },
-            { label: 'Methodology', slug: 'about/methodology' },
-            { label: 'Legal & attribution', slug: 'about/legal' },
-          ],
-        },
-        {
           label: 'Getting started',
           items: [
             { label: 'Requirements', slug: 'getting-started/requirements' },
             { label: 'Setup', slug: 'getting-started/setup' },
             { label: 'Quick start', slug: 'getting-started/quickstart' },
-          ],
-        },
-        {
-          label: 'Tooling',
-          items: [
-            { label: 'fwkit CLI', slug: 'tooling/fwkit' },
-            { label: 'BLE tools', slug: 'tooling/ble-tools' },
-            { label: 'Actions SDK OTA', slug: 'tooling/actions-ota' },
+            { label: 'Troubleshooting', slug: 'getting-started/troubleshooting' },
           ],
         },
         {
           label: 'Emulator',
           items: [
             { label: 'Overview', slug: 'emulator' },
+            { label: 'Browser walkthrough', slug: 'emulator/browser-guide' },
             { label: 'Installation', slug: 'emulator/installation' },
             { label: 'First boot', slug: 'emulator/first-boot' },
             { label: 'OTA and recovery', slug: 'emulator/ota-recovery' },
@@ -78,6 +67,15 @@ export default defineConfig({
                 { label: 'Device profile', slug: 'devices/cmf-watch-pro-2' },
                 { label: 'Verified status', slug: 'devices/cmf-watch-pro-2/status' },
                 { label: 'Limitations & risks', slug: 'devices/cmf-watch-pro-2/limitations' },
+              ],
+            },
+            {
+              label: 'Guides',
+              items: [
+                { label: 'Firmware OTA flash', slug: 'devices/cmf-watch-pro-2/guides/ota-flash' },
+                { label: 'Dial editing & upload', slug: 'devices/cmf-watch-pro-2/guides/dial-editing' },
+                { label: 'Bad Apple case study', slug: 'devices/cmf-watch-pro-2/guides/bad-apple' },
+                { label: 'Application analysis', slug: 'devices/cmf-watch-pro-2/guides/ghidra' },
               ],
             },
             {
@@ -107,29 +105,55 @@ export default defineConfig({
                 { label: 'Recovery & boot modes', slug: 'devices/cmf-watch-pro-2/internals/recovery' },
               ],
             },
-            {
-              label: 'Guides',
-              items: [
-                { label: 'Firmware OTA flash', slug: 'devices/cmf-watch-pro-2/guides/ota-flash' },
-                { label: 'Dial editing & upload', slug: 'devices/cmf-watch-pro-2/guides/dial-editing' },
-                { label: 'Bad Apple case study', slug: 'devices/cmf-watch-pro-2/guides/bad-apple' },
-                { label: 'Ghidra workflow', slug: 'devices/cmf-watch-pro-2/guides/ghidra' },
-              ],
-            },
           ],
         },
         {
-          label: 'For AI agents',
+          label: 'CMF Watch 3 Pro',
           items: [
-            { label: 'Agent context', slug: 'ai/context' },
-            { label: 'Prompt recipes', slug: 'ai/prompts' },
+            { label: 'Overview', items: [
+              { label: 'Device profile', slug: 'devices/cmf-watch-pro-3' },
+              { label: 'Support and verification', slug: 'devices/cmf-watch-pro-3/status' },
+            ] },
+            { label: 'Guides', items: [
+              { label: 'Testing stock firmware', slug: 'devices/cmf-watch-pro-3/testing' },
+              { label: 'Watch faces', slug: 'devices/cmf-watch-pro-3/watch-faces' },
+            ] },
+            { label: 'Reference', items: [
+              { label: 'Firmware format', slug: 'devices/cmf-watch-pro-3/formats' },
+              { label: 'Hardware and emulation', slug: 'devices/cmf-watch-pro-3/hardware' },
+            ] },
           ],
         },
         {
-          label: 'Dumps & data',
-          items: [{ label: 'Data index', slug: 'dumps' }],
+          label: 'Tool reference',
+          items: [
+            { label: 'fwkit CLI', slug: 'tooling/fwkit' },
+            { label: 'BLE tools', slug: 'tooling/ble-tools' },
+            { label: 'Actions SDK OTA', slug: 'tooling/actions-ota' },
+          ],
+        },
+        {
+          label: 'Contributing',
+          items: [
+            { label: 'Development setup', slug: 'getting-started/contributing' },
+            { label: 'Firmware analysis', slug: 'contributing/firmware-analysis' },
+            { label: 'Research methodology', slug: 'about/methodology' },
+            { label: 'Agent context', slug: 'ai/context' },
+            { label: 'Documentation guidelines', slug: 'ai/documentation' },
+            { label: 'Agent task examples', slug: 'ai/prompts' },
+          ],
+        },
+        {
+          label: 'Project information',
+          items: [
+            { label: 'Device support', slug: 'about/roadmap' },
+            { label: 'Community', slug: 'about/community' },
+            { label: 'Data index', slug: 'dumps' },
+            { label: 'Legal and attribution', slug: 'about/legal' },
+          ],
         },
       ],
     }),
+    legacyDocumentationUrls(),
   ],
 });

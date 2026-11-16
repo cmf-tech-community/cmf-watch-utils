@@ -10,6 +10,10 @@ byte-for-byte, and applies targeted edits. It never talks to a watch.
 uv run fwkit --help
 ```
 
+In the reference tables, `<file>`, `<image>` and similar names are placeholders,
+not literal shell arguments. Replace each with your path, and quote paths with
+spaces. Use `uv run fwkit COMMAND --help` for a command’s complete arguments.
+
 ## AOTA container
 
 | Command | Purpose |
@@ -37,10 +41,10 @@ image keep their original length that way.
 | Command | Purpose |
 |---|---|
 | `fwkit res-list <resfile>` | Strings in a RES table |
-| `fwkit res-set <resfile> <key> <value>` | Replace one string |
+| `fwkit res-set <resfile> <key> <value> -o <out>` | Replace one string |
 | `fwkit pic-list <resfile>` | Pictures and their codecs |
 | `fwkit pic-decode <resfile> <index> <png>` | Decode a picture to PNG |
-| `fwkit pic-set <resfile> <index> <png>` | Replace a picture from PNG |
+| `fwkit pic-set <resfile> <index> <png> -o <out>` | Replace a picture from PNG |
 | `fwkit edit-res <image> <partition> <resfile> <key> <value> <out>` | Replace a string inside an AOTA image |
 | `fwkit edit-pic <image> <partition> <resfile> <index> <png> <out>` | Replace a picture inside an AOTA image |
 
@@ -62,8 +66,8 @@ image keep their original length that way.
 |---|---|
 | `fwkit ajs-info <file>` | Record layout, frame count, fps and tiles |
 | `fwkit ajs-extract <file> <dir>` | Extract frames as JPEG |
-| `fwkit ajs-repack <dir> <file>` | Rebuild from JPEG frames |
-| `fwkit ajs-set-frame <file> <index> <jpeg> <out>` | Replace a single frame |
+| `fwkit ajs-repack <dir> -o <file>` | Rebuild from JPEG frames |
+| `fwkit ajs-set-frame <file> <index> <jpeg> -o <out>` | Replace a single frame |
 
 ## WFDL watch faces
 
@@ -83,11 +87,11 @@ image keep their original length that way.
 | `fwkit act-info <app>` | ACTH header fields |
 | `fwkit app-scene-refs <app>` | Scene-id references in the app image |
 | `fwkit app-patch-scene <app> ...` | Rewrite a scene-id literal and rebuild the header |
-| `fwkit edit-app <image> <input> <out>` | Replace `app.bin` inside `TEMP` and rebuild the image |
+| `fwkit edit-app <image> <addr> <hex> <out>` | Patch bytes at a virtual address in `app.bin` and rebuild `TEMP` |
 
 ## Conventions
 
-- The toolkit preserves unknown fields, so a rebuild of an unmodified image is byte-identical.
+- Check an unchanged rebuild against the original image before relying on a parser for a new firmware version. Byte-identical AOTA rebuilds were verified on the reference builds for [Watch Pro 2](/devices/cmf-watch-pro-2/formats/aota/) and [Watch 3 Pro](/devices/cmf-watch-pro-3/formats/).
 - Formats are documented per device in the device section; the layouts differ between
   firmware generations.
 - `tooling/tests/selftest.py` runs the round-trip checks:

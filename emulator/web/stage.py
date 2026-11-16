@@ -11,7 +11,7 @@ from cmf_watch_utils.emu.profiles import PROFILES
 from cmf_watch_utils.emu.preview import watch_face_preview
 from cmf_watch_utils.emu.prepare import STOCK_SHA256, stock_faces, write_texture_index
 from cmf_watch_utils.emu.vm import child, executable, runtime_env
-from page import FRAME_FILES, ROUTES, render_page
+from page import FRAME_FILES, OG_IMAGES, ROUTES, render_page
 
 
 def initialize_watch3_storage(args, model, nor, nand, nand_id, target):
@@ -88,6 +88,7 @@ if args.frames_dir:
 web = Path(__file__).resolve().parent
 for name in ("watch.js", "style.css", "face.mjs", "catalog.mjs", "speaker.mjs", "fixtures.mjs", "favicon.svg"):
     shutil.copyfile(web / name, args.output / name)
+shutil.copyfile(web / OG_IMAGES[args.profile], args.output / OG_IMAGES[args.profile])
 (args.output / "index.html").write_text(render_page(args.profile), encoding="utf-8")
 fixtures = args.output / "fixtures"
 fixtures.mkdir()

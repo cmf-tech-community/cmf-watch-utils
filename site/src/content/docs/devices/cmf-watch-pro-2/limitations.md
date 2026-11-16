@@ -1,77 +1,83 @@
 ---
-title: Limitations & risks
-description: Hard boundaries, unresolved formats, recovery uncertainty and safe operating rules.
+title: Firmware flashing risks and limitations
+description: What to check before flashing a CMF Watch Pro 2, what can fail, and what recovery options are verified.
 ---
 
-## Flashing risks
+A failed firmware update can leave the **CMF Watch Pro 2** unable to start.
+If the watch stops booting, its Bluetooth update service may become unavailable.
+There is no verified physical recovery procedure that covers every failure.
 
-1. **A failed full OTA can leave the watch unbootable.** No button-only or BLE-only recovery path
-   has been proven for every failure mode. If the app or bootloader never comes back, the
-   realistic recovery options are a NAND dump/programmer or vendor service.
-2. **The bootloader is not part of the AOTA image.** The OTA updates app-visible partitions
-   (`TEMP`, `res`, `fonts`, `res_e`, `sdfs_k`); it does not replace the bootloader.
-3. **A charged watch is required.** A 54 MB image took roughly 10–30 minutes on the reference
-   unit at BLE MTU 23. A weak battery is an avoidable risk.
-4. **Interrupting the transfer aborts the staging phase.** Disconnecting during the data phase
-   aborts the staging; the watch may reboot back to the old image, but that outcome is not
-   guaranteed.
-5. **Factory menus can clear app data.** Entering a shutdown/reset option from the factory test
-   menu cleared pairing state on the reference unit. A stale authkey still produced an `A052`
-   reply but no `A040`; re-pairing fixed it. See [Shell / AT channel](/devices/cmf-watch-pro-2/protocol/shell/).
+<span id="flashing-risks"></span>
+<span id="ethical-and-legal-limits"></span>
 
-## Emulator limits
+## Before flashing
 
-QEMU can exercise bounded firmware boots, virtual OTA and modeled recovery.
-The virtual crown + charger test restores known-good app and SDFS data through a
-host supervisor. It does not execute the watch's physical boot chain or validate
-recovery from damaged boot partitions, power loss or hardware faults. A passing
-preflight or boot test is evidence for that fixture and test path. See
-[Recovery & boot modes](/devices/cmf-watch-pro-2/internals/recovery/).
+- **Match the model and board.** These hardware results apply to Watch Pro 2
+  board `JX402` (`jx402_01_3089c` in the update package), with stock firmware
+  `1.0.0.73` as the reference. Use firmware explicitly built for your board.
+  Watch 3 Pro uses a different package.
+- **Check the image.** For a downloaded firmware file, compare its SHA-256 with
+  the publisher's checksum when available. The `fwkit verify` command checks
+  the internal checksums of an AOTA firmware package. Those checks establish
+  file integrity. Compatibility and successful boot require separate testing.
+- **Keep a matching stock image on your computer.** You can use it to restore
+  stock if the watch still exposes a compatible Bluetooth update service.
+  Keep a copy of the exact file you install so you can identify the build if
+  something fails.
+- **Keep power and Bluetooth stable.** Start with the watch charged and the host
+  awake. If using FMC on your phone, disconnect any competing watch client.
+  Leave the update client connected until the watch finishes installing and
+  restarts. Transfer time depends on the package and Bluetooth connection.
 
-## Storage ceiling
+See the [reference firmware downloads](/dumps/) and the
+[desktop flashing guide](/devices/cmf-watch-pro-2/guides/ota-flash/).
 
-`/NAND:E` (`res_e.bin`) is a fixed **58,777,088-byte** partition.
+## If the update fails
 
-- Stock content uses 58,776,014 bytes, leaving only **1,074 bytes** free.
-- Replacing only `9.ajs` (4,795,064 bytes) with the 756,479-byte PoC leaves about
-  **3.85 MiB** free.
-- Full Bad Apple is ~19.7 MB (~18.75 MiB), so it requires deleting other warm-up animations,
-  reducing resolution/fps/frame count, or splitting the clip.
+| What the watch does | What to check |
+|---|---|
+| Restarts into its usual interface | Check the firmware version and reconnect before retrying. If the watch was reset, pair it again because the previous Bluetooth credentials may be stale. |
+| Shows an update or recovery screen | Check whether your updater can still connect. A visible progress bar alone only confirms the screen is active. Recovery depends on which update service is available in that state. |
+| Stays black or repeatedly restarts | Stop repeated transfers. If the watch still connects, record its version and visible update services. If it remains unreachable, physical diagnosis or vendor service may be needed. |
 
-## Protocol and access limitations
+An interruption can happen while the watch receives the package or while it
+installs it. A failed transfer may leave the previous firmware working, but
+the outcome depends on the point of failure. The Watch Pro 2 AOTA packages
+documented here update the application and resources. They do not replace the
+bootloader, which is the code that starts the watch before the app. A stock
+package cannot repair an inaccessible or damaged bootloader through this path.
+See [Recovery & boot modes](/devices/cmf-watch-pro-2/internals/recovery/).
 
-- **No arbitrary file read.** The shell and BLE command set expose status/control operations,
-  not a general NAND read. `album.cfg` and user watch faces in `/NAND:C` cannot be pulled
-  without a dump or a patched app.
-- **No unlock or privilege escalation.** The tools use the normal authenticated app protocol.
-- **Pairing state matters.** The authkey is derived from the pairing exchange and the watch
-  secret. After a reset/re-pair, old state produces misleading acknowledgements.
-- **Encryption is fixed for this generation.** Frame payloads use AES-CBC with a fixed IV and
-  a session key derived from the nonce and authkey. Other firmware may change this.
+<span id="emulator-limits"></span>
+<span id="tested-scope"></span>
 
-## Unresolved formats and internals
+## What the emulator can verify
 
-- ACTH header checksum bytes (`+0x1C`, `+0x20`) and `+0x0C = 0x62` are not fully explained.
-- `.sty` type-2 `+0x18` font/style selector encoding is unresolved.
-- `album.cfg` contents and the `.wfdl` header byte `+0x17` are not fully mapped.
-- The six AT group callbacks at `0x101F4D70` are not fully identified.
-- SPP opcodes `0x905E`/`0x9060`/`0x9063` semantics are only partly understood.
-- `0xA055` byte 3 reads `7` on the reference unit while the public FMC client hardcodes
-  capacity `6`; side-loaded dials are not reported in the list.
+Use the [browser emulator](/emulator/watch-pro-2/) to check whether a supported
+firmware package boots and draws a usable screen. Desktop QEMU can also test
+Bluetooth transfer, guest validation, reboot and installation into virtual
+storage. Its crown-and-charger test restores a broken virtual app using the
+emulator's recovery model. Physical bootloader behaviour, recovery after
+power loss, and recovery with a broken Bluetooth service still require
+hardware evidence. [Virtual OTA and recovery](/emulator/ota-recovery/)
 
-## Tested scope
+<span id="storage-ceiling"></span>
+<span id="protocol-and-access-limitations"></span>
+<span id="unresolved-formats-and-internals"></span>
 
-- **Watch:** CMF Watch Pro 2, board `JX402`, SoC Actions ATS3089C, firmware `1.0.0.73`.
-- **Host:** Windows 11 with Python 3.12 and Bleak. Bleak is cross-platform, but macOS/Linux BLE
-  behaviour and MTU negotiation were not validated.
-- **These addresses, UUIDs, keys and layouts apply to the tested scope only.** The Pro 3, a
-  different firmware build, or a regional variant may differ; a diff is required before any
-  write.
+## Watch faces and firmware resources
 
-## Ethical and legal limits
+A watch-face upload is a separate operation from a firmware update. A malformed
+or oversized face can still prevent the stock interface from loading. The stock
+AOTA packages documented here leave the partition holding user-installed faces
+outside the update, so reinstalling firmware may leave the offending face
+in place. See [Watch-face editing and upload](/devices/cmf-watch-pro-2/guides/dial-editing/)
+for validation and upload guidance.
 
-- Bypassing account, payment or device-ownership protections is outside the intended use.
-- Stock firmware, vendor resources or copyrighted animation frames are not redistributed
-  without the corresponding rights.
-- The code is AGPL-3.0 because part of the BLE/watcher behaviour is a port of the AGPL-3.0
-  `freethinkel/fmc` project. See [Legal & attribution](/about/legal/).
+Firmware resource partitions have fixed capacities. A replacement must fit the
+partition after rebuilding, including alignment and padding. See the
+[SDFS format and capacity reference](/devices/cmf-watch-pro-2/formats/sdfs/)
+when building or changing a package.
+
+For help with connection failures, pairing screens and failed downloads, see
+[Troubleshooting](/getting-started/troubleshooting/).
