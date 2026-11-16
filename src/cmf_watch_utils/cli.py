@@ -115,9 +115,7 @@ def cmd_prepare(args):
 def cmd_pair_fixture(args):
     from .emu.pairing import pair_fixture
 
-    profile = PROFILES[args.profile]
-    image.require(not profile.experimental, "Pairing fixture export is unverified for this profile")
-    emit(pair_fixture(args, profile))
+    emit(pair_fixture(args, PROFILES[args.profile]))
 
 
 def cmd_preflight(args):
@@ -136,7 +134,6 @@ def cmd_faces(args):
 
 def cmd_recover(args):
     profile = PROFILES[args.profile]
-    image.require(not profile.experimental, "Virtual recovery is unverified for this profile")
     result = recovery.recover(args, profile)
     emit(result, args.output / "recovery.json")
 
@@ -271,6 +268,8 @@ def parser():
     run.add_argument("--wav", action="store_true")
     run.add_argument("--host-mic", action="store_true", help="Use the PC microphone for stock guest capture")
     run.add_argument("--charger-connected", action="store_true")
+    run.add_argument("--watch-face-preview", action="store_true",
+                     help="Start Watch 3 Pro stock at the watch face using the browser setup state")
     run.add_argument("--allow-reboot", action="store_true")
     run.add_argument("--hci-port", type=port)
     run.add_argument("--qmp-port", type=port)

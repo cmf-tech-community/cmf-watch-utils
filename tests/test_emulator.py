@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 from cmf_watch_utils import actions, cmf_watch
-from cmf_watch_utils.emu import image, prepare, stock_ota, vm
+from cmf_watch_utils.emu import image, prepare, recovery, stock_ota, vm
 from cmf_watch_utils.emu.profiles import PROFILES, WP2
 from cmf_watch_utils.ota_client import OTA_SVC
 from fwkit import aota
@@ -124,6 +124,21 @@ class StockOtaTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ProfileTests(unittest.TestCase):
+    def test_wp3_raw_nand_recovery_remains_unavailable(self):
+        args = SimpleNamespace(pending_nand=Path("nand.bin"))
+        with self.assertRaisesRegex(ValueError, "Raw NAND OTA recovery is unverified"):
+            recovery.recover(args, PROFILES["wp3-stock"])
+
+    def test_desktop_charger_default_matches_on_both_models(self):
+        output = Path("run")
+        for name in ("wp2-stock", "wp3-stock"):
+            for connected in (False, True):
+                with self.subTest(profile=name, connected=connected):
+                    args = SimpleNamespace(runtime_dir=None, charger_connected=connected)
+                    model = PROFILES[name].model
+                    env = vm.run_env(args, model, output, output / "nor.bin", output / "nand.bin")
+                    self.assertEqual(env[model.env_prefix + "UNPLUGGED"], "0" if connected else "1")
+
     def test_run_env_exports_motor_log_path(self):
         output = Path("/tmp/wp2-run")
         args = SimpleNamespace(runtime_dir=None, charger_connected=False)

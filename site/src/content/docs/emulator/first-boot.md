@@ -27,9 +27,11 @@ uv run cmf-watch-utils emu prepare-fixtures --fixtures fixtures --stock dumps/bi
 ```
 
 The command prints where it saved the storage files and logs. The
-`fixtures` folder should contain `nor.bin`, `nand-id.bin` and
-`nand-defaults.bin`. Keep them for future runs. If you already have these
-three files from a previous setup, reuse them and go to [Headless boot](#headless-boot).
+`fixtures` folder should contain `nor.bin`, `nand-id.bin`,
+`nand-defaults.bin` and `wfc-index.txt`. The texture index lets QEMU
+recognize the stock watch-face artwork. Keep these files together.
+If an older fixture directory lacks the index, prepare a new directory.
+With a complete fixture set, continue to [Headless boot](#headless-boot).
 
 ## Headless boot
 

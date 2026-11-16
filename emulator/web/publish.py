@@ -27,7 +27,7 @@ if args.stock:
 
 web = Path(__file__).resolve().parent
 target = args.output / "emulator" / ROUTES[args.profile]
-scripts = ("watch.js", "style.css", "face.mjs", "catalog.mjs", "firmware-worker.js", "speaker.mjs")
+scripts = ("watch.js", "style.css", "face.mjs", "catalog.mjs", "firmware-worker.js", "speaker.mjs", "fixtures.mjs")
 root = web.parents[1]
 tools = (
     ("src", ("cmf_watch_utils/emu/image.py", "cmf_watch_utils/emu/profiles.py")),

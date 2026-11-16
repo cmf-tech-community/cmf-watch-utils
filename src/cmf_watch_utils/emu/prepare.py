@@ -103,15 +103,22 @@ def stage_resources(stock, profile, target):
         staging.write(header)
 
 
-def write_wp3_texture_index(stock, target):
+def write_texture_index(faces, target):
     textures = set()
-    for name, face in sdfs.unpack(stock.decompressed("res_d.bin")).items():
-        if name.endswith(".wfc"):
-            for entry in wfdl.parse(face).resources:
-                if entry.cf == 5:
-                    pixels = lz4.decompress(entry.data, entry.raw_size)
-                    textures.add(f"{entry.w}:{entry.h}:{hashlib.sha256(pixels).hexdigest()}")
-    target.write_text("\n".join(sorted(textures)) + "\n", encoding="ascii")
+    for face in faces:
+        for entry in wfdl.parse(face).resources:
+            if entry.cf == 5:
+                pixels = lz4.decompress(entry.data, entry.raw_size)
+                require(len(pixels) == entry.w * entry.h * 3, "Invalid packed WFC texture size")
+                textures.add(f"{entry.w}:{entry.h}:{hashlib.sha256(pixels).hexdigest()}")
+    require(textures, "No packed WFC textures found")
+    target.write_text("\n".join(sorted(textures)) + "\n", encoding="ascii", newline="\n")
+
+
+def stock_faces(stock, model):
+    partition = "res_d.bin" if model == "wp3" else "fonts.bin"
+    return {name: data for name, data in sdfs.unpack(stock.decompressed(partition)).items()
+            if name.endswith(".wfc")}
 
 
 def provision_nand(args, profile, work, env, qemu, debugger, elf, pending):
@@ -177,11 +184,10 @@ def prepare(args, profile):
         legacy_nor, app = build_nor(Image(provisioning_stock), PROFILES["wp2-stock"])
         provisioning_nor = work / "provisioning-nor.bin"
         provisioning_nor.write_bytes(legacy_nor)
-        write_wp3_texture_index(stock, work / "wfc-index.txt")
+    write_texture_index(stock_faces(stock, profile.model.name).values(), work / "wfc-index.txt")
     (work / "app.bin").write_bytes(app)
-    outputs = {"nor.bin": nor, "nand-id.bin": nand_id}
-    if wp3:
-        outputs["wfc-index.txt"] = (work / "wfc-index.txt").read_bytes()
+    outputs = {"nor.bin": nor, "nand-id.bin": nand_id,
+               "wfc-index.txt": (work / "wfc-index.txt").read_bytes()}
     for name, data in outputs.items():
         existing = args.fixtures / name
         if existing.exists():

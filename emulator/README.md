@@ -53,9 +53,11 @@ source files from a pinned Actions SDK commit. Use `--qemu-archive` and
 `--sdk-root` for local source inputs. `--work-dir`, `--output-dir`, `--jobs`,
 `--arm-prefix` and repeatable `--configure-arg=...` are configurable. Select a
 fresh work directory when changing QEMU configure flags. The default audio
-configuration supports headless testing. Use `--wfc-dir` for an optional local
-stock texture index. The published preview omits this index, so some stock
-watch faces may render differently.
+configuration supports headless testing. Stock fixture preparation writes
+`wfc-index.txt` from the reference firmware. Keep it with the fixture NOR and
+NAND so the desktop runtime can identify packed watch-face textures. For an
+older Watch Pro 2 setup without the index, prepare the fixtures in a new
+directory and use that directory on the next run.
 
 GitHub Actions builds Linux x64, Windows x64, macOS ARM64, and one shared ROM
 and NAND-reader bundle. Each native build must execute a small synthetic ARM
@@ -88,7 +90,9 @@ the Linux release runner uses Ubuntu 22.04.
 
 ## Watch 3 Pro desktop preview
 
-The experimental `wp3-stock` profile boots stock Watch 3 Pro `1.0.1.77` in the shared native QEMU runtime. It uses a synthetic flash layout and the compatibility ROM. Prepare it with `emu prepare-fixtures --profile wp3-stock --stock <watch-3-pro-package> --provisioning-stock <watch-pro-2-1.0.0.73-package>` and the usual QEMU, Arm GDB, NAND ID and provisioner options. The Watch Pro 2 package supplies the virtual NAND writer. Run the resulting fixtures with `emu run --profile wp3-stock`. The stock guest starts on virtual charger power during first boot. Disconnect it through Advanced after initialization to use the watch screen.
+The experimental `wp3-stock` profile boots stock Watch 3 Pro `1.0.1.77` in the shared native QEMU runtime. It uses a synthetic flash layout and the compatibility ROM. Prepare it with `emu prepare-fixtures --profile wp3-stock --stock <watch-3-pro-package> --provisioning-stock <watch-pro-2-1.0.0.73-package>` and the usual QEMU, Arm GDB, NAND ID and provisioner options. The Watch Pro 2 package supplies the virtual NAND writer. Run the resulting fixtures with `emu run --profile wp3-stock`. The virtual charger disconnects during startup by default. Use `--charger-connected` to keep it attached, or change the charger state through Advanced while running.
+
+Add `--watch-face-preview` to `emu run --profile wp3-stock` to start at the watch face with the same local setup as the browser. The command stages its own NOR and compatibility ROM in the run directory. Omit the flag to test the stock onboarding screens.
 
 The [Watch 3 Pro browser preview](https://cmf.arnv.dev/emulator/watch-pro-3/) boots stock firmware. Watch 3 Pro pairing, recovery, and full factory suite coverage are still in development.
 

@@ -11,6 +11,7 @@ import sys
 import time
 
 from .image import require, verify_package
+from .preview import watch_face_preview
 
 
 def executable(value, env=None):
@@ -48,16 +49,15 @@ def runtime_env(args, model, **values):
 def run_env(args, model, output, nor, nand):
     return runtime_env(args, model, NOR=nor, NAND=nand, FRAME=output / "frame.ppm",
                        INPUT=output / "input.txt", MOTOR=output / "motor.log",
-                       UNPLUGGED=int(model.name != "wp3" and not args.charger_connected),
+                       UNPLUGGED=int(not args.charger_connected),
                        HOST_RTC=1, EXPLORATORY=0)
 
 
-def command(args, model, output, env, audio, *, media_clock=False):
-    require(args.rom.is_file(), f"Compatibility ROM not found: {args.rom}")
+def command(args, model, output, env, audio, rom, *, media_clock=False):
     clock = "shift=3,align=on" if not args.headless and audio else "shift=3,align=off"
     if media_clock:
         clock = "shift=6,align=on"
-    argv = [executable(args.qemu, env), "-M", model.machine, "-bios", str(args.rom),
+    argv = [executable(args.qemu, env), "-M", model.machine, "-bios", str(rom),
             "-display", "none", "-monitor", "none", "-serial", f"file:{output / 'uart0.log'}",
             "-serial", "null", "-serial", "null", "-icount", clock]
     if args.hci_port:
@@ -161,7 +161,7 @@ def live(args, argv, env, output, version, stock, profile):
         optical = stock and (profile.live_health or profile.model.name == "wp3")
         viewer = [executable(wish, env), str(script), str(output), "stock" if stock else "custom",
                   version, profile.model.title, profile.model.name, str(int(optical)),
-                  str(int(args.charger_connected or profile.model.name == "wp3"))]
+                  str(int(args.charger_connected))]
         with child(argv, env, output / "qemu.log") as vm, child(viewer, env, output / "viewer.log") as gui:
             while vm.poll() is None and gui.poll() is None:
                 time.sleep(0.2)
@@ -184,6 +184,11 @@ def run(args, profile):
     require(not args.headless or args.host_mic or args.audio in (None, "auto", "none"),
             "Headless speaker tests use --wav unless a host microphone backend is selected")
     stock = not (args.app or args.ota_image or args.nor)
+    preview = getattr(args, "watch_face_preview", False)
+    require(not preview or (stock and model.name == "wp3"),
+            "--watch-face-preview requires the Watch 3 Pro stock application")
+    rom = args.rom
+    require(rom.is_file(), f"Compatibility ROM not found: {rom}")
     require(not (args.watch_face or args.fmc_face) or
             (stock and not args.nand and (profile.live_health or model.name == "wp3")),
             "Watch-face import requires the stock watch-face profile and its default NAND")
@@ -207,8 +212,15 @@ def run(args, profile):
     stamp = app[64:128].split(b"\0", 1)[0]
     version = profile.stock_version if stock else (
         stamp.decode("ascii") if re.fullmatch(rb"[A-Za-z0-9._+-]{1,63}", stamp) else "Unknown version")
+    if preview:
+        preview_rom = bytearray(rom.read_bytes())
+        require(len(preview_rom) == 65536, "Expected a 64 KiB compatibility ROM")
+        model.app.stage(data, watch_face_preview(app, preview_rom))
     output = args.output
     output.mkdir(parents=True, exist_ok=False)
+    if preview:
+        rom = output / "compat.bin"
+        rom.write_bytes(preview_rom)
     nor = output / "nor.bin"
     nor.write_bytes(data)
     shutil.copyfile(nand_id, output / "nand-id.bin")
@@ -247,7 +259,7 @@ def run(args, profile):
     media_clock = not stock and (audio or args.wav) and bool(re.fullmatch(rb"badapple\d+_\d{6}", stamp))
     if media_clock:
         env[model.env_prefix + "MEDIA_CLOCK"] = "1"
-    argv = command(args, model, output, env, audio, media_clock=media_clock)
+    argv = command(args, model, output, env, audio, rom, media_clock=media_clock)
     if not args.headless or model.name == "wp3":
         env[model.env_prefix + "LIVE_FRAME"] = "1"
         env[model.env_prefix + "LIVE_SENSORS"] = "1"
