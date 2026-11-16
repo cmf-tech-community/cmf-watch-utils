@@ -19,7 +19,7 @@ export default defineConfig({
       favicon: '/favicon.svg',
       social: [
         { icon: 'discord', label: 'FMC Community on Discord', href: 'https://discord.gg/KnAFruMabJ' },
-        { icon: 'external', label: 'r/CMFWatchMods on Reddit', href: 'https://www.reddit.com/r/CMFWatchMods/' },
+        { icon: 'reddit', label: 'r/CMFWatchMods on Reddit', href: 'https://www.reddit.com/r/CMFWatchMods/' },
         {
           icon: 'github',
           label: 'GitHub',
