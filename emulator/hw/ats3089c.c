@@ -82,7 +82,13 @@ struct ActsState {
     bool stk_enabled;
     bool watch3;
     uint8_t imu_reg, imu_regs[256];
-    uint8_t optical_page, optical_reg, optical_regs[4][256];
+    uint8_t optical_page, optical_regs[4][2048];
+    uint16_t optical_reg;
+    uint32_t optical_fifo[800];
+    unsigned optical_head, optical_count, optical_byte, optical_frame;
+    unsigned optical_wear;
+    int64_t optical_next_frame;
+    bool optical_fifo_selected;
     uint8_t haptic_regs[256];
     uint8_t psram_mode_regs[16];
     unsigned psram_mode_pos;
@@ -385,17 +391,92 @@ static bool acts_wp3_imu_transfer(ActsState *s, uint32_t *task)
                                data, len) == MEMTX_OK;
 }
 
+static void acts_wp3_optical_tick(ActsState *s, int64_t now)
+{
+    uint8_t *regs = s->optical_regs[1];
+    unsigned adt = lduw_be_p(regs + 0x408);
+    unsigned status = lduw_be_p(regs + 0x508);
+    unsigned pending = 0;
+    bool worn = s->optical_wear == 2;
+
+    if (!s->optical_wear) {
+        return;
+    }
+    if ((adt & 1) && worn != !!(adt & 0x10)) {
+        pending |= worn ? 0x400 : 0x800;
+    }
+    if (!(lduw_be_p(regs) & 1)) {
+        s->optical_head = s->optical_count = s->optical_byte = 0;
+        stw_be_p(regs + 0x50a, 0);
+    } else if (now >= s->optical_next_frame) {
+        unsigned slots = lduw_be_p(regs + 0x108) & 0xff;
+        unsigned phase = s->optical_frame++ % 25;
+        unsigned pulse = phase < 8 ? phase * 2 : (25 - phase);
+
+        if (now - s->optical_next_frame > 66000000) {
+            s->optical_next_frame = now;
+        }
+        s->optical_next_frame += 33000000;
+        for (unsigned slot = 0; slot < 8; slot++) {
+            unsigned mask = lduw_be_p(regs + 0x10a + slot * 0x1c) >> 2;
+
+            if (!(slots & (1 << slot)) || !(mask & 16)) {
+                continue;
+            }
+            for (unsigned channel = 0; channel < 4; channel++) {
+                if ((mask & (1 << channel)) &&
+                    s->optical_count < ARRAY_SIZE(s->optical_fifo)) {
+                    unsigned tag = slot * 4 + channel;
+                    unsigned tail = (s->optical_head + s->optical_count++) %
+                                    ARRAY_SIZE(s->optical_fifo);
+                    unsigned amplitude = channel % 2 ? 240 : 115;
+                    unsigned adc = worn ? 220000 + pulse * amplitude : 400;
+
+                    s->optical_fifo[tail] = (tag << 27) | adc;
+                }
+            }
+        }
+        stw_be_p(regs + 0x50a, s->optical_count);
+        if (s->optical_count >= MAX(1, lduw_be_p(regs + 0x00a) & 0x3ff)) {
+            pending |= 0x20;
+        }
+    }
+    if (pending & ~status) {
+        stw_be_p(regs + 0x508, status | pending);
+        acts_gpio_falling(s, 22);
+    }
+}
+
 static bool acts_wp3_optical_transfer(ActsState *s, uint32_t *task)
 {
     unsigned command = task[5], len = task[3];
-    uint8_t data[256];
+    uint8_t data[3200];
     if (((command >> 1) & 127) != 0x14 || !len || len > sizeof(data) ||
         task[2] < 0x18000000 || (uint64_t)task[2] + len > 0x40000000) {
         return false;
     }
     if (command & 1) {
+        if (s->optical_fifo_selected) {
+            for (unsigned i = 0; i < len; i++) {
+                data[i] = 0;
+                if (!s->optical_count) {
+                    continue;
+                }
+                data[i] = s->optical_fifo[s->optical_head] >>
+                          (24 - 8 * s->optical_byte++);
+                if (s->optical_byte == 4) {
+                    s->optical_byte = 0;
+                    s->optical_count--;
+                    s->optical_head = (s->optical_head + 1) %
+                                      ARRAY_SIZE(s->optical_fifo);
+                }
+            }
+            stw_be_p(s->optical_regs[1] + 0x50a, s->optical_count);
+            return address_space_write(&address_space_memory, task[2],
+                                       MEMTXATTRS_UNSPECIFIED, data, len) == MEMTX_OK;
+        }
         for (unsigned i = 0; i < len; i++) {
-            data[i] = s->optical_regs[s->optical_page][s->optical_reg++];
+            data[i] = s->optical_regs[s->optical_page][s->optical_reg++ & 0x7ff];
         }
         return address_space_write(&address_space_memory, task[2], MEMTXATTRS_UNSPECIFIED,
                                    data, len) == MEMTX_OK;
@@ -404,6 +485,9 @@ static bool acts_wp3_optical_transfer(ActsState *s, uint32_t *task)
                            data, len) != MEMTX_OK) {
         return false;
     }
+    s->optical_fifo_selected = s->optical_page == 1 && len == 1 &&
+                               (command >> 8 & 0xff) == 0xaa &&
+                               data[0] == 0xaa;
     if (len == 2 && data[0] == 0xdd) {
         if (data[1] < 0xc2 || data[1] > 0xc5) {
             return false;
@@ -411,9 +495,19 @@ static bool acts_wp3_optical_transfer(ActsState *s, uint32_t *task)
         s->optical_page = data[1] - 0xc2;
         return true;
     }
-    s->optical_reg = data[0];
+    unsigned reg = (command >> 8 & 7) * 256 + data[0];
+    s->optical_reg = reg;
+    if (s->optical_page == 1 && reg == 0x508 && len == 3) {
+        s->optical_regs[1][0x508] &= ~data[1];
+        s->optical_regs[1][0x509] &= ~data[2];
+        return true;
+    }
     for (unsigned i = 1; i < len; i++) {
-        s->optical_regs[s->optical_page][s->optical_reg++] = data[i];
+        s->optical_regs[s->optical_page][s->optical_reg++ & 0x7ff] = data[i];
+    }
+    if (s->optical_page == 1 && reg == 0x700 && len == 3 &&
+        data[1] == 0 && data[2] == 0x30) {
+        s->optical_regs[1][0x719] |= 1;
     }
     return true;
 }
@@ -596,6 +690,7 @@ static void acts_input_tick(void *opaque)
     timer_mod(s->input_timer, now + 6000000);
     acts_motion_tick(s, now);
     acts_gps_tick(s, now);
+    acts_wp3_optical_tick(s, now);
     if (s->health_hook && s->health_readings && now >= s->health_next_sample) {
         s->health_next_sample = now + 400000000;
         unsigned mode = ldub_phys(&address_space_memory, 0x2ffb1301);
@@ -702,7 +797,11 @@ static void acts_input_tick(void *opaque)
     } else if ((s->health_hook || s->watch3) &&
                sscanf(line, "l %u", &x) == 1 && x <= 100000) {
         s->ambient_lux = x;
-    } else if ((s->health_hook || s->wp3_health_hook) &&
+    } else if (s->watch3 && sscanf(line, "o %u", &down) == 1 && down <= 2) {
+        s->optical_wear = down;
+        s->health_readings = 0;
+        s->optical_next_frame = now;
+    } else if ((s->health_hook || s->wp3_health_hook) && !s->optical_wear &&
                sscanf(line, "h %u %u %u", &down, &x, &y) == 3 &&
                down <= 1 && x >= 30 && x <= 220 && y >= 70 && y <= 100) {
         s->health_readings = down ? x | (y << 8) : 0;
@@ -3297,8 +3396,13 @@ static void acts_reset(void *opaque)
     s->spi2_reply_len = s->spi2_reply_pos = s->spi2_patch_block = 0;
     memset(s->imu_regs, 0, sizeof(s->imu_regs));
     memset(s->optical_regs, 0, sizeof(s->optical_regs));
+    s->optical_regs[1][0x36] = 0xaa;
+    s->optical_regs[1][0x37] = 0x55;
     memset(s->als_regs, 0, sizeof(s->als_regs));
     s->optical_page = s->optical_reg = 0;
+    s->optical_fifo_selected = false;
+    s->optical_head = s->optical_count = s->optical_byte = s->optical_frame = 0;
+    s->optical_next_frame = 0;
     memset(s->psram_mode_regs, 0, sizeof(s->psram_mode_regs));
     s->psram_mode_pos = 0;
     s->imu_regs[0x12] = 4;
