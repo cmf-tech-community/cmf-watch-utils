@@ -287,6 +287,8 @@ set gyroZ 0
 set battery 4000
 set charging [expr {[llength $argv] > 6 ? [lindex $argv 6] : 0}]
 set virtualHealth 0
+set rawOptical 0
+set opticalWorn 0
 set heartRate 72
 set spo2 98
 set virtualGps 0
@@ -299,7 +301,7 @@ proc apply_sensors {} {
     global accelX accelY accelZ battery charging virtualHealth heartRate spo2 stock
     global gyroX gyroY gyroZ watchModel
     global virtualGps gpsLatitude gpsLongitude
-    global virtualHealthControls
+    global virtualHealthControls rawOptical opticalWorn
     set latitude 0
     set longitude 0
     if {$virtualGps} {
@@ -323,7 +325,12 @@ proc apply_sensors {} {
     send_event "a $accelX $accelY $accelZ"
     send_event "p $battery $charging"
     if {$virtualHealthControls} {
-        send_event "h $virtualHealth $heartRate $spo2"
+        if {$watchModel eq "wp3"} {
+            send_event "o [expr {$rawOptical ? 1 + $opticalWorn : 0}]"
+        }
+        if {$watchModel ne "wp3" || !$rawOptical} {
+            send_event "h $virtualHealth $heartRate $spo2"
+        }
     }
     send_event "g $virtualGps $latitude $longitude"
 }
@@ -358,7 +365,12 @@ proc open_sensors {} {
         pack .advanced.gyro -fill x -pady 6
     }
     if {$virtualHealthControls} {
-        group .advanced.health "Simulated optical results"
+        group .advanced.health "Optical sensors"
+        if {$watchModel eq "wp3"} {
+            check .advanced.health.raw "Feed raw optical samples" rawOptical
+            check .advanced.health.worn "Watch is worn" opticalWorn
+            pack .advanced.health.raw .advanced.health.worn -fill x -pady 3
+        }
         check .advanced.health.enabled "Enable simulated readings" virtualHealth
         slider .advanced.health.hr "Heart rate (bpm)" heartRate 30 220 1
         slider .advanced.health.spo2 "Blood oxygen (%)" spo2 70 100 1

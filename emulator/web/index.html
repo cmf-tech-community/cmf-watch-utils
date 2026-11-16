@@ -130,6 +130,10 @@
       </details>
       <details class="settings-section" id="health-controls">
         <summary>Optical sensors</summary>
+        <div id="raw-optical-controls" hidden>
+          <label class="switch-label"><input id="raw-optical" type="checkbox"> Feed raw optical samples</label>
+          <label class="switch-label"><input id="optical-worn" type="checkbox" disabled> Watch is worn</label>
+        </div>
         <label class="switch-label"><input id="health-enabled" type="checkbox"> Simulate readings</label>
         <div class="sensor-fields">
           <label>Heart rate (bpm)<input id="heart-rate" type="number" min="30" max="220" value="72" required></label>

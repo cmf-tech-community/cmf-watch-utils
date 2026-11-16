@@ -676,8 +676,19 @@ function updateBrightness() {
 $('brightness').oninput = updateBrightness;
 updateBrightness();
 
+const rawOptical = $('raw-optical');
+const opticalWorn = $('optical-worn');
+$('raw-optical-controls').hidden = !watch3;
+
 function sendHealth() {
+  const raw = watch3 && rawOptical.checked;
+  opticalWorn.disabled = customApp || !raw;
+  for (const id of ['health-enabled', 'heart-rate', 'blood-oxygen']) {
+    $(id).disabled = customApp || raw;
+  }
   if (customApp) return;
+  if (watch3) input(`o ${raw ? (opticalWorn.checked ? 2 : 1) : 0}`);
+  if (raw) return;
   if (!$('health-enabled').checked) {
     input('h 0 72 98');
     return;
@@ -701,7 +712,9 @@ function sendGps() {
   }
 }
 
-for (const id of ['health-enabled', 'heart-rate', 'blood-oxygen']) $(id).onchange = sendHealth;
+for (const id of ['raw-optical', 'optical-worn', 'health-enabled', 'heart-rate', 'blood-oxygen']) {
+  $(id).onchange = sendHealth;
+}
 for (const id of ['gps-enabled', 'gps-lat', 'gps-lon']) $(id).onchange = sendGps;
 
 const ambientLight = $('ambient-lux');
@@ -836,6 +849,7 @@ $('reset-simulation').onclick = () => {
   $('battery').value = 69;
   $('charger').checked = false;
   $('health-enabled').checked = false;
+  rawOptical.checked = opticalWorn.checked = false;
   $('heart-rate').value = 72;
   $('blood-oxygen').value = 98;
   $('gps-enabled').checked = false;
@@ -1117,7 +1131,8 @@ $('start').onclick=async()=>{
     }
     bootedCatalogFace = overrides.catalogFace;
     customApp = Boolean(overrides.app);
-    for (const field of $('health-controls').querySelectorAll('input')) field.disabled = customApp;
+    rawOptical.disabled = customApp;
+    sendHealth();
     ambientLight.disabled = ambientLightSlider.disabled = customApp;
     $('firmware-label').textContent = customApp
       ? ({'bad-apple': 'BAD APPLE', 'display-demo': 'DISPLAY TEST'}[bootPreset.value] || 'CUSTOM APPLICATION')
@@ -1174,7 +1189,7 @@ $('start').onclick=async()=>{
       for (const id of ['crown','up','down']) $(id).disabled = false;
       if (powerChanged) sendPower();
       updateBrightness();
-      if ($('health-enabled').checked) sendHealth();
+      sendHealth();
       if ($('gps-enabled').checked) sendGps();
       updateAmbientLight();
       input(`a ${gravity.join(' ')}`);
