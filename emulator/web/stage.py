@@ -14,21 +14,32 @@ from fwkit.aota import sum32
 from page import FRAME_FILES, ROUTES, render_page
 
 
-def watch_face_preview(app):
+def watch_face_preview(app, rom):
     preview = bytearray(app)
-    launcher_check = 0x45158
+    launcher_entry = 0x45154
+    setup_stub = 0x7f80
     autosleep_timeout = 0x155b4a
+    # Mark local setup complete with the stock state 0x59 setter, call the
+    # original state 0x58 getter, then continue the launcher.
+    setup_code = bytes.fromhex(
+        "10b5 0120 03b4 6846 034b 9847 02b0 5820 024b 9847 024a 1047"
+    ) + struct.pack("<3I", 0x100dba49, 0x101c6ec3, 0x1004515d)
+    setup_end = setup_stub + len(setup_code)
+    if rom[setup_stub:setup_end] != bytes(len(setup_code)):
+        raise ValueError("Watch 3 Pro preview setup stub needs unused compatibility ROM space")
     for offset, expected, replacement in (
-        (launcher_check, "81f1b3fe", "012000bf"),
-        (autosleep_timeout, "02fb00f4", "6ff00004"),
+        (launcher_entry, bytes.fromhex("10b5 5820 81f1b3fe"),
+         struct.pack("<2I", 0xf000f8df, setup_stub | 1)),
+        (autosleep_timeout, bytes.fromhex("02fb00f4"), bytes.fromhex("6ff00004")),
     ):
-        if app[offset:offset + 4] != bytes.fromhex(expected):
+        if app[offset:offset + len(expected)] != expected:
             raise ValueError(f"Unexpected Watch 3 Pro preview instruction at {offset:#x}")
-        preview[offset:offset + 4] = bytes.fromhex(replacement)
+        preview[offset:offset + len(expected)] = replacement
     size = struct.unpack_from("<I", preview, 24)[0]
     struct.pack_into("<I", preview, 28, 0xffffffff - sum32(preview[512:512 + size]))
     struct.pack_into("<I", preview, 32, 0)
     struct.pack_into("<I", preview, 32, 0xffffffff - sum32(preview[:512]))
+    rom[setup_stub:setup_end] = setup_code
     return preview
 
 
@@ -89,11 +100,11 @@ if args.profile == "wp3-stock" and not (args.qemu and args.gdb and args.provisio
 nor, nand, nand_id = profile.fixtures(args.fixtures)
 stock_nor = bytearray(nor.read_bytes())
 stock_app = profile.stock_app(stock_nor)
-if args.profile == "wp3-stock":
-    profile.model.app.stage(stock_nor, watch_face_preview(stock_app))
-rom = args.rom.read_bytes()
+rom = bytearray(args.rom.read_bytes())
 if len(rom) != 65536:
     raise ValueError("Expected a 64 KiB compatibility ROM")
+if args.profile == "wp3-stock":
+    profile.model.app.stage(stock_nor, watch_face_preview(stock_app, rom))
 frame_names = FRAME_FILES[args.profile]
 if args.frames_dir and any(not (args.frames_dir / name).is_file() for name in frame_names):
     parser.error("--frames-dir needs " + ", ".join(frame_names))
