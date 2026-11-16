@@ -7,6 +7,8 @@ The emulator runs stock CMF Watch Pro 2 and Watch 3 Pro firmware on your
 computer. Both profiles support custom application boots. Desktop virtual OTA
 has model-specific test coverage described in [OTA and recovery](/emulator/ota-recovery/).
 
+<span id="start-here"></span>
+
 ## Browser preview
 
 For step-by-step instructions, start with [Use the browser emulator](/emulator/browser-guide/).

@@ -6,6 +6,8 @@ description: Create the watch's virtual storage, boot stock firmware, and open t
 Complete [Installation](/emulator/installation/) first. The commands
 use paths relative to the checkout. On Windows, use `runtime/qemu-system-arm.exe` and add `--runtime-dir` with the path to your MSYS2 `ucrt64/bin` folder. On Ubuntu, use `--gdb gdb-multiarch`.
 
+<span id="prepare-the-storage"></span>
+
 ## Watch Pro 2 storage
 
 QEMU needs files that stand in for the watch's storage. They contain the app,

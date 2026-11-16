@@ -98,3 +98,5 @@ helps distinguish setup problems from firmware or emulator failures.
 imports and repeatable exports. [Research methodology](/about/methodology/)
 explains the evidence needed for format, protocol and emulator claims. Put
 build-specific findings in the corresponding device reference.
+
+For project discussion and community questions, see [Community](/about/community/).

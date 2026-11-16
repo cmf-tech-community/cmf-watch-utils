@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import legacyDocumentationUrls from './integrations/legacy-urls.mjs';
 
 export default defineConfig({
   site: 'https://cmf.arnv.dev',
@@ -17,6 +18,8 @@ export default defineConfig({
       customCss: ['/src/styles/custom.css'],
       favicon: '/favicon.svg',
       social: [
+        { icon: 'discord', label: 'FMC Community on Discord', href: 'https://discord.gg/KnAFruMabJ' },
+        { icon: 'external', label: 'r/CMFWatchMods on Reddit', href: 'https://www.reddit.com/r/CMFWatchMods/' },
         {
           icon: 'github',
           label: 'GitHub',
@@ -144,11 +147,13 @@ export default defineConfig({
           label: 'Project information',
           items: [
             { label: 'Device support', slug: 'about/roadmap' },
+            { label: 'Community', slug: 'about/community' },
             { label: 'Data index', slug: 'dumps' },
             { label: 'Legal and attribution', slug: 'about/legal' },
           ],
         },
       ],
     }),
+    legacyDocumentationUrls(),
   ],
 });

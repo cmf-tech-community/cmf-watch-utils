@@ -54,6 +54,8 @@ the virtual storage. Keep the exported file local.
 
 For Watch 3 Pro, add `--profile wp3-stock` to both commands and use Watch 3 Pro fixtures. Start a new guest with `emu run --profile wp3-stock --nor local/paired-nor.bin` before negotiating OTA. The stock app loads the synthetic secret into its authentication state during boot.
 
+<span id="stock-update"></span>
+
 ## Watch Pro 2 stock update
 
 Run these commands in order, each in a separate terminal. Give the first
