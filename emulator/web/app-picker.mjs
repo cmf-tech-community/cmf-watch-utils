@@ -11,9 +11,16 @@ export function setupAppPicker(model, changed = () => {}, report = () => {}) {
   const list = get('apps-selection');
   const files = [];
   const ids = new WeakMap();
+  const roles = ['firmware', 'loader'];
+  const localFile = role => get(`apps-${role}-file`).files[0];
   let dependencies;
   let pending;
   const catalog = new Map();
+  for (const role of roles) {
+    const picker = get(`apps-${role}-file`);
+    picker.closest('[data-apps-override]').hidden = model !== 'wp2';
+    picker.addEventListener('change', renderSources);
+  }
   get('apps-catalog-add').onclick = async () => {
     const button = get('apps-catalog-add');
     const record = catalog.get(get('apps-catalog').value);
@@ -43,10 +50,6 @@ export function setupAppPicker(model, changed = () => {}, report = () => {}) {
     report('Resolving selected FMC firmware, loader and apps…');
     dependencies = await resolvePreload(plan, model);
     preset.value = 'apps';
-    for (const role of ['firmware', 'loader']) {
-      const record = dependencies[role];
-      get(`apps-${role}-selection`).value = `${record.name} · ${record.version}`;
-    }
     for (const record of dependencies.apps) {
       const blob = await download(record, 'apps');
       const file = new File([blob], `${record.name} · ${record.version}.wp2app`);
@@ -58,31 +61,43 @@ export function setupAppPicker(model, changed = () => {}, report = () => {}) {
     render();
     await loadCatalog();
   }
-  async function prepare(validateFirmware, progress = () => {}) {
-    progress('Downloading App Loader and checking app packages…');
+  async function prepare(validateFirmware, progress = () => {}, hosted = true) {
     if (model !== 'wp2') throw Error('No compatible Apps firmware is available for this watch.');
-    if (pending) await pending;
-    if (!dependencies) throw Error('Select compatible firmware and loader first.');
+    const localLoader = localFile('loader');
+    const localFirmware = localFile('firmware');
+    if (pending && (!localFirmware || !localLoader)) await pending;
+    if (!localLoader && !dependencies?.loader) throw Error('Select a local App Loader or retry loading the catalog.');
+    if (!localFirmware && !dependencies?.firmware) throw Error('Select local patched firmware or retry loading the catalog.');
     const packages = [];
-    const loader = await download(dependencies.loader, 'firmwares', progress);
+    const loader = localLoader || await download(dependencies.loader, 'firmwares', progress);
+    progress('Checking App Loader and app packages…');
     packages.push({name: 'L.pkg', bytes: validateAppPackage(new Uint8Array(await loader.arrayBuffer()), 1)});
     for (const [slot, file] of files.entries()) {
       packages.push({name: `${slot}.pkg`, bytes: validateAppPackage(new Uint8Array(await file.arrayBuffer()))});
     }
-    progress('Downloading selected firmware…');
-    const firmware = await download(dependencies.firmware, 'firmwares', progress);
+    const firmware = localFirmware || await download(dependencies.firmware, 'firmwares', progress);
+    if (firmware.size > 64 * 1024 ** 2) throw Error('Firmware packages must be 64 MiB or smaller.');
     progress('Checking and unpacking selected firmware…');
     const parsed = await validateFirmware(await firmware.arrayBuffer());
+    if (!parsed) throw Error('Select patched firmware for the Apps preset.');
     progress('Downloading virtual app storage…');
-    const nand = await fetchFixture(new URL('./fixtures/nand-defaults.bin.gz', import.meta.url), {
-      name: 'virtual app storage', size: 2112 * 65536, gzip: true,
+    const nand = await fetchFixture(new URL(hosted ? './fixtures/nand-defaults.bin.gz' : './fixtures/nand-defaults.bin', import.meta.url), {
+      name: 'virtual app storage', size: 2112 * 65536, gzip: hosted,
     });
     progress('Installing App Loader and selected apps into virtual storage…');
     installAppFiles(nand, packages, model);
     report(`${files.length} ${files.length === 1 ? 'app' : 'apps'} installed into virtual storage.`);
     return {app: parsed.app, sdfs: new Blob([parsed.sdfs]), nand: new Blob([nand])};
   }
+  function renderSources() {
+    for (const role of roles) {
+      const record = dependencies?.[role];
+      get(`apps-${role}-selection`).value = localFile(role) ? 'Local file' :
+        record ? `${record.name} · ${record.version}` : 'Catalog selection unavailable';
+    }
+  }
   function render() {
+    renderSources();
     if (dependencies) changed({preset: 'apps', firmware: dependencies.firmware.id, loader: dependencies.loader.id, app: files.map(file => ids.get(file)).filter(Boolean)});
     list.replaceChildren();
     for (const file of files) {
@@ -146,10 +161,6 @@ export function setupAppPicker(model, changed = () => {}, report = () => {}) {
     pending = resolvePreload({apps: [], loader: 'bfe60t13x4bgbgc'}, model);
     try {
       dependencies = await pending;
-      for (const role of ['firmware', 'loader']) {
-        const record = dependencies[role];
-        get(`apps-${role}-selection`).value = `${record.name} · ${record.version}`;
-      }
       report('Firmware and loader selected automatically. App Loader has eight app slots.');
       render();
       await loadCatalog();
@@ -168,13 +179,7 @@ export function setupAppPicker(model, changed = () => {}, report = () => {}) {
       files.push(entry.file);
       if (entry.id) ids.set(entry.file, entry.id);
     }
-    if (dependencies) {
-      for (const role of ['firmware', 'loader']) {
-        const record = dependencies[role];
-        get(`apps-${role}-selection`).value = `${record.name} · ${record.version}`;
-      }
-    }
     render();
   }
-  return {update, prepare, setPlan, snapshot, restore, hasLocalFiles: () => files.some(file => !ids.has(file)), files: () => [...files], dependencies: () => dependencies};
+  return {update, prepare, setPlan, snapshot, restore, hasLocalFiles: () => roles.some(localFile) || files.some(file => !ids.has(file)), files: () => [...files], dependencies: () => dependencies};
 }

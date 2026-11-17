@@ -745,7 +745,7 @@ for (const picker of document.querySelectorAll('.file-row .file-control input'))
     }
     const names = [...picker.files].map(item => item.name);
     label.textContent = names.length > 1 ? `${names.length} files selected` :
-      names[0] || (picker.multiple ? 'Select files' : 'Select file');
+      names[0] || label.dataset.empty || (picker.multiple ? 'Select files' : 'Select file');
     label.title = names.join(', ');
     clear.hidden = !file;
     $('image-error').textContent = '';
@@ -1094,9 +1094,37 @@ function validateHostedFirmware(bytes) {
   });
 }
 
+async function validateLocalFirmware(bytes) {
+  let response;
+  try {
+    response = await fetch(watch3 ? './firmware/wp3' : './firmware', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/octet-stream'},
+      body: bytes,
+    });
+  } catch {
+    throw Error('The local firmware importer did not respond. Check that the emulator server is running and retry.');
+  }
+  if ([404, 405, 501].includes(response.status)) {
+    throw Error('This server has no firmware importer. Open the emulator served by the current serve.py.');
+  }
+  if (response.status === 204) return null;
+  if (!response.ok) throw Error(`Firmware package rejected: ${response.statusText}`);
+  const payload = await response.arrayBuffer();
+  const length = payload.byteLength >= 4 ? new DataView(payload).getUint32(0, true) : 0;
+  if (length < 0x208 || length > 0x34b000 || payload.byteLength - 4 - length <= 0 ||
+      payload.byteLength - 4 - length > 0x10000) {
+    throw Error('Invalid application or resources returned by the firmware importer.');
+  }
+  return {app: new Uint8Array(payload, 4, length), sdfs: new Uint8Array(payload, 4 + length)};
+}
+
 async function readBootOverrides() {
   const preset = bootPreset.value;
-  if (preset === 'apps') return {...await appPicker.prepare(validateHostedFirmware, text => status(text, false, 'loading')), catalogFace: faceCatalog.selected()};
+  if (preset === 'apps') {
+    return {...await appPicker.prepare(hosted ? validateHostedFirmware : validateLocalFirmware,
+      text => status(text, false, 'loading'), hosted), catalogFace: faceCatalog.selected()};
+  }
   const stock = preset === 'stock';
   const builtIn = builtInPresets.get(preset);
   const uploads = !stock && !builtIn;
@@ -1153,36 +1181,8 @@ async function readBootOverrides() {
         : '30903fc8ce6db4f8860bb554366635db3d2bcbb2d43827b3b50fbbac22b59353';
       if (digest === stockHash) return { nand };
     }
-    if (hosted) {
-      const {app, sdfs} = await validateHostedFirmware(packageBytes);
-      return {app, sdfs: new Blob([sdfs]), nand};
-    }
-    let response;
-    try {
-      response = await fetch(watch3 ? './firmware/wp3' : './firmware', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/octet-stream'},
-        body: packageBytes,
-      });
-    } catch {
-      throw Error('The local firmware importer did not respond. Check that the emulator server is running and retry.');
-    }
-    if ([404, 405, 501].includes(response.status)) {
-      throw Error('This server has no firmware importer. Open the emulator served by the current serve.py.');
-    }
-    if (response.status === 204) return { nand };
-    if (!response.ok) throw Error(`Firmware package rejected: ${response.statusText}`);
-    const payload = await response.arrayBuffer();
-    const length = new DataView(payload).getUint32(0, true);
-    if (length < 0x208 || length > 0x34b000 || payload.byteLength - 4 - length <= 0 ||
-        payload.byteLength - 4 - length > 0x10000) {
-      throw Error('Invalid application or resources returned by the firmware importer.');
-    }
-    return {
-      nand,
-      app: new Uint8Array(payload, 4, length),
-      sdfs: new Blob([new Uint8Array(payload, 4 + length)]),
-    };
+    const parsed = await (hosted ? validateHostedFirmware : validateLocalFirmware)(packageBytes);
+    return parsed ? {app: parsed.app, sdfs: new Blob([parsed.sdfs]), nand} : {nand};
   }
   if (!app) return { nand, face, catalogFace };
   if (app.size < 0x208 || app.size > 0x34b000) {
@@ -1426,8 +1426,8 @@ if (crossOriginIsolated || !hosted) {
 $('start').disabled = true;
 const unlockSelection = lockBootControls($('boot-images'));
 let preloadFailed = false;
+let draft;
 try {
-  let draft;
   const draftToken = sessionStorage.getItem(bootDraftKey);
   if (draftToken && crossOriginIsolated) {
     draft = await takeBootDraft(faceModel, draftToken);
@@ -1476,7 +1476,7 @@ try {
   unlockSelection();
   $('start').disabled = false;
 }
-const chooseAppsFirst = bootPreset.value === 'apps' && !appPicker.files().length;
+const chooseAppsFirst = !draft && bootPreset.value === 'apps' && !appPicker.files().length;
 if (!preloadFailed && crossOriginIsolated && chooseAppsFirst) {
   status('Firmware and App Loader selected. Add apps, then choose Boot selection.', false, 'notice');
 }
