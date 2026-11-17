@@ -65,14 +65,33 @@
   <aside class="side-panels" aria-label="Emulator settings">
     <section class="settings-group advanced">
       <h2>Simulation</h2>
+        <details class="settings-section" open>
+          <summary>Config</summary>
+        <label class="switch-label"><input id="watch-sound" type="checkbox" checked> Watch sound</label>
+        <label class="switch-label" id="vibration-control" hidden><input id="watch-vibration" type="checkbox" checked> Watch vibration</label>
+          <div id="storage-controls">
+            <label class="switch-label"><input id="cache-downloads" type="checkbox" checked> Cache downloads</label>
+            <label class="switch-label"><input id="remember-settings" type="checkbox" checked> Remember settings</label>
+            <label class="switch-label"><input id="persist-watch" type="checkbox" checked> Automatically save watch storage</label>
+            <small>Saves this watch’s flash for the same firmware and app selection. The watch boots again when reopened; running apps are not suspended.</small>
+            <small id="storage-status" role="status">Storage restores automatically when the same watch is reopened.</small>
+            <div class="panel-actions"><button id="save-watch-storage" type="button" disabled>Save now</button></div>
+            <button id="protect-storage" type="button">Keep browser data</button>
+            <small id="storage-usage"></small>
+            <details class="field"><summary>Clear saved data</summary>
+              <button id="clear-downloads" type="button">Clear downloaded files</button>
+              <button id="clear-settings" type="button">Clear remembered settings</button>
+              <button id="clear-watch-storage" type="button">Clear this watch’s storage</button>
+              <small>Clearing watch storage removes its saved settings, apps and history. The current session keeps running until restarted.</small>
+            </details>
+          </div>
+        </details>
       <details class="settings-section" open>
         <summary>Display</summary>
         <div class="brightness-control">
           <label for="brightness">Brightness <output id="brightness-level" for="brightness">100%</output></label>
           <input id="brightness" type="range" min="0" max="100" value="100">
         </div>
-        <label class="switch-label"><input id="watch-sound" type="checkbox" checked> Watch sound</label>
-        <label class="switch-label" id="vibration-control" hidden><input id="watch-vibration" type="checkbox" checked> Watch vibration</label>
         <label class="switch-label"><input id="show-frame" type="checkbox" checked> Show watch frame</label>
         <label class="switch-label"><input id="capture-frame" type="checkbox"> Include frame in screenshots</label>
         <label class="frame-color">Watch color
@@ -95,7 +114,7 @@
       <details class="settings-section" open>
         <summary>Power</summary>
         <div id="power">
-          <label for="battery">Battery level <output id="battery-level" for="battery">69%</output></label>
+          <label for="battery"><span id="battery-label">Battery level</span> <output id="battery-level" for="battery">69%</output></label>
           <input id="battery" type="range" min="0" max="100" value="69">
           <label class="switch-label"><input id="charger" type="checkbox"> Charger connected</label>
         </div>
@@ -116,25 +135,26 @@
             <label>Y <input type="number" min="-2000" max="2000" step="1" value="0" aria-label="Y in milligravity"></label>
             <label>Z <input type="number" min="-2000" max="2000" step="1" value="1000" aria-label="Z in milligravity"></label>
           </div>
-          <button id="reset-orientation" type="button">Reset orientation</button>
-        </div>
-      </details>
-      <details class="settings-section" id="gyro-controls" hidden>
-        <summary>Gyroscope</summary>
+      <div id="gyro-controls" hidden>
+        <label class="switch-label"><input id="gyro-follow" type="checkbox" checked> Follow model movement</label><small>Drag or use arrow keys to rotate. Gyroscope rates return to zero when movement stops. Turn this off to inject constant rates.</small>
         <fieldset class="sensor-fields gyro-fields">
           <legend>Angular velocity (°/s)</legend>
           <label for="gyro-x">X<input id="gyro-x" type="number" min="-2000" max="2000" step="1" value="0" required></label>
           <label for="gyro-y">Y<input id="gyro-y" type="number" min="-2000" max="2000" step="1" value="0" required></label>
           <label for="gyro-z">Z<input id="gyro-z" type="number" min="-2000" max="2000" step="1" value="0" required></label>
         </fieldset>
+      </div>
+          <button id="reset-orientation" type="button">Reset orientation</button>
+        </div>
       </details>
       <details class="settings-section" id="health-controls">
         <summary>Optical sensors</summary>
         <div id="raw-optical-controls" hidden>
-          <label class="switch-label"><input id="raw-optical" type="checkbox"> Feed raw optical samples</label>
+          <label class="switch-label"><input id="raw-optical" type="checkbox" aria-describedby="raw-optical-help"> Simulate optical sensor signals</label>
+          <small id="raw-optical-help">Send synthetic light-sensor samples through the stock driver and measurement algorithm. Use “Watch is worn” to simulate skin contact. Heart-rate and oxygen values below are disabled in this mode.</small>
           <label class="switch-label"><input id="optical-worn" type="checkbox" disabled> Watch is worn</label>
         </div>
-        <label class="switch-label"><input id="health-enabled" type="checkbox"> Simulate readings</label>
+        <label class="switch-label"><input id="health-enabled" type="checkbox"> Set measurement results</label>
         <div class="sensor-fields">
           <label>Heart rate (bpm)<input id="heart-rate" type="number" min="30" max="220" value="72" required></label>
           <label>Blood oxygen (%)<input id="blood-oxygen" type="number" min="70" max="100" value="98" required></label>
@@ -160,12 +180,18 @@
       <div class="panel-actions"><button id="reset-simulation" type="button">Reset simulation</button></div>
     </section>
     <section id="boot-images" class="settings-group">
-      <h2>Boot images</h2>
+      <div class="settings-heading">
+        <h2>Boot images</h2>
+        <button id="share-session" type="button" aria-label="Share session" title="Copy session link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m-4 4 4-4 4 4M5 13v7h14v-7"/></svg></button>
+      </div>
+      <small id="share-status" role="status"></small>
+      <input id="share-url" readonly hidden aria-label="Session link">
       <small><a href="https://cmf.arnv.dev/emulator/browser-guide/" target="_blank" rel="noopener noreferrer" title="Opens documentation in a new tab">Browser guide</a></small>
       <div id="boot-presets" class="field" hidden>
         <label for="boot-preset">Boot preset</label>
         <select id="boot-preset">
           <option value="stock">Stock firmware</option>
+          <option value="apps">Apps firmware</option>
           <option value="display-demo" hidden>Display test</option>
           <option value="bad-apple">Bad Apple</option>
           <option value="custom">Custom firmware</option>
@@ -173,6 +199,18 @@
         <small id="display-demo-guide" hidden>Press the crown to change the test pattern’s color.</small>
         <small id="bad-apple-guide" hidden>Choose a firmware package or supply the application and its SDFS file.</small>
       </div>
+      <details class="settings-section" id="fmc-firmware-catalog">
+        <summary>FMC firmware</summary>
+        <div class="field"><label for="fmc-firmware-selection">Firmware package</label><select id="fmc-firmware-selection"><option value="">Choose firmware</option></select></div>
+        <button id="fmc-firmware-use" type="button">Use selected firmware</button>
+      </details>
+      <section class="settings-section" id="apps-profile" hidden aria-label="Installable apps">
+        <div class="field"><label for="apps-firmware-selection">Firmware</label><input id="apps-firmware-selection" readonly></div>
+        <div class="field"><label for="apps-loader-selection">App Loader</label><input id="apps-loader-selection" readonly></div>
+        <div class="field"><label for="apps-catalog">FMC apps</label><select id="apps-catalog"><option value="">Choose an app</option></select><button id="apps-catalog-add" type="button">Add selected app</button></div>
+        <label class="file-control"><input id="apps-files" type="file" accept=".wp2app" multiple aria-label="Add app packages"><span>Add apps</span></label>
+        <ul id="apps-selection" aria-label="Selected apps"></ul>
+      </section>
       <details class="settings-section" id="firmware-package" open hidden>
         <summary>Firmware package</summary>
         <div class="field">

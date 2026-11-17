@@ -41,8 +41,14 @@ def container(data, model):
     declared = {node.findtext("file_name"): node for node in nodes}
     require(len(nodes) == len(declared) and set(declared) == set(files), "OTA manifest file mismatch")
     for name, node in declared.items():
-        for key, expected in (("file_size", len(files[name])), ("orig_size", len(files[name])),
-                              ("checksum", aota.crc32(files[name]))):
+        original_size = len(files[name])
+        manifest_checksum = aota.crc32(files[name])
+        if name != "TEMP.bin" and files[name].startswith(b"LZMA"):
+            original = decompress(files[name], 64 * 1024 * 1024, allow_padding=True)
+            original_size = len(original)
+            manifest_checksum = aota.crc32(original)
+        for key, expected in (("file_size", len(files[name])), ("orig_size", original_size),
+                              ("checksum", manifest_checksum)):
             require(int(node.findtext(key, ""), 0) == expected, f"Manifest {key} mismatch: {name}")
     return files, declared, end
 
@@ -106,6 +112,17 @@ def inner_payload(data, model, allow_padding=False):
 
 def verify_package(data, model):
     files, nodes, end = container(data, model)
+    reference_resources = {
+        "res.bin": "176cf2395556d02fef656f758a80bbf1eb6818edb8d2c072ed43b08b7246299f",
+        "fonts.bin": "59384c971bc5b940e1e5fc14c6216930e0caf7ed0a491d65a67dd78f1d4f015e",
+        "res_e.bin": "0cbaef7a9a3e91ca7735b938f2926f605b0b65644e1a63a25b7aa1bc623f3f65",
+        "sdfs_k.bin": "44a0e3ef8aac3e80758145e615c1c9acab82d678b789a3c511e43f321afdde70",
+    }
+    if model.name == "wp2" and set(files) == {"TEMP.bin", *reference_resources}:
+        require(all(hashlib.sha256(files[name]).hexdigest() == digest
+                    for name, digest in reference_resources.items()),
+                "This package changes stock resources; prepare matching virtual storage first")
+        files = {"TEMP.bin": files["TEMP.bin"]}
     if set(files) == {"TEMP.bin"}:
         destination(nodes, "TEMP.bin", model.temp, 2)
         require(len(files["TEMP.bin"]) <= model.temp.size, "TEMP exceeds partition capacity")

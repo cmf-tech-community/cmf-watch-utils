@@ -99,6 +99,7 @@ struct ActsState {
     unsigned spi2_reply_len, spi2_reply_pos, spi2_patch_block;
     bool health_hook;
     bool wp3_health_hook;
+    bool wp3_power_hook;
     unsigned ambient_lux;
     uint8_t als_regs[256];
     uint32_t health_readings;
@@ -126,6 +127,9 @@ struct ActsState {
     bool touch_down;
     uint8_t touch_reg;
     const char *input_path;
+    const char *storage_snapshot;
+    uint8_t *storage_original_nor;
+    uint8_t *storage_boot_nor;
     FILE *input;
     QEMUTimer *input_timer;
     int64_t touch_pressed_at, crown_pressed_at;
@@ -724,7 +728,23 @@ static void acts_input_tick(void *opaque)
         fseek(s->input, start, SEEK_SET);
         return;
     }
-    if (sscanf(line, "t %u %u %u", &down, &x, &y) == 3 &&
+    if (s->storage_snapshot && s->storage_boot_nor &&
+        sscanf(line, "snapshot %u", &x) == 1) {
+        g_autofree char *nor_path = g_strconcat(s->storage_snapshot, ".nor", NULL);
+        g_autofree char *nand_path = g_strconcat(s->storage_snapshot, ".nand", NULL);
+        g_autofree char *ack_path = g_strconcat(s->storage_snapshot, ".ack", NULL);
+        g_autofree uint8_t *nor = g_malloc(0x400000);
+        const uint8_t *current = memory_region_get_ram_ptr(&s->nor);
+        for (size_t i = 0; i < 0x400000; i++) {
+            nor[i] = current[i] == s->storage_boot_nor[i]
+                ? s->storage_original_nor[i] : current[i];
+        }
+        bool ok = g_file_set_contents(nor_path, (const char *)nor, 0x400000, NULL) &&
+            g_file_set_contents(nand_path, (const char *)s->nand.data,
+                                (gsize)NAND_PAGE * NAND_PAGES, NULL);
+        g_autofree char *ack = g_strdup_printf("%u %s", x, ok ? "ok" : "error");
+        g_file_set_contents(ack_path, ack, -1, NULL);
+    } else if (sscanf(line, "t %u %u %u", &down, &x, &y) == 3 &&
         down <= 1 && x < 466 && y < 466) {
         if (down && (!s->touch_down || s->auto_touch)) {
             s->touch_pressed_at = now;
@@ -2511,7 +2531,7 @@ static uint64_t acts_read(void *opaque, hwaddr addr, unsigned size)
     if (addr == 0xfffe0 && s->health_hook) {
         return s->health_readings;
     }
-    if (addr == 0xfffe4 && s->health_hook) {
+    if (addr == 0xfffe4 && (s->health_hook || s->wp3_power_hook)) {
         return s->battery_percent;
     }
     if (addr == 0xfffe8 && s->health_hook) {
@@ -3536,6 +3556,50 @@ static void acts_wp3_stock_brightness(ActsState *s)
     memcpy(slot, code, sizeof(code));
 }
 
+static bool acts_wp3_stock_power(ActsState *s)
+{
+    const uint8_t capacity_entry[] = {
+        0x2d, 0xe9, 0xf3, 0x41, 0x3c, 0x4d, 0xb5, 0xf8, 0xc2, 0x71,
+    };
+    const uint8_t notify_entry[] = {
+        0x2d, 0xe9, 0xff, 0x47, 0xc4, 0x4c, 0x94, 0xf8, 0xa5, 0x81,
+    };
+    const uint8_t capacity_code[] = {
+        0x06, 0x4b, 0x1b, 0x68, 0x64, 0x2b, 0x01, 0xd8, 0x18, 0x46, 0x70, 0x47,
+        0x2d, 0xe9, 0xf3, 0x41, 0x03, 0x4d, 0xb5, 0xf8, 0xc2, 0x71, 0xdf, 0xf8,
+        0x0c, 0xf0, 0x00, 0xbf, 0xe4, 0xff, 0x0f, 0x40, 0xe0, 0x0f, 0x00, 0x38,
+        0xb7, 0x7e, 0x12, 0x10,
+    };
+    const uint8_t notify_code[] = {
+        0x07, 0xb5, 0x0c, 0x4b, 0x19, 0x68, 0x64, 0x29, 0x0b, 0xd8, 0x0b, 0x4a,
+        0x92, 0xf8, 0x38, 0x32, 0x8b, 0x42, 0x06, 0xd0, 0xd2, 0xf8, 0xc8, 0x31,
+        0x1b, 0xb1, 0xb2, 0xf8, 0xc2, 0x01, 0x07, 0x4b, 0x98, 0x47, 0xbd, 0xe8,
+        0x07, 0x40, 0x2d, 0xe9, 0xff, 0x47, 0x03, 0x4c, 0x94, 0xf8, 0xa5, 0x81,
+        0xdf, 0xf8, 0x0c, 0xf0, 0xe4, 0xff, 0x0f, 0x40, 0xe0, 0x0f, 0x00, 0x38,
+        0xc1, 0xbe, 0x12, 0x10, 0xcf, 0xc0, 0x12, 0x10,
+    };
+    uint8_t *app = (uint8_t *)memory_region_get_ram_ptr(&s->nor) + 0x24000;
+    uint8_t *capacity = app + 0x127eac;
+    uint8_t *notify = app + 0x12c0c4;
+    uint8_t *capacity_slot = rom_ptr(0x7e00, sizeof(capacity_code));
+    uint8_t *notify_slot = rom_ptr(0x7d00, sizeof(notify_code));
+    const uint8_t empty[96] = {0};
+    if (!capacity_slot || !notify_slot ||
+        memcmp(capacity, capacity_entry, sizeof(capacity_entry)) ||
+        memcmp(notify, notify_entry, sizeof(notify_entry)) ||
+        memcmp(capacity_slot, empty, sizeof(capacity_code)) ||
+        memcmp(notify_slot, empty, sizeof(notify_code))) {
+        return false;
+    }
+    memcpy(capacity_slot, capacity_code, sizeof(capacity_code));
+    memcpy(notify_slot, notify_code, sizeof(notify_code));
+    stl_le_p(capacity, 0xf000f8df);
+    stl_le_p(capacity + 4, 0x7e01);
+    stl_le_p(notify, 0xf000f8df);
+    stl_le_p(notify + 4, 0x7d01);
+    return true;
+}
+
 static bool acts_wp3_stock_health(ActsState *s)
 {
     /* Stock 1.0.1.77 wear and instantaneous result getters. Route their
@@ -3794,9 +3858,14 @@ static void acts_init(MachineState *machine)
         error_report("Cannot load supplied boot ROM / compatibility ROM");
         exit(1);
     }
+    s->storage_snapshot = g_getenv("QEMU_WP2_STORAGE_SNAPSHOT");
+    if (s->storage_snapshot) {
+        s->storage_original_nor = g_memdup2(memory_region_get_ram_ptr(&s->nor), 0x400000);
+    }
     armv7m_load_kernel(ARM_CPU(first_cpu), machine->kernel_filename, 0x10000000, 0x1000000);
     if (s->watch3 && !machine->kernel_filename) {
         acts_wp3_stock_brightness(s);
+        s->wp3_power_hook = s->input_path && acts_wp3_stock_power(s);
         s->wp3_health_hook = s->input_path && acts_wp3_stock_health(s);
         if (s->wp3_health_hook) {
             memory_region_init_io(&s->optical_results, OBJECT(machine), &acts_wp3_optical_ops,
@@ -3823,6 +3892,9 @@ static void acts_init(MachineState *machine)
             error_report("Virtual ambient light requires stock 1.0.0.73");
             exit(1);
         }
+    }
+    if (s->storage_snapshot) {
+        s->storage_boot_nor = g_memdup2(memory_region_get_ram_ptr(&s->nor), 0x400000);
     }
 }
 

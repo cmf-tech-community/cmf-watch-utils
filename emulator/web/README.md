@@ -189,10 +189,11 @@ settings. **Hard reset to stock** discards the running session and selected
 files, then starts a fresh stock session.
 
 Open **Optical sensors** to set the heart rate and blood oxygen shown by
-the stock measurement apps. On Watch 3 Pro, **Simulate readings** supplies display values directly.
-Enable **Feed raw optical samples** and **Watch is worn** to have stock calculate
+the stock measurement apps. On Watch 3 Pro, **Set measurement results** supplies display values directly.
+Enable **Simulate optical sensor signals** and **Watch is worn** to have stock calculate
 measurements from a synthetic signal. Stock has displayed these results in its
-history screens; persistence across browser reloads remains unverified. Open **Gyroscope** on Watch 3 Pro to enter X, Y and Z angular
+history screens. **Config → Automatically save watch storage** retains flash by default across reloads.
+Open **Orientation** on Watch 3 Pro to control rotation from the model or enter angular
 velocity in degrees per second. Open **GPS** to send a stationary fix at a
 latitude and longitude in decimal degrees. The guest must start its GPS
 receiver, for example when starting an outdoor workout.
@@ -203,3 +204,22 @@ log or just the motor events.
 Pass `--frames-dir` to the staging script to include the four Nothing X
 front renders. Select **Watch color** in the browser to switch frames while
 the emulator runs.
+
+## Browser storage
+
+Config separates cached downloads, remembered simulation controls and saved watch flash.
+Downloads, controls and watch flash are retained automatically by default. Each can be disabled. IndexedDB
+stores downloaded blobs and compressed NOR/NAND checkpoints. Small control preferences use
+localStorage. See the [browser guide](../../site/src/content/docs/emulator/browser-guide.md#save-data-in-the-browser)
+for clearing, saving and browser storage limits.
+
+The runtime must support `QEMU_WP2_STORAGE_SNAPSHOT`. Its value is a filename prefix;
+`snapshot <sequence>` on the existing input stream writes `<prefix>.nor`, `<prefix>.nand`
+and finally `<prefix>.ack` containing the sequence and `ok` or `error`. The flash is captured
+within the QEMU event loop. Emulator-only NOR initialization patches are removed from the
+export; firmware writes are retained. This saves flash, not CPU or peripheral state.
+
+The browser stores both images in one IndexedDB transaction, keyed by model and hashes of
+the initial firmware and resources. Concurrent saves reject an out-of-date writer. Do not
+replace this with saving the initial MEMFS NAND file: the runtime consumes and unlinks that
+file on boot, and subsequent flash writes occur in the modeled NAND array.
