@@ -31,7 +31,7 @@ Stock starts at the highest manual brightness in the watch's own settings.
 The browser brightness slider adjusts the rendered display separately.
 The virtual speaker is on by default. If your browser blocks autoplay, tap or
 click the emulator to start audio. Use **Watch sound** under **Simulation →
-Display** to mute it. If the virtual watch runs slowly, audio stretches to
+Config** to mute it. If the virtual watch runs slowly, audio stretches to
 keep pace while preserving pitch.
 The stock preview plays the built-in ACT sounds through the virtual speaker.
 You can preview a ringtone by changing the volume in the watch’s **Sounds**
@@ -41,6 +41,11 @@ custom app, the slider changes the simulated battery voltage and the app
 decides how to report it.
 
 ### Watch faces and custom firmware
+
+**Simulation → Config** caches downloads and automatically saves the virtual
+watch's storage by default. Reopen the same setup to restore its last save.
+See [browser storage controls](/emulator/browser-guide/#save-data-in-the-browser)
+for the separate cache, settings and watch storage options.
 
 Choose **Display test** from **Boot preset** to run a bundled custom firmware.
 Press the crown to change the pattern’s color. **Hard reset to stock** discards
@@ -65,6 +70,10 @@ For an example of a custom Zephyr application, see the
 [case study](/devices/cmf-watch-pro-2/guides/bad-apple/).
 For Bluetooth OTA and recovery tests, use desktop QEMU.
 
+Both browser models offer the FMC firmware and watch-face catalogs. Watch Pro 2
+also supports compatible FMC apps through **Apps firmware**. Use the share
+button to copy the catalog selections. Follow the [app and share guide](/emulator/browser-guide/#installable-apps-from-fmc).
+
 On phones and devices that report limited memory, the browser limits display
 updates to about 30 fps to reduce work. The watch firmware still runs in software,
 so boot times and animation speed depend on the host device.
@@ -73,9 +82,9 @@ custom firmware boot or desktop QEMU for tests that depend on guest timing.
 
 ### Watch 3 Pro passcodes and optical measurements
 
-In **Simulation → Optical sensors**, enable **Feed raw optical samples** and
+In **Simulation → Optical sensors**, enable **Simulate optical sensor signals** and
 **Watch is worn**. Open **Heart rate** or **Blood oxygen** in the virtual watch
-to measure the synthetic signal with the stock app. **Simulate readings**
+to measure a repeating test pulse with the stock app. **Set measurement results**
 supplies values directly for UI tests.
 
 For a passcode test, open **Settings → Passcode** on the virtual watch and

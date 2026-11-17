@@ -1,6 +1,6 @@
 ---
 title: Use the browser emulator
-description: Start a virtual watch, try watch faces, load custom firmware and return to stock.
+description: Start a virtual watch, save its storage, load watch faces, firmware or apps, and share a setup.
 ---
 
 The browser emulator runs a virtual watch. Its controls and uploaded files
@@ -34,7 +34,7 @@ The save status shows when the latest checkpoint finished. An abrupt tab closure
 
 Cached files avoid repeat downloads. They do not eliminate firmware boot time, decompression or emulator startup. Switching models does not copy one model’s saved storage to the other. A share link contains selections, not your saved watch data or local uploads.
 
-**Protect saved data** asks the browser to protect this site’s storage from automatic eviction. The browser may decline. Private browsing, clearing site data and browser storage limits can remove saved data. Local storage is not a backup.
+**Protect saved data** asks your browser to keep this site's saves and downloads when disk space runs low. The browser may decline. Clearing site data still removes the files, even if the browser granted protection.
 
 **Clear saved data** has separate controls for downloaded files, remembered controls and all saved watch storage for the current model. Clearing saved watch storage does not interrupt the running watch; restart it to use fresh storage. **Hard reset to stock** discards the current saved state and starts a fresh stock watch.
 
@@ -49,11 +49,11 @@ the simulated voltage and its own battery driver instead.
 ### Optical sensors
 
 Under **Optical sensors**, **Set measurement results** supplies the chosen
-heart-rate and blood-oxygen values directly. Watch 3 Pro also offers **Simulate
-optical sensor signals**: synthetic samples pass through the stock sensor driver
-and measurement algorithm. **Watch is worn** controls simulated skin contact.
-The direct result fields are disabled in this mode; its output is calculated by
-the firmware and does not follow those fields.
+heart-rate and blood-oxygen values directly. On Watch 3 Pro, turn on **Simulate
+optical sensor signals** and **Watch is worn** to send a repeating test pulse to
+the stock sensor driver. Open Heart rate or Blood oxygen on the watch and let
+the firmware calculate the result. Turn off signal simulation to enter exact
+values again.
 
 ### Orientation and rotation
 
@@ -133,9 +133,10 @@ the matching patched Watch Pro 2 firmware and App Loader. Do not put them in
    packages, and installs them into virtual storage before booting.
 5. Open **Apps** in the watch's menu and select an installed app.
 
-No manual NAND upload is required. This prepares a new session; it does not
-perform a Bluetooth installation or preserve changes after a page reload.
-Local files must be selected again after reloading.
+The browser prepares the virtual storage automatically. With automatic saving
+enabled, reopening the same firmware, loader and app selection restores the
+last saved storage. Catalog apps can be reselected from the session URL.
+Select local uploads again after reloading.
 
 This profile currently supports Watch Pro 2. Watch 3 Pro shows an unavailable
 message because no compatible patched firmware and loader are configured.

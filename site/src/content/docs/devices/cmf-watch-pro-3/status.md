@@ -13,6 +13,7 @@ behavior with simulated hardware, not physical device compatibility.
 |---|---|---|
 | Package tools | Reference AOTA and seven SDFS archives rebuilt byte-for-byte. | Changes need their own checks; parser success does not prove boot. |
 | Stock boot | Desktop and browser reach the launcher and accept touch and crown input. | The emulator supplies a compatibility ROM and prepared storage. |
+| Browser storage | The hosted emulator completed an automatic save, restored it after closing and reopening the tab, and reached the stock UI. | Retention of specific passcodes and optical history was not part of this test. |
 | Stock faces | All seven normal stock faces and picker transitions were checked in Windows QEMU and the browser. | Always-on variants and every animation state were not covered. |
 | Custom app | Browser application and package imports booted test images; desktop booted an installed graphics test app. | Use an image built for the selected model. |
 | Passcodes | Browser tests covered numeric and gesture setup, off-wrist locking, rejected wrong entries and successful unlock. | Browser reload retention remains unverified. |
@@ -26,7 +27,7 @@ behavior with simulated hardware, not physical device compatibility.
 | Motion | Desktop level, tilt and gyro tests responded to supplied values. | No physical calibration or sensor-noise validation. |
 | Light | Desktop stock test displayed supplied lux and recorded a pass. | Shared controls alone do not establish identical browser results. |
 | GPS | Desktop stock factory screen updated between simulated coordinate pairs. | No satellite acquisition or radio test. |
-| Optical | Stock calculated heart rate and blood oxygen from raw synthetic samples and displayed history on desktop and browser. | Browser reload persistence remains unverified. |
+| Optical | Stock calculated heart rate and blood oxygen from raw synthetic samples and displayed history on desktop and browser. | Retention of optical history across a browser reload remains unverified. |
 | Speaker and microphone | Desktop speaker/aging tests captured non-silent output; Windows microphone capture supplied PCM to the guest. | No completed four-hour aging run or complete browser microphone parity. |
 | Motor | Desktop stock motor tests produced logged on/off transitions. | Browser vibration strength depends on the host device. |
 
