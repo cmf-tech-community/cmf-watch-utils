@@ -1,3 +1,4 @@
+import {cachedFetch} from './persistence.mjs';
 const origin = 'https://fmc.tools';
 const compatible = {
   wp2: 'published=true && (device="watch_pro_2" || device="")',
@@ -8,7 +9,7 @@ async function entries(model) {
   const faces = new Map();
   const query = new URLSearchParams({
     filter: compatible[model], perPage: 100, sort: '-created,id', expand: 'owner',
-    fields: 'id,collectionId,name,preview,bin,downloads,flashes,expand.owner.name',
+    fields: 'id,collectionId,name,preview,bin,updated,downloads,flashes,expand.owner.name',
   });
   let totalPages;
   for (let page = 1; totalPages === undefined || page <= totalPages; page++) {
@@ -33,14 +34,14 @@ function fileUrl(face, filename) {
 }
 
 export async function downloadCatalogFace(face) {
-  const response = await fetch(fileUrl(face, face.bin), {signal: AbortSignal.timeout(15000)});
+  const response = await cachedFetch(fileUrl(face, face.bin), {signal: AbortSignal.timeout(15000)}, face.updated || '');
   if (!response.ok) throw Error('FMC could not download this watch face.');
   const file = await response.blob();
   if (!file.size || file.size > 3021359) throw Error('This watch face is outside the supported size.');
   return file;
 }
 
-export function setupFaceCatalog(picker, initial, onApply, model = 'wp2') {
+export function setupFaceCatalog(picker, initial, onApply, model = 'wp2', onSelect = () => {}) {
   const choices = picker.querySelector('.catalog-options');
   const message = picker.querySelector('[role=status]');
   const clear = picker.querySelector('.catalog-clear');
@@ -67,6 +68,7 @@ export function setupFaceCatalog(picker, initial, onApply, model = 'wp2') {
   function select(face) {
     selected = face;
     updateSelection();
+    onSelect(face);
   }
   clear.onclick = () => select(undefined);
   apply.onclick = () => onApply(selected);
@@ -139,6 +141,7 @@ export function setupFaceCatalog(picker, initial, onApply, model = 'wp2') {
   });
   return {
     selected: () => selected,
+    select,
     markApplied(face) {
       applied = face;
       updateSelection();

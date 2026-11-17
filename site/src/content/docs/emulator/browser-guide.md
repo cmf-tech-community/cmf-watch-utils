@@ -20,6 +20,53 @@ The model name above the watch switches to the other model's page. Choose the
 model your files were made for. If startup fails, follow
 [browser troubleshooting](/getting-started/troubleshooting/#the-browser-emulator-freezes-goes-black-or-has-broken-audio).
 
+## Save data in the browser
+
+**Simulation → Config** separates three kinds of local storage:
+
+- **Cache downloads** keeps downloaded firmware, app packages, watch faces and emulator files for reuse. It is enabled by default. Clearing the download cache does not erase saved watch data. The cache is limited to 256 MB; older entries are removed as needed.
+- **Remember settings** retains simulation controls, sound and appearance choices separately for each watch model. It is enabled by default. Uploaded files must be selected again.
+- **Automatically save watch storage** preserves the virtual watch’s NOR and NAND flash, including settings, installed apps and history that its firmware has written. It is enabled by default and can be turned off. Saves are separated by model and the contents of the selected firmware, resources and apps; a different selection starts with its own storage.
+
+With automatic saving enabled, the emulator saves once stock is ready, after interactions settle and every 15 seconds while visible. It also attempts a save when the page becomes hidden, and finishes a save before **Stop**, model changes and firmware switches. Reopening the same firmware restores its saved storage automatically. **Save now** is an optional shortcut.
+
+The save status shows when the latest checkpoint finished. An abrupt tab closure, browser crash or power loss can interrupt a pending save; changes since the last completed checkpoint may be lost. This is a flash checkpoint, not a suspended CPU session: the watch boots again when reopened, and changes the firmware has not written to flash are not included.
+
+Cached files avoid repeat downloads. They do not eliminate firmware boot time, decompression or emulator startup. Switching models does not copy one model’s saved storage to the other. A share link contains selections, not your saved watch data or local uploads.
+
+**Keep browser data** asks the browser to protect this site’s storage from automatic eviction. The browser may decline. Private browsing, clearing site data and browser storage limits can remove saved data. Local storage is not a backup.
+
+**Clear saved data** has separate controls for downloaded files, remembered controls and all saved watch storage for the current model. Clearing saved watch storage does not interrupt the running watch; restart it to use fresh storage. **Hard reset to stock** discards the current saved state and starts a fresh stock watch.
+
+## Simulate hardware inputs
+
+### Battery
+
+The battery slider sets the percentage reported by supported stock firmware.
+This is a testing override, not a battery-discharge model. Custom firmware uses
+the simulated voltage and its own battery driver instead.
+
+### Optical sensors
+
+Under **Optical sensors**, **Set measurement results** supplies the chosen
+heart-rate and blood-oxygen values directly. Watch 3 Pro also offers **Simulate
+optical sensor signals**: synthetic samples pass through the stock sensor driver
+and measurement algorithm. **Watch is worn** controls simulated skin contact.
+The direct result fields are disabled in this mode; its output is calculated by
+the firmware and does not follow those fields.
+
+### Orientation and rotation
+
+Under **Simulation → Orientation**, drag the small watch model or focus it and
+use the arrow keys. Its tilt sets the gravity readings supplied to the watch.
+
+On Watch 3 Pro, **Follow model movement** also produces gyroscope readings while
+the model rotates. These readings describe rotation speed in degrees per second,
+not the angle of the watch. They return to zero when movement stops, even if the
+watch remains tilted. Disable this option to enter constant X, Y and Z rotation
+rates for a sensor test. The model gesture controls tilt; manual Z input also
+allows tests of rotation around the face's perpendicular axis.
+
 ## Try a watch face
 
 A watch face changes the clock screen. It is different from a firmware package,
@@ -76,12 +123,57 @@ These are different from a raw `app.bin` or an AOTA firmware update. They need
 the matching patched Watch Pro 2 firmware and App Loader. Do not put them in
 **Application image** or **Firmware package**.
 
-The [CMF Watch SDK](https://github.com/fmctools/cmf-watch-sdk) describes the
-loader installation and desktop emulator workflow. The
-[community apps repository](https://github.com/fmctools/apps) contains app sources
-and publishing instructions. This browser interface does not currently install
-`.wp2app` packages. The SDK's documented target is Watch Pro 2 stock 1.0.0.73;
-these packages do not establish Watch 3 Pro app compatibility.
+1. Stop emulation and select **Apps firmware** under **Boot preset**.
+2. The compatible patched firmware and App Loader are selected automatically.
+   Their names and versions appear above the app list.
+3. Choose an app from **FMC apps** and click **Add selected app**, or select one
+   or more local `.wp2app` files under **Add apps**. Up to eight apps fit in the
+   loader's slots. Each selected file has a **Remove** control.
+4. Start emulation. The browser downloads the firmware and loader, checks the
+   packages, and installs them into virtual storage before booting.
+5. Open **Apps** in the watch's menu and select an installed app.
+
+No manual NAND upload is required. This prepares a new session; it does not
+perform a Bluetooth installation or preserve changes after a page reload.
+Local files must be selected again after reloading.
+
+This profile currently supports Watch Pro 2. Watch 3 Pro shows an unavailable
+message because no compatible patched firmware and loader are configured.
+The [CMF Watch SDK](https://github.com/fmctools/cmf-watch-sdk) describes app
+development. The [community apps repository](https://github.com/fmctools/apps)
+contains sources and publishing instructions.
+
+### Share a configured session
+
+Catalog selections update the page URL. **Share session** copies a link to the
+selected firmware, loader, apps and watch face. Local uploads cannot be included;
+recipients must select those files themselves. The link recreates the boot
+configuration, not the running watch's memory or saved settings.
+
+The firmware catalog remains available while emulation runs. **Use selected
+firmware** restarts the virtual watch when necessary to apply the selection.
+
+Append FMC record IDs to the model page's URL:
+
+| Parameter | Selection |
+|---|---|
+| `watchface=<id>` | A watch face for that model |
+| `firmware=<id>` | One firmware catalog record |
+| `loader=<id>` | One compatible App Loader record |
+| `app=<id>` | An app; repeat this parameter for multiple apps |
+
+For example, `/emulator/watch-pro-2/?app=pyccglfsfijw463` loads Orbit and selects
+the compatible firmware and loader automatically. Add
+`&app=m00yj6hopd9a0zs` to include Sky Hop. Selections appear in the corresponding
+controls before startup. An explicit firmware or loader replaces that automatic
+selection and must be compatible with the apps.
+
+IDs refer to catalog records, not immutable releases: the files behind a record
+can change when its author updates it. Invalid IDs, incompatible models and
+unsupported combinations produce an error rather than silently booting stock.
+Firmware packages with resources that differ from the bundled base require
+matching virtual storage; selecting a catalog entry does not make every firmware
+version compatible. **Hard reset to stock** clears URL selections as well.
 
 ## Return to stock
 

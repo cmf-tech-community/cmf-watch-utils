@@ -31,6 +31,17 @@ button:disabled { opacity: .35; cursor: default; }
 }
 .mark { width: 19px; height: 19px; fill: #cc483a; }
 .muted { color: var(--muted); }
+.settings-group a {
+  color: #b8b8b8;
+  text-decoration: underline;
+  text-decoration-color: #707070;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+.settings-group a:hover, .settings-group a:focus-visible {
+  color: #fff;
+  text-decoration-color: currentColor;
+}
 main { max-width: 990px; margin: auto; padding: 24px 16px; }
 h1 { margin: 0 0 14px; font-size: 19px; font-weight: 500; }
 .model-picker { position: relative; width: fit-content; }
@@ -466,6 +477,10 @@ details[open] > summary::after { transform: rotate(90deg); }
 .settings-group .switch-label { min-height: 24px; }
 .panel-actions { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 12px; }
 .panel-actions button { padding: 5px 9px; }
+#storage-controls { display: grid; gap: 10px; margin-top: 12px; }
+#storage-controls .panel-actions { margin-top: 0; }
+#storage-controls button { width: 100%; padding: 7px 9px; text-align: left; }
+#storage-controls small { margin: 0; line-height: 1.5; }
 #reset-orientation { justify-self: end; }
 .orientation-face {
   transform: translateZ(var(--case-half-depth));
@@ -620,3 +635,13 @@ body[data-model="wp3"] .case[data-frame] { --bezel-width: 46%; --bezel-center: 5
   }
 }
 .diagnostics pre, .side-panels > .settings-group { scrollbar-width: thin; scrollbar-color: #515151 #0a0a0a; }
+#apps-selection { list-style: none; padding: 0; margin: 12px 0; }
+#apps-selection li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+#apps-selection li span { min-width: 0; overflow-wrap: anywhere; }
+#apps-selection button { flex-shrink: 0; }
+.settings-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.settings-heading h2 { margin: 0; font-size: 13px; font-weight: 550; }
+.settings-heading #share-session { display: grid; place-items: center; width: 32px; height: 32px; padding: 6px; border: 0; background: transparent; }
+#share-session svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+#share-session:hover { background: #202020; }
+#fmc-firmware-use { display: block; margin-top: 12px; min-height: 32px; }

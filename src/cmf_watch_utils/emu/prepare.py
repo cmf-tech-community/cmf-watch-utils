@@ -83,6 +83,18 @@ def build_nor(stock, profile):
     return nor, files["app.bin"]
 
 
+def empty_app_volume():
+    volume = bytearray(b"\xff" * (10 * 1024 * 1024))
+    volume[:512 * 512] = bytes(512 * 512)
+    volume[:11] = b"\xeb\xfe\x90MSDOS5.0"
+    struct.pack_into("<HBHBHHBHHHII", volume, 11,
+                     512, 4, 1, 1, 512, 20480, 0xf8, 479, 63, 255, 0, 0)
+    volume[36:62] = b"\x80\x00\x29\x00\x00\x21\x48NO NAME    FAT     "
+    volume[510:512] = b"\x55\xaa"
+    volume[512:516] = b"\xf8\xff\xff\xff"
+    return volume
+
+
 def stage_resources(stock, profile, target):
     wp3 = profile.model.name == "wp3"
     partitions = WP3_PARTITIONS if wp3 else PARTITIONS
@@ -99,6 +111,10 @@ def stage_resources(stock, profile, target):
             require(payload.startswith(b"sdfs.bin") and len(padded) <= size, f"Invalid SDFS for {name}")
             struct.pack_into("<III", header, 12 * index, offset, len(padded), STAGING + staging.tell())
             staging.write(padded)
+        if not wp3:
+            payload = empty_app_volume()
+            struct.pack_into("<III", header, 12 * len(resources), layout["udisk"][0], len(payload), STAGING + staging.tell())
+            staging.write(payload)
         staging.seek(0)
         staging.write(header)
 

@@ -1,7 +1,11 @@
+import {cachedFetch, preferences} from './persistence.mjs';
+import {setupStorage, restoreSettings} from './storage-controls.mjs';
 import {downloadCatalogFace, setupFaceCatalog} from './catalog.mjs';
 import {fetchFixture} from './fixtures.mjs';
 import {installWatchFace} from './face.mjs';
 import {speakerSlice} from './speaker.mjs';
+import {setupAppPicker} from './app-picker.mjs';
+import {parsePreload, catalogRecord} from './preload.mjs';
 
 const $ = (id) => document.getElementById(id);
 const panel = $('panel');
@@ -11,6 +15,7 @@ const hosted = document.body.hasAttribute('data-hosted');
 const bundledStock = document.body.hasAttribute('data-stock-ready');
 const watch3 = document.body.dataset.model === 'wp3';
 const faceModel = watch3 ? 'wp3' : 'wp2';
+restoreSettings(faceModel, document.querySelector('.advanced'));
 const modelSlug = watch3 ? 'watch-pro-3' : 'watch-pro-2';
 const modelToggle = $('model-toggle');
 if (modelToggle) {
@@ -35,6 +40,75 @@ const stockFiles = $('stock-files');
 const frameFile = $('frame-file');
 const frameOverrides = new Map();
 const bootPreset = $('boot-preset');
+function updateLink(values) {
+  const url = new URL(location.href);
+  for (const [key, value] of Object.entries(values)) {
+    url.searchParams.delete(key);
+    for (const item of Array.isArray(value) ? value : value ? [value] : []) url.searchParams.append(key, item);
+  }
+  history.replaceState(null, '', url);
+}
+const appPicker = setupAppPicker(faceModel, updateLink, (text, error = false) => status(text, error, 'notice'));
+$('share-session').onclick = async () => {
+  const url = new URL(location.href);
+  for (const key of ['idle', 'debug', 'isolation-reload']) url.searchParams.delete(key);
+  $('share-url').value = url.href;
+  const local = appPicker.hasLocalFiles() || [...document.querySelectorAll('input[type=file]')].some(input => input.id !== 'apps-files' && input.files.length && !(input.id === 'firmware-file' && url.searchParams.has('firmware')));
+  try {
+    await navigator.clipboard.writeText(url.href);
+    $('share-status').textContent = local ? 'Link copied. Local uploads are not included.' : 'Link copied.';
+  } catch {
+    $('share-url').hidden = false;
+    $('share-url').focus();
+    $('share-url').select();
+    $('share-status').textContent = 'Copy this link manually. Local uploads are not included.';
+  }
+};
+async function selectCatalogFirmware(record) {
+  status(`Downloading ${record.name} · ${record.version}…`, false, 'loading');
+  const response = await cachedFetch(`https://fmc.tools/api/firmwares/${record.id}/download`, {signal: AbortSignal.timeout(90000)}, record.updated || record.version || '');
+  if (!response.ok) throw Error(`Could not download ${record.name}.`);
+  const selection = new DataTransfer();
+  selection.items.add(new File([await response.blob()], `${record.name}-${record.version}.bin`));
+  $('firmware-file').files = selection.files;
+  $('firmware-file').dispatchEvent(new Event('change'));
+  bootPreset.value = 'custom';
+  bootPreset.dispatchEvent(new Event('change'));
+  status(`Selected ${record.name} · ${record.version}.`, false, 'notice');
+  const select = $('fmc-firmware-selection');
+  if (![...select.options].some(option => option.value === record.id)) select.add(new Option(`${record.name} · ${record.version}`, record.id));
+  select.value = record.id;
+  updateLink({firmware: record.id, loader: null, app: null, preset: null});
+}
+const firmwareRecords = new Map();
+$('fmc-firmware-catalog').addEventListener('toggle', async () => {
+  if (!$('fmc-firmware-catalog').open || firmwareRecords.size) return;
+  try {
+    const query = new URLSearchParams({filter: `published=true && device="${watch3 ? 'watch_3_pro' : 'watch_pro_2'}" && kind!="loader"`, perPage: '100', sort: '-updated'});
+    for (let page = 1; ; page++) {
+      query.set('page', page);
+      const response = await fetch(`https://fmc.tools/api/collections/firmwares/records?${query}`, {signal: AbortSignal.timeout(15000)});
+      if (!response.ok) throw Error('Could not load the FMC firmware catalog.');
+      const data = await response.json();
+      for (const record of data.items) {
+        firmwareRecords.set(record.id, record);
+        if (![...$('fmc-firmware-selection').options].some(option => option.value === record.id)) $('fmc-firmware-selection').add(new Option(`${record.name} · ${record.version}`, record.id));
+      }
+      if (page >= data.totalPages) break;
+    }
+  } catch (error) { status(error.message, true); }
+});
+$('fmc-firmware-use').onclick = async () => {
+  const record = firmwareRecords.get($('fmc-firmware-selection').value);
+  if (!record) return;
+  if (bootInProgress) {
+    try { await storage.checkpoint(); } catch (error) { status(error.message, true); return; }
+    updateLink({firmware: record.id, loader: null, app: null, preset: null, watchface: null});
+    location.reload();
+    return;
+  }
+  try { await selectCatalogFirmware(record); } catch (error) { status(error.message, true); }
+};
 const builtInPresets = new Map();
 if (document.body.hasAttribute('data-demo-ready')) {
   builtInPresets.set('display-demo', 'display-demo.bin');
@@ -45,6 +119,7 @@ if (document.body.hasAttribute('data-bad-apple-ready')) {
 }
 const needsBaseFiles = hosted && !bundledStock;
 let bootInProgress = false;
+let stockPowerReady = false;
 let bootedCatalogFace;
 let nextFace;
 const nextFaceKey = `${faceModel}-next-face`;
@@ -55,7 +130,12 @@ if (crossOriginIsolated) {
   } catch {}
 }
 const faceCatalog = setupFaceCatalog($('face-catalog'), nextFace, face => {
+  updateLink({watchface: face?.id});
   if (bootInProgress) {
+    if (bootPreset.value === 'apps') {
+      $('image-error').textContent = 'Stop the watch before changing the app session’s watch face.';
+      return;
+    }
     if (needsBaseFiles) {
       $('image-error').textContent = 'Stop the watch and select the base files again before applying a face.';
       return;
@@ -69,7 +149,7 @@ const faceCatalog = setupFaceCatalog($('face-catalog'), nextFace, face => {
     faceFile.dispatchEvent(new Event('change'));
   }
   $('start').click();
-}, faceModel);
+}, faceModel, face => updateLink({watchface: face?.id}));
 const requiredFixtures = ['nor.bin', 'nand-defaults.bin', 'nand-id.bin', 'compat.bin', 'app.bin'];
 let runtime, timer, pointer=null, crownDown=false, frames=0, lastFrame=null;
 let lastFrameFile;
@@ -80,6 +160,13 @@ let audioFile, audioData, audioChanged = 0;
 let lastAudioPacket;
 let customApp = false;
 let runtimeLog='', halted=false, nextLog=0;
+const storage = setupStorage(faceModel, {getRuntime: () => runtime, input, report: (text, error) => status(text, error, 'notice'), isStopped: () => halted || !frames || (!customApp && !stockPowerReady)});
+for (const link of document.querySelectorAll('#model-list a')) link.addEventListener('click', async event => {
+  if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  try { await storage.checkpoint(); location.assign(link.href); }
+  catch (error) { status(error.message, true); }
+});
 const debug=new URLSearchParams(location.search).has('debug');
 const encoder = new TextEncoder();
 const fatalGuestOutput = /ZEPHYR FATAL ERROR|\bHARD FAULT\b|Kernel panic|Lockup: can't escalate/i;
@@ -87,7 +174,7 @@ function status(text,error=false,state) {
   const message = $('status');
   message.textContent = text;
   message.toggleAttribute('data-error', error);
-  $('notification').hidden = !error && state !== 'loading' && state !== 'timeout';
+  $('notification').hidden = !error && state !== 'loading' && state !== 'timeout' && state !== 'notice';
   $('recover').hidden = !error && state !== 'timeout';
 }
 function guestStopped(message) {
@@ -101,8 +188,11 @@ function guestStopped(message) {
   }
 }
 
-function restartFor(preset, face) {
+async function restartFor(preset, face) {
+  try { await storage.checkpoint(); } catch (error) { status(error.message, true); return; }
   const url = new URL(location.href);
+  for (const key of ['firmware', 'loader', 'app', 'watchface', 'idle']) url.searchParams.delete(key);
+  sessionStorage.removeItem(nextFaceKey);
   if (face) {
     try {
       sessionStorage.setItem(nextFaceKey, JSON.stringify(face));
@@ -112,11 +202,13 @@ function restartFor(preset, face) {
     }
   }
   url.searchParams.set('preset', preset);
+  if (face?.id) url.searchParams.set('watchface', face.id);
   if (preset !== 'stock' && !builtInPresets.has(preset)) url.searchParams.set('idle', '1');
   location.replace(url.href);
 }
 
-function bootStock() {
+async function bootStock() {
+  try { await storage.reset(); } catch (error) { status(error.message, true); return; }
   restartFor('stock');
 }
 
@@ -205,6 +297,7 @@ function renderFrame() {
     }
     context.putImageData(pixels,0,0);frames++;
     if(frames===1 && !halted) {
+      if (customApp) storage.ready();
       faceCatalog.markApplied(bootedCatalogFace);
       status('Firmware is rendering locally.',false,'running');
     }
@@ -219,7 +312,7 @@ function renderFrame() {
   }
 }
 const sound = $('watch-sound');
-try { sound.checked = sessionStorage.getItem('wp2-watch-sound') !== 'off'; } catch {}
+
 function prepareSpeaker() {
   if (!sound.checked || halted) return;
   try {
@@ -238,7 +331,7 @@ function unlockSpeaker() {
   if (sound.checked && !halted && speaker?.state === 'suspended') speaker.resume().catch(() => {});
 }
 sound.onchange = () => {
-  try { sessionStorage.setItem('wp2-watch-sound', sound.checked ? 'on' : 'off'); } catch {}
+
   if (sound.checked) {
     unlockSpeaker();
   } else if (speakerOutput) {
@@ -426,6 +519,11 @@ function render() {
   nextLog=now+500;
   try {
     const uart=readLog('/watch/uart.log',32000).split('\n').filter(line=>!line.includes('#CD:')).join('\n');
+    if (!stockPowerReady && (watch3 ? /view 16 painted/ : /view \d+ painted/).test(uart)) {
+      stockPowerReady = true;
+      storage.ready();
+      sendPower();
+    }
     let diagnostic='';
     if(debug)try{diagnostic=readLog('/watch/qemu.log',12000);}catch{}
     const logPanel = $('log');
@@ -484,7 +582,7 @@ function updateBootOptions() {
   $('firmware-package').hidden = !uploads;
   $('raw-applications').hidden = !uploads;
   $('advanced-boot-files').hidden = !uploads && !needsBaseFiles;
-  $('face-catalog').hidden = !stock;
+  $('face-catalog').hidden = !stock && preset !== 'apps';
   $('watch-face-upload').hidden = !stock;
   $('display-demo-guide').hidden = preset !== 'display-demo';
   $('bad-apple-guide').hidden = preset !== 'bad-apple' || !uploads;
@@ -505,6 +603,7 @@ function updateBootOptions() {
       restartFor(bootPreset.value);
       return;
     }
+    if (bootPreset.value !== 'apps') updateLink({preset: bootPreset.value, firmware: null, loader: null, app: null});
     updateBootOptions();
     $('image-error').textContent = '';
   };
@@ -606,10 +705,12 @@ roller.addEventListener('wheel', event => {
   event.preventDefault();
   rotateCrown(event.deltaY > 0 ? 2 : -2);
 }, { passive: false });
-for (const picker of document.querySelectorAll('.file-control input')) {
+for (const picker of document.querySelectorAll('.file-row .file-control input')) {
   const label = picker.parentElement.querySelector('.file-name');
   const clear = picker.closest('.file-row').querySelector('.clear-file');
   picker.addEventListener('change', () => {
+    if (picker.id === 'firmware-file') updateLink({firmware: null});
+    if (picker.id === 'face-file') updateLink({watchface: null});
     const file = picker.files[0];
     if (picker === frameFile) {
       if (file) frameOverrides.set(frameColor.value, file);
@@ -632,19 +733,21 @@ for (const picker of document.querySelectorAll('.file-control input')) {
   };
 }
 
-let powerChanged = false;
+let powerChanged = preferences().remember !== false && Boolean(preferences()[faceModel]);
 let powerTimer;
 function sendPower() {
+  if (!customApp && !stockPowerReady) return;
   const percent = Number($('battery').value);
   const voltage = percent <= 69
     ? 3300 + 700 * percent / 69
     : 4000 + 350 * (percent - 69) / 31;
   const charger = Number($('charger').checked);
-  input(customApp || watch3 ? `p ${Math.round(voltage)} ${charger}` : `p 4000 ${charger} ${percent}`);
+  input(customApp ? `p ${Math.round(voltage)} ${charger}` : `p 4000 ${charger} ${percent}`);
 }
 function updateBattery() {
   const percent = syncSliderFill($('battery'));
   $('battery-level').value = percent;
+  $('battery').setAttribute('aria-valuetext', $('battery-level').value);
 }
 $('battery').oninput = () => {
   powerChanged = true;
@@ -764,7 +867,39 @@ let drag;
 let motionTimer;
 
 const axes = [...$('orientation-axes').querySelectorAll('input')];
-const gyroAxes = [...$('gyro-controls').querySelectorAll('input')];
+const gyroAxes = [...$('gyro-controls').querySelectorAll('input[type=number]')];
+const gyroFollow = $('gyro-follow');
+let gyroStopTimer;
+let gyroLastTime;
+function stopModelGyroscope() {
+  clearTimeout(gyroStopTimer);
+  gyroLastTime = undefined;
+  if (!watch3 || !gyroFollow.checked) return;
+  for (const axis of gyroAxes) axis.value = 0;
+  sendGyroscope();
+}
+function followModelGyroscope(nextPitch, nextRoll) {
+  if (!watch3 || !gyroFollow.checked) return;
+  const now = performance.now();
+  const seconds = Math.max(0.016, (now - (gyroLastTime ?? now - 50)) / 1000);
+  const radians = pitch * Math.PI / 180;
+  const delta = (next, previous) => ((next - previous + 180) % 360 + 360) % 360 - 180;
+  const pitchRate = delta(nextPitch, pitch) / seconds;
+  const rollRate = delta(nextRoll, roll) / seconds;
+  const rates = [pitchRate, rollRate * Math.cos(radians), -rollRate * Math.sin(radians)];
+  gyroAxes.forEach((axis, i) => { axis.value = Math.round(Math.max(-2000, Math.min(2000, rates[i]))); });
+  gyroLastTime = now;
+  sendGyroscope();
+  clearTimeout(gyroStopTimer);
+  gyroStopTimer = setTimeout(stopModelGyroscope, 120);
+}
+gyroFollow.onchange = () => {
+  clearTimeout(gyroStopTimer);
+  gyroLastTime = undefined;
+  for (const axis of gyroAxes) axis.readOnly = gyroFollow.checked;
+  if (gyroFollow.checked) stopModelGyroscope();
+};
+gyroFollow.onchange();
 
 function sendGyroscope() {
   if (!watch3 || gyroAxes.some(axis => !axis.validity.valid)) return;
@@ -784,7 +919,8 @@ function showOrientation() {
   }
 }
 
-function setOrientation(nextPitch, nextRoll) {
+function setOrientation(nextPitch, nextRoll, moving = false) {
+  if (moving) followModelGyroscope(nextPitch, nextRoll);
   pitch = nextPitch % 360;
   roll = nextRoll % 360;
   const x = pitch * Math.PI / 180;
@@ -819,6 +955,8 @@ for (const axis of axes) {
   });
 }
 
+axes[0].dispatchEvent(new Event('input'));
+
 orientationPad.addEventListener('pointerdown', event => {
   if (event.button !== 0 || drag) return;
   orientationPad.focus();
@@ -828,22 +966,22 @@ orientationPad.addEventListener('pointerdown', event => {
 orientationPad.addEventListener('pointermove', event => {
   if (drag?.id !== event.pointerId) return;
   setOrientation(drag.pitch - (event.clientY - drag.y) * 2,
-    drag.roll + (event.clientX - drag.x) * 2);
+    drag.roll + (event.clientX - drag.x) * 2, true);
 });
-orientationPad.addEventListener('lostpointercapture', () => { drag = undefined; });
+orientationPad.addEventListener('lostpointercapture', () => { drag = undefined; stopModelGyroscope(); });
 orientationPad.addEventListener('keydown', event => {
   switch (event.key) {
-    case 'ArrowUp': setOrientation(pitch + 5, roll); break;
-    case 'ArrowDown': setOrientation(pitch - 5, roll); break;
-    case 'ArrowLeft': setOrientation(pitch, roll - 5); break;
-    case 'ArrowRight': setOrientation(pitch, roll + 5); break;
+    case 'ArrowUp': setOrientation(pitch + 5, roll, true); break;
+    case 'ArrowDown': setOrientation(pitch - 5, roll, true); break;
+    case 'ArrowLeft': setOrientation(pitch, roll - 5, true); break;
+    case 'ArrowRight': setOrientation(pitch, roll + 5, true); break;
     case 'Home': setOrientation(0, 0); break;
     default: return;
   }
   event.preventDefault();
   event.stopPropagation();
 });
-$('reset-orientation').onclick = () => setOrientation(0, 0);
+$('reset-orientation').onclick = () => { stopModelGyroscope(); setOrientation(0, 0); };
 $('reset-simulation').onclick = () => {
   $('brightness').value = 100;
   updateBrightness();
@@ -933,6 +1071,7 @@ function validateHostedFirmware(bytes) {
 
 async function readBootOverrides() {
   const preset = bootPreset.value;
+  if (preset === 'apps') return {...await appPicker.prepare(validateHostedFirmware, text => status(text, false, 'loading')), catalogFace: faceCatalog.selected()};
   const stock = preset === 'stock';
   const builtIn = builtInPresets.get(preset);
   const uploads = !stock && !builtIn;
@@ -944,7 +1083,7 @@ async function readBootOverrides() {
   const catalogFace = stock ? faceCatalog.selected() : undefined;
   if (builtIn && !firmware && !app && !sdfs) {
     const load = async name => {
-      const response = await fetch(new URL(`./presets/${name}`, import.meta.url));
+      const response = await cachedFetch(new URL(`./presets/${name}`, import.meta.url), {}, 'bundle');
       if (!response.ok) throw Error('The selected firmware preset could not be loaded.');
       return response.blob();
     };
@@ -1093,7 +1232,8 @@ async function loadFixtures(nandOverride, useStockAudio) {
   }
 }
 
-$('stop').onclick=()=>{
+$('stop').onclick=async()=>{
+  try { await storage.checkpoint(); } catch (error) { status(error.message, true); return; }
   const url = new URL(location.href);
   url.searchParams.set('idle', '1');
   location.replace(url);
@@ -1104,8 +1244,8 @@ $('start').onclick=async()=>{
   try {
     if(!crossOriginIsolated)throw Error('Cross-origin isolation is required. Start the supplied local server.');
     $('image-error').textContent = '';
-    const pickers = ['stock-files', 'firmware-file', 'app-file', 'sdfs-file', 'face-file', 'nand-file']
-      .map($);
+    const pickers = [...['stock-files', 'firmware-file', 'app-file', 'sdfs-file', 'face-file', 'nand-file'].map($),
+      ...document.querySelectorAll('#apps-profile input, #apps-profile select, #apps-profile button')];
     for (const picker of pickers) picker.disabled = true;
     if ($('firmware-file').files.length) status('Checking firmware package...', false, 'loading');
     let overrides, files;
@@ -1147,13 +1287,17 @@ $('start').onclick=async()=>{
         nor.set(new Uint8Array(await overrides.sdfs.arrayBuffer()), 0x3d3000);
       }
     }
+    await storage.restore(files);
     const runtimeURL = new URL('./runtime/', import.meta.url);
     const scriptURL = new URL('qemu-system-arm.js', runtimeURL).href;
     status('Starting the emulator runtime…', false, 'loading');
     const {default:createQemu} = await import(scriptURL);
     const mediaClock = builtInPresets.has('bad-apple') && bootPreset.value === 'bad-apple';
     const clock = mediaClock ? 'shift=6,align=on' : 'shift=3,align=off';
+    const wasm = await cachedFetch(new URL('qemu-system-arm.wasm', runtimeURL), {}, runtimeURL.pathname.includes('/assets/') ? 'bundle' : '');
+    if (!wasm.ok) throw Error('Could not load the emulator runtime.');
     runtime=await createQemu({
+      wasmBinary: new Uint8Array(await wasm.arrayBuffer()),
       mainScriptUrlOrBlob:scriptURL,
       locateFile:name=>new URL(name, runtimeURL).href,
       print:log,printErr:log,onAbort:reason=>guestStopped(reason ? `Runtime aborted: ${reason}` : 'Runtime aborted. See the watch log.'),
@@ -1171,7 +1315,7 @@ $('start').onclick=async()=>{
         Object.assign(module.ENV,{QEMU_WP2_NOR:'/watch/nor.bin',QEMU_WP2_NAND:'/watch/nand-defaults.bin',
           QEMU_WP2_FRAME:'/watch/frame.ppm',QEMU_WP2_INPUT:'/watch/input.txt',QEMU_WP2_LIVE_FRAME:'1',
           QEMU_WP2_PCM_STREAM:'/watch/speaker.pcm',
-          QEMU_WP2_MOTOR:motorPath,
+          QEMU_WP2_MOTOR:motorPath,QEMU_WP2_STORAGE_SNAPSHOT:'/watch/storage',
           QEMU_WP2_LIVE_SENSORS:'1',QEMU_WP2_HOST_RTC:'1',QEMU_WP2_UNPLUGGED:$('charger').checked?'0':'1'});
         if (watch3) module.ENV.QEMU_WP2_MODEL = 'wp3';
         if (mediaClock) module.ENV.QEMU_WP2_MEDIA_CLOCK = '1';
@@ -1237,8 +1381,32 @@ if (crossOriginIsolated && (idle || requestedPreset)) {
 }
 if (builtInPresets.has(requestedPreset)) {
   bootPreset.value = requestedPreset;
-} else if (requestedPreset === 'custom' || (!watch3 && requestedPreset === 'bad-apple')) {
+} else if (requestedPreset === 'custom' || requestedPreset === 'apps' || (!watch3 && requestedPreset === 'bad-apple')) {
   bootPreset.value = requestedPreset;
 }
 updateBootOptions();
-if (crossOriginIsolated && !idle && (bundledStock || !hosted)) $('start').click();
+await appPicker.update();
+let preloadFailed = false;
+try {
+  const plan = parsePreload(bootUrl.search);
+  if (plan.apps.length || plan.loader) {
+    await appPicker.setPlan(plan);
+    if (plan.watchface) {
+      faceCatalog.select(appPicker.dependencies().watchface);
+      $('face-catalog').open = true;
+    }
+    updateBootOptions();
+  } else if (plan.firmware) {
+    const record = await catalogRecord(plan.firmware, faceModel, 'firmware');
+    await selectCatalogFirmware(record);
+    if (plan.watchface) throw Error('Load the selected firmware first, then choose a watch face.');
+  } else if (plan.watchface) {
+    const face = await catalogRecord(plan.watchface, faceModel, 'watchface');
+    faceCatalog.select(face);
+    $('face-catalog').open = true;
+  }
+} catch (error) {
+  $('image-error').textContent = error.message;
+  preloadFailed = true;
+}
+if (!preloadFailed && crossOriginIsolated && !idle && (bundledStock || !hosted)) $('start').click();
