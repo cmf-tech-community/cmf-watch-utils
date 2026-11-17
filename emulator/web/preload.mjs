@@ -49,7 +49,7 @@ export function parsePreload(search) {
     if (key === 'app') plan.apps = [...new Set(values)];
     else if (values.length) plan[key] = values[0];
   }
-  if (plan.apps.length > 8) throw Error('The app loader supports at most eight apps.');
+  if (plan.apps.length > 8) throw Error('App Loader has eight app slots.');
   return plan;
 }
 

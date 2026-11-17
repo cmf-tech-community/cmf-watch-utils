@@ -34,7 +34,7 @@ The save status shows when the latest checkpoint finished. An abrupt tab closure
 
 Cached files avoid repeat downloads. They do not eliminate firmware boot time, decompression or emulator startup. Switching models does not copy one model’s saved storage to the other. A share link contains selections, not your saved watch data or local uploads.
 
-**Keep browser data** asks the browser to protect this site’s storage from automatic eviction. The browser may decline. Private browsing, clearing site data and browser storage limits can remove saved data. Local storage is not a backup.
+**Protect saved data** asks the browser to protect this site’s storage from automatic eviction. The browser may decline. Private browsing, clearing site data and browser storage limits can remove saved data. Local storage is not a backup.
 
 **Clear saved data** has separate controls for downloaded files, remembered controls and all saved watch storage for the current model. Clearing saved watch storage does not interrupt the running watch; restart it to use fresh storage. **Hard reset to stock** discards the current saved state and starts a fresh stock watch.
 
