@@ -76,7 +76,8 @@
             <small>Saves this watch’s flash for the same firmware and app selection. The watch boots again when reopened; running apps are not suspended.</small>
             <small id="storage-status" role="status">Storage restores automatically when the same watch is reopened.</small>
             <div class="panel-actions"><button id="save-watch-storage" type="button" disabled>Save now</button></div>
-            <button id="protect-storage" type="button">Keep browser data</button>
+            <button id="protect-storage" type="button" aria-describedby="protect-storage-help">Protect saved data</button>
+            <small id="protect-storage-help">Ask your browser to keep these saves and downloads when disk space runs low.</small>
             <small id="storage-usage"></small>
             <details class="field"><summary>Clear saved data</summary>
               <button id="clear-downloads" type="button">Clear downloaded files</button>
@@ -151,7 +152,7 @@
         <summary>Optical sensors</summary>
         <div id="raw-optical-controls" hidden>
           <label class="switch-label"><input id="raw-optical" type="checkbox" aria-describedby="raw-optical-help"> Simulate optical sensor signals</label>
-          <small id="raw-optical-help">Send synthetic light-sensor samples through the stock driver and measurement algorithm. Use “Watch is worn” to simulate skin contact. Heart-rate and oxygen values below are disabled in this mode.</small>
+          <small id="raw-optical-help">With “Watch is worn” on, the watch measures a repeating test pulse. Turn this mode off to enter heart rate and blood oxygen directly.</small>
           <label class="switch-label"><input id="optical-worn" type="checkbox" disabled> Watch is worn</label>
         </div>
         <label class="switch-label"><input id="health-enabled" type="checkbox"> Set measurement results</label>

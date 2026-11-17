@@ -477,7 +477,9 @@ details[open] > summary::after { transform: rotate(90deg); }
 .settings-group .switch-label { min-height: 24px; }
 .panel-actions { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 12px; }
 .panel-actions button { padding: 5px 9px; }
-#storage-controls { display: grid; gap: 10px; margin-top: 12px; }
+#storage-controls { display: grid; row-gap: 0; margin-top: 0; }
+#storage-controls > :not(.switch-label) { margin-top: 10px; }
+#watch-face-upload > summary { padding-block: 9px; }
 #storage-controls .panel-actions { margin-top: 0; }
 #storage-controls button { width: 100%; padding: 7px 9px; text-align: left; }
 #storage-controls small { margin: 0; line-height: 1.5; }

@@ -147,7 +147,7 @@ export function setupAppPicker(model, changed = () => {}, report = () => {}) {
         const record = dependencies[role];
         get(`apps-${role}-selection`).value = `${record.name} · ${record.version}`;
       }
-      report('Firmware and loader selected automatically. Add up to eight app packages.');
+      report('Firmware and loader selected automatically. App Loader has eight app slots.');
       render();
       await loadCatalog();
     } catch (error) {
