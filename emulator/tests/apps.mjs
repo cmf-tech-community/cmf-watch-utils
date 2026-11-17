@@ -1,7 +1,16 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {populateAppVolume} from '../web/app-storage.mjs';
-import {parsePreload, resolvePreload} from '../web/preload.mjs';
+import {parsePreload, resolvePreload, catalogDownloadRevision} from '../web/preload.mjs';
+
+test('catalog download identity ignores counters but changes for a replaced file', () => {
+  const record = {id: 'example', collectionId: 'firmwares', image: 'firmware_unique.bin', updated: 'before', downloads: 1};
+  const revision = catalogDownloadRevision(record);
+  assert.equal(catalogDownloadRevision({...record, updated: 'after', downloads: 2}), revision);
+  assert.notEqual(catalogDownloadRevision({...record, image: 'firmware_replaced.bin'}), revision);
+  assert.ok(catalogDownloadRevision({id: 'app', package: 'app_unique.wp2app'}));
+  assert.equal(catalogDownloadRevision({id: 'unknown', version: '1.0'}), '');
+});
 
 function volume() {
   const bytes = new Uint8Array(10 * 1024 * 1024);

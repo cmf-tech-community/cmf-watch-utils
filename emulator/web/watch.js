@@ -6,7 +6,8 @@ import {fetchFixture} from './fixtures.mjs';
 import {installWatchFace} from './face.mjs';
 import {speakerSlice} from './speaker.mjs';
 import {setupAppPicker} from './app-picker.mjs';
-import {parsePreload, catalogRecord} from './preload.mjs';
+import {parsePreload, catalogRecord, catalogDownloadRevision} from './preload.mjs';
+import {downloadFile} from './download.mjs';
 
 const $ = (id) => document.getElementById(id);
 const panel = $('panel');
@@ -67,10 +68,11 @@ $('share-session').onclick = async () => {
 };
 async function selectCatalogFirmware(record) {
   status(`Downloading ${record.name} · ${record.version}…`, false, 'loading');
-  const response = await cachedFetch(`https://fmc.tools/api/firmwares/${record.id}/download`, {signal: AbortSignal.timeout(90000)}, record.updated || record.version || '');
-  if (!response.ok) throw Error(`Could not download ${record.name}.`);
+  const blob = await downloadFile(`https://fmc.tools/api/firmwares/${record.id}/download`, {
+    name: record.name, revision: catalogDownloadRevision(record), progress: text => status(text, false, 'loading'),
+  });
   const selection = new DataTransfer();
-  selection.items.add(new File([await response.blob()], `${record.name}-${record.version}.bin`));
+  selection.items.add(new File([blob], `${record.name}-${record.version}.bin`));
   $('firmware-file').files = selection.files;
   $('firmware-file').dispatchEvent(new Event('change'));
   bootPreset.value = 'custom';
@@ -1262,6 +1264,12 @@ $('stop').onclick=async()=>{
   location.replace(url);
 };
 $('start').onclick=async()=>{
+  if (!crossOriginIsolated) {
+    status(hosted
+      ? 'Browser isolation is not ready. Reload this page and allow its service worker before booting.'
+      : 'Cross-origin isolation is required. Start the supplied local server.', true);
+    return;
+  }
   if (bootBusy) return;
   if (bootInProgress) return restartSelection();
   bootBusy = true;
@@ -1287,8 +1295,7 @@ $('start').onclick=async()=>{
     } catch (error) {
       $('image-error').textContent = error.message;
       bootInProgress = false;
-      if (watch3) status(error.message, true);
-      else status('Ready');
+      status(error.message, true);
       $('start').disabled = false;
       return;
     }
@@ -1375,12 +1382,13 @@ $('start').onclick=async()=>{
     $('apply-boot').textContent = bootInProgress ? 'Apply and restart' : 'Boot selection';
   }
 };
-$('apply-boot').onclick = () => $('start').onclick();
+$('apply-boot').onclick = () => $('start').click();
 
 
 const bootUrl = new URL(location.href);
 if (hosted && !crossOriginIsolated) {
   $('start').disabled = true;
+  $('apply-boot').disabled = true;
   if (!navigator.serviceWorker || bootUrl.searchParams.has('isolation-reload')) {
     status('This browser could not start the emulator workers. Try a recent desktop version of Chrome or Edge.', true);
   } else {
@@ -1414,6 +1422,9 @@ if (builtInPresets.has(requestedPreset)) {
   bootPreset.value = requestedPreset;
 }
 updateBootOptions();
+if (crossOriginIsolated || !hosted) {
+$('start').disabled = true;
+const unlockSelection = lockBootControls($('boot-images'));
 let preloadFailed = false;
 try {
   let draft;
@@ -1437,7 +1448,6 @@ try {
     updateBootOptions();
     await appPicker.update();
   } else {
-    await appPicker.update();
     const plan = parsePreload(bootUrl.search);
     if (plan.apps.length || plan.loader) {
       await appPicker.setPlan(plan);
@@ -1454,10 +1464,21 @@ try {
       const face = await catalogRecord(plan.watchface, faceModel, 'watchface');
       faceCatalog.select(face);
       $('face-catalog').open = true;
+    } else {
+      await appPicker.update();
     }
   }
 } catch (error) {
   $('image-error').textContent = error.message;
+  status(error.message, true);
   preloadFailed = true;
+} finally {
+  unlockSelection();
+  $('start').disabled = false;
 }
-if (!preloadFailed && crossOriginIsolated && !idle && (bundledStock || !hosted)) $('start').click();
+const chooseAppsFirst = bootPreset.value === 'apps' && !appPicker.files().length;
+if (!preloadFailed && crossOriginIsolated && chooseAppsFirst) {
+  status('Firmware and App Loader selected. Add apps, then choose Boot selection.', false, 'notice');
+}
+if (!preloadFailed && crossOriginIsolated && !idle && !chooseAppsFirst && (bundledStock || !hosted)) $('start').click();
+}

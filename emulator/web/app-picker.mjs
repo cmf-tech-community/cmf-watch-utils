@@ -1,6 +1,7 @@
-import {cachedFetch} from './persistence.mjs';
-import {resolvePreload} from './preload.mjs';
+import {fetchFixture} from './fixtures.mjs';
+import {resolvePreload, catalogDownloadRevision} from './preload.mjs';
 import {installAppFiles, validateAppPackage} from './app-storage.mjs';
+import {downloadFile} from './download.mjs';
 
 export function setupAppPicker(model, changed = () => {}, report = () => {}) {
   const get = id => document.getElementById(id);
@@ -32,17 +33,16 @@ export function setupAppPicker(model, changed = () => {}, report = () => {}) {
     } catch (error) { report(error.message, true); }
     finally { button.disabled = model !== 'wp2'; }
   };
-  async function download(record, collection) {
-    const response = await cachedFetch(`https://fmc.tools/api/${collection}/${record.id}/download`, {signal: AbortSignal.timeout(90000)}, record.updated || record.version || '');
-    if (!response.ok) throw Error(`Could not download ${record.name}.`);
-    return response.blob();
+  async function download(record, collection, progress = report) {
+    return downloadFile(`https://fmc.tools/api/${collection}/${record.id}/download`, {
+      name: record.name, revision: catalogDownloadRevision(record), progress,
+    });
   }
   async function setPlan(plan) {
     section.hidden = false;
     report('Resolving selected FMC firmware, loader and apps…');
     dependencies = await resolvePreload(plan, model);
     preset.value = 'apps';
-    preset.dispatchEvent(new Event('change'));
     for (const role of ['firmware', 'loader']) {
       const record = dependencies[role];
       get(`apps-${role}-selection`).value = `${record.name} · ${record.version}`;
@@ -64,17 +64,20 @@ export function setupAppPicker(model, changed = () => {}, report = () => {}) {
     if (pending) await pending;
     if (!dependencies) throw Error('Select compatible firmware and loader first.');
     const packages = [];
-    const loader = await download(dependencies.loader, 'firmwares');
+    const loader = await download(dependencies.loader, 'firmwares', progress);
     packages.push({name: 'L.pkg', bytes: validateAppPackage(new Uint8Array(await loader.arrayBuffer()), 1)});
     for (const [slot, file] of files.entries()) {
       packages.push({name: `${slot}.pkg`, bytes: validateAppPackage(new Uint8Array(await file.arrayBuffer()))});
     }
-    progress('Downloading firmware and preparing app storage…');
-    const firmware = await download(dependencies.firmware, 'firmwares');
+    progress('Downloading selected firmware…');
+    const firmware = await download(dependencies.firmware, 'firmwares', progress);
+    progress('Checking and unpacking selected firmware…');
     const parsed = await validateFirmware(await firmware.arrayBuffer());
-    const response = await cachedFetch(new URL('./fixtures/nand-defaults.bin.gz', import.meta.url), {}, 'bundle');
-    if (!response.ok) throw Error('The emulator bundle is missing prepared app storage.');
-    const nand = new Uint8Array(await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    progress('Downloading virtual app storage…');
+    const nand = await fetchFixture(new URL('./fixtures/nand-defaults.bin.gz', import.meta.url), {
+      name: 'virtual app storage', size: 2112 * 65536, gzip: true,
+    });
+    progress('Installing App Loader and selected apps into virtual storage…');
     installAppFiles(nand, packages, model);
     report(`${files.length} ${files.length === 1 ? 'app' : 'apps'} installed into virtual storage.`);
     return {app: parsed.app, sdfs: new Blob([parsed.sdfs]), nand: new Blob([nand])};
