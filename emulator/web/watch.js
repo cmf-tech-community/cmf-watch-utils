@@ -6,7 +6,8 @@ import {fetchFixture} from './fixtures.mjs';
 import {installWatchFace} from './face.mjs';
 import {speakerSlice} from './speaker.mjs';
 import {setupAppPicker} from './app-picker.mjs';
-import {parsePreload, catalogRecord} from './preload.mjs';
+import {parsePreload, catalogRecord, catalogDownloadRevision} from './preload.mjs';
+import {downloadFile} from './download.mjs';
 
 const $ = (id) => document.getElementById(id);
 const panel = $('panel');
@@ -67,10 +68,11 @@ $('share-session').onclick = async () => {
 };
 async function selectCatalogFirmware(record) {
   status(`Downloading ${record.name} · ${record.version}…`, false, 'loading');
-  const response = await cachedFetch(`https://fmc.tools/api/firmwares/${record.id}/download`, {signal: AbortSignal.timeout(90000)}, record.updated || record.version || '');
-  if (!response.ok) throw Error(`Could not download ${record.name}.`);
+  const blob = await downloadFile(`https://fmc.tools/api/firmwares/${record.id}/download`, {
+    name: record.name, revision: catalogDownloadRevision(record), progress: text => status(text, false, 'loading'),
+  });
   const selection = new DataTransfer();
-  selection.items.add(new File([await response.blob()], `${record.name}-${record.version}.bin`));
+  selection.items.add(new File([blob], `${record.name}-${record.version}.bin`));
   $('firmware-file').files = selection.files;
   $('firmware-file').dispatchEvent(new Event('change'));
   bootPreset.value = 'custom';
@@ -743,7 +745,7 @@ for (const picker of document.querySelectorAll('.file-row .file-control input'))
     }
     const names = [...picker.files].map(item => item.name);
     label.textContent = names.length > 1 ? `${names.length} files selected` :
-      names[0] || (picker.multiple ? 'Select files' : 'Select file');
+      names[0] || label.dataset.empty || (picker.multiple ? 'Select files' : 'Select file');
     label.title = names.join(', ');
     clear.hidden = !file;
     $('image-error').textContent = '';
@@ -1092,9 +1094,37 @@ function validateHostedFirmware(bytes) {
   });
 }
 
+async function validateLocalFirmware(bytes) {
+  let response;
+  try {
+    response = await fetch(watch3 ? './firmware/wp3' : './firmware', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/octet-stream'},
+      body: bytes,
+    });
+  } catch {
+    throw Error('The local firmware importer did not respond. Check that the emulator server is running and retry.');
+  }
+  if ([404, 405, 501].includes(response.status)) {
+    throw Error('This server has no firmware importer. Open the emulator served by the current serve.py.');
+  }
+  if (response.status === 204) return null;
+  if (!response.ok) throw Error(`Firmware package rejected: ${response.statusText}`);
+  const payload = await response.arrayBuffer();
+  const length = payload.byteLength >= 4 ? new DataView(payload).getUint32(0, true) : 0;
+  if (length < 0x208 || length > 0x34b000 || payload.byteLength - 4 - length <= 0 ||
+      payload.byteLength - 4 - length > 0x10000) {
+    throw Error('Invalid application or resources returned by the firmware importer.');
+  }
+  return {app: new Uint8Array(payload, 4, length), sdfs: new Uint8Array(payload, 4 + length)};
+}
+
 async function readBootOverrides() {
   const preset = bootPreset.value;
-  if (preset === 'apps') return {...await appPicker.prepare(validateHostedFirmware, text => status(text, false, 'loading')), catalogFace: faceCatalog.selected()};
+  if (preset === 'apps') {
+    return {...await appPicker.prepare(hosted ? validateHostedFirmware : validateLocalFirmware,
+      text => status(text, false, 'loading'), hosted), catalogFace: faceCatalog.selected()};
+  }
   const stock = preset === 'stock';
   const builtIn = builtInPresets.get(preset);
   const uploads = !stock && !builtIn;
@@ -1151,36 +1181,8 @@ async function readBootOverrides() {
         : '30903fc8ce6db4f8860bb554366635db3d2bcbb2d43827b3b50fbbac22b59353';
       if (digest === stockHash) return { nand };
     }
-    if (hosted) {
-      const {app, sdfs} = await validateHostedFirmware(packageBytes);
-      return {app, sdfs: new Blob([sdfs]), nand};
-    }
-    let response;
-    try {
-      response = await fetch(watch3 ? './firmware/wp3' : './firmware', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/octet-stream'},
-        body: packageBytes,
-      });
-    } catch {
-      throw Error('The local firmware importer did not respond. Check that the emulator server is running and retry.');
-    }
-    if ([404, 405, 501].includes(response.status)) {
-      throw Error('This server has no firmware importer. Open the emulator served by the current serve.py.');
-    }
-    if (response.status === 204) return { nand };
-    if (!response.ok) throw Error(`Firmware package rejected: ${response.statusText}`);
-    const payload = await response.arrayBuffer();
-    const length = new DataView(payload).getUint32(0, true);
-    if (length < 0x208 || length > 0x34b000 || payload.byteLength - 4 - length <= 0 ||
-        payload.byteLength - 4 - length > 0x10000) {
-      throw Error('Invalid application or resources returned by the firmware importer.');
-    }
-    return {
-      nand,
-      app: new Uint8Array(payload, 4, length),
-      sdfs: new Blob([new Uint8Array(payload, 4 + length)]),
-    };
+    const parsed = await (hosted ? validateHostedFirmware : validateLocalFirmware)(packageBytes);
+    return parsed ? {app: parsed.app, sdfs: new Blob([parsed.sdfs]), nand} : {nand};
   }
   if (!app) return { nand, face, catalogFace };
   if (app.size < 0x208 || app.size > 0x34b000) {
@@ -1262,6 +1264,12 @@ $('stop').onclick=async()=>{
   location.replace(url);
 };
 $('start').onclick=async()=>{
+  if (!crossOriginIsolated) {
+    status(hosted
+      ? 'Browser isolation is not ready. Reload this page and allow its service worker before booting.'
+      : 'Cross-origin isolation is required. Start the supplied local server.', true);
+    return;
+  }
   if (bootBusy) return;
   if (bootInProgress) return restartSelection();
   bootBusy = true;
@@ -1287,8 +1295,7 @@ $('start').onclick=async()=>{
     } catch (error) {
       $('image-error').textContent = error.message;
       bootInProgress = false;
-      if (watch3) status(error.message, true);
-      else status('Ready');
+      status(error.message, true);
       $('start').disabled = false;
       return;
     }
@@ -1375,12 +1382,13 @@ $('start').onclick=async()=>{
     $('apply-boot').textContent = bootInProgress ? 'Apply and restart' : 'Boot selection';
   }
 };
-$('apply-boot').onclick = () => $('start').onclick();
+$('apply-boot').onclick = () => $('start').click();
 
 
 const bootUrl = new URL(location.href);
 if (hosted && !crossOriginIsolated) {
   $('start').disabled = true;
+  $('apply-boot').disabled = true;
   if (!navigator.serviceWorker || bootUrl.searchParams.has('isolation-reload')) {
     status('This browser could not start the emulator workers. Try a recent desktop version of Chrome or Edge.', true);
   } else {
@@ -1414,9 +1422,12 @@ if (builtInPresets.has(requestedPreset)) {
   bootPreset.value = requestedPreset;
 }
 updateBootOptions();
+if (crossOriginIsolated || !hosted) {
+$('start').disabled = true;
+const unlockSelection = lockBootControls($('boot-images'));
 let preloadFailed = false;
+let draft;
 try {
-  let draft;
   const draftToken = sessionStorage.getItem(bootDraftKey);
   if (draftToken && crossOriginIsolated) {
     draft = await takeBootDraft(faceModel, draftToken);
@@ -1437,7 +1448,6 @@ try {
     updateBootOptions();
     await appPicker.update();
   } else {
-    await appPicker.update();
     const plan = parsePreload(bootUrl.search);
     if (plan.apps.length || plan.loader) {
       await appPicker.setPlan(plan);
@@ -1454,10 +1464,21 @@ try {
       const face = await catalogRecord(plan.watchface, faceModel, 'watchface');
       faceCatalog.select(face);
       $('face-catalog').open = true;
+    } else {
+      await appPicker.update();
     }
   }
 } catch (error) {
   $('image-error').textContent = error.message;
+  status(error.message, true);
   preloadFailed = true;
+} finally {
+  unlockSelection();
+  $('start').disabled = false;
 }
-if (!preloadFailed && crossOriginIsolated && !idle && (bundledStock || !hosted)) $('start').click();
+const chooseAppsFirst = !draft && bootPreset.value === 'apps' && !appPicker.files().length;
+if (!preloadFailed && crossOriginIsolated && chooseAppsFirst) {
+  status('Firmware and App Loader selected. Add apps, then choose Boot selection.', false, 'notice');
+}
+if (!preloadFailed && crossOriginIsolated && !idle && !chooseAppsFirst && (bundledStock || !hosted)) $('start').click();
+}

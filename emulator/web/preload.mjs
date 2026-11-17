@@ -5,6 +5,11 @@ const appPresets = {
   wp2: {firmware: 'kqbnulphohzw2wb', loader: 'bfe60t13x4bgbgc'},
 };
 
+export function catalogDownloadRevision(record) {
+  const file = record.image || record.package;
+  return file ? `${record.collectionId || record.collectionName || ''}/${record.id}/${file}` : '';
+}
+
 export async function catalogRecord(id, model, role, request = fetch) {
   if (!identifier.test(id)) throw Error(`Invalid FMC ${role} ID.`);
   const collection = role === 'app' ? 'apps' : role === 'watchface' ? 'watchfaces' : 'firmwares';

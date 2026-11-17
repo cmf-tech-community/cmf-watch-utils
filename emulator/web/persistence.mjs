@@ -54,13 +54,23 @@ export async function discardDownload(url) {
   await store('downloads', 'readwrite', s => s.delete(IDBKeyRange.bound(key, key + '\uffff')));
 }
 
+function abortable(operation, signal) {
+  if (!signal) return operation;
+  return new Promise((resolve, reject) => {
+    const abort = () => reject(signal.reason);
+    if (signal.aborted) abort();
+    else signal.addEventListener('abort', abort, {once: true});
+    operation.then(resolve, reject).finally(() => signal.removeEventListener('abort', abort));
+  });
+}
+
 export async function cachedFetch(url, options = {}, revision = '', progress = () => {}) {
   if (preferences().cache === false || !globalThis.indexedDB) return fetch(url, options);
   const address = new URL(url, globalThis.location?.href).href;
   const key = `${address}|${revision}`;
   const epoch = cacheEpoch;
   try {
-    const entry = await store('downloads', 'readonly', s => s.get(key));
+    const entry = await abortable(store('downloads', 'readonly', s => s.get(key)), options.signal);
     if (entry && (revision || Date.now() - entry.saved < 3600000)) {
       options.signal?.throwIfAborted();
       return new Response(entry.blob, {headers: entry.headers});
@@ -69,12 +79,14 @@ export async function cachedFetch(url, options = {}, revision = '', progress = (
   const response = await fetch(url, options);
   if (!response.ok || response.type === 'opaque') return response;
   const chunks = [];
+  let received = 0;
   const reader = response.body.getReader();
   try {
     while (true) {
       const {done, value} = await reader.read();
       if (done) break;
-      progress();
+      received += value.length;
+      progress(received);
       chunks.push(value);
     }
   } finally { reader.releaseLock(); }
@@ -82,7 +94,7 @@ export async function cachedFetch(url, options = {}, revision = '', progress = (
   options.signal?.throwIfAborted();
   if (epoch === cacheEpoch && preferences().cache !== false && blob.size <= 160 * 1024 * 1024) {
     try {
-      await store('downloads', 'readwrite', s => {
+      await abortable(store('downloads', 'readwrite', s => {
         let size = blob.size;
         const entries = [];
         const cursor = s.openCursor();
@@ -99,8 +111,9 @@ export async function cachedFetch(url, options = {}, revision = '', progress = (
             s.put({blob, saved: Date.now(), headers: [...response.headers]}, key);
           }
         };
-      });
-    } catch {
+      }), options.signal);
+    } catch (error) {
+      if (options.signal?.aborted) throw error;
       globalThis.dispatchEvent?.(new Event('emulator-cache-unavailable'));
     }
   }

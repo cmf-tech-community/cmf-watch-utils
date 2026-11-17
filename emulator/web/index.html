@@ -207,8 +207,20 @@
         <button id="fmc-firmware-use" type="button">Use selected firmware</button>
       </details>
       <section class="settings-section" id="apps-profile" hidden aria-label="Installable apps">
-        <div class="field"><label for="apps-firmware-selection">Firmware</label><input id="apps-firmware-selection" readonly></div>
-        <div class="field"><label for="apps-loader-selection">App Loader</label><input id="apps-loader-selection" readonly></div>
+        <div class="field">
+          <label for="apps-firmware-selection">Patched firmware</label><input id="apps-firmware-selection" readonly>
+          <div class="file-row" data-apps-override>
+            <label class="file-control"><input id="apps-firmware-file" type="file" accept=".bin,.fw,.aota" aria-label="Use local patched firmware"><span class="file-name" data-empty="Use local firmware">Use local firmware</span></label>
+            <button class="clear-file" type="button" aria-label="Remove local firmware and use catalog firmware" title="Use catalog firmware" hidden>×</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="apps-loader-selection">App Loader</label><input id="apps-loader-selection" readonly>
+          <div class="file-row" data-apps-override>
+            <label class="file-control"><input id="apps-loader-file" type="file" accept=".wp2app" aria-label="Use local App Loader"><span class="file-name" data-empty="Use local loader">Use local loader</span></label>
+            <button class="clear-file" type="button" aria-label="Remove local loader and use catalog loader" title="Use catalog loader" hidden>×</button>
+          </div>
+        </div>
         <div class="field"><label for="apps-catalog">FMC apps</label><select id="apps-catalog"><option value="">Choose an app</option></select><button id="apps-catalog-add" type="button">Add selected app</button></div>
         <label class="file-control"><input id="apps-files" type="file" accept=".wp2app" multiple aria-label="Add app packages"><span>Add apps</span></label>
         <ul id="apps-selection" aria-label="Selected apps"></ul>
