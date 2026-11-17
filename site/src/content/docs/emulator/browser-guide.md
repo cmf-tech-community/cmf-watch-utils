@@ -79,8 +79,8 @@ which contains application code and possibly resources.
 4. Check the selected face after startup. If the previous face is still selected,
    hold the watch display to open the stock face picker and inspect its choices.
 
-For a downloaded face, stop emulation with the square control, choose the file
-under **Watch face**, then use **Start emulation**. Use a face intended for the
+For a downloaded face, choose the file under **Watch face**, then use
+**Apply and restart** (or **Boot selection** if the watch has not started). Use a face intended for the
 selected model. A successful preview does not guarantee installation on hardware.
 
 ## Load custom firmware
@@ -97,14 +97,14 @@ type, ask before choosing an input.
 | Watch face (`.wfdl`, `.wfc`, or a face distributed as `.bin`) | **Watch face** |
 | Prepared virtual NAND storage | **Advanced boot files → Virtual NAND**, only when the build's instructions require it |
 
-1. Stop the running emulation.
-2. Select **Custom firmware** under **Boot preset**.
-3. Choose either the package or the raw application files. Clear selections from
+1. Select **Custom firmware** under **Boot preset**.
+2. Choose either the package or the raw application files. Clear selections from
    a previous experiment using the file input's remove control.
-4. Keep bundled base files unless the build instructions explicitly require
+3. Keep bundled base files unless the build instructions explicitly require
    replacements. A normal custom-app preview does not require you to upload
    every file in **Advanced boot files**.
-5. Start emulation. Check for the application's expected screen and inspect
+4. Choose **Apply and restart**, or **Boot selection** if the watch has not started.
+   Check for the application's expected screen and inspect
    **Watch log** if it fails to start.
 
 Use application resources from the same build when supplied. An application may
@@ -123,20 +123,23 @@ These are different from a raw `app.bin` or an AOTA firmware update. They need
 the matching patched Watch Pro 2 firmware and App Loader. Do not put them in
 **Application image** or **Firmware package**.
 
-1. Stop emulation and select **Apps firmware** under **Boot preset**.
+1. Select **Apps firmware** under **Boot preset**.
 2. The compatible patched firmware and App Loader are selected automatically.
    Their names and versions appear above the app list.
 3. Choose an app from **FMC apps** and click **Add selected app**, or select one
    or more local `.wp2app` files under **Add apps**. Up to eight apps fit in the
    loader's slots. Each selected file has a **Remove** control.
-4. Start emulation. The browser downloads the firmware and loader, checks the
+4. Choose **Apply and restart**, or **Boot selection** if the watch has not started.
+   The browser downloads the firmware and loader, checks the
    packages, and installs them into virtual storage before booting.
 5. Open **Apps** in the watch's menu and select an installed app.
 
 The browser prepares the virtual storage automatically. With automatic saving
 enabled, reopening the same firmware, loader and app selection restores the
 last saved storage. Catalog apps can be reselected from the session URL.
-Select local uploads again after reloading.
+**Apply and restart** keeps selected local files through that restart using
+temporary browser storage. An ordinary reload or a new tab still requires
+selecting local uploads again.
 
 This profile currently supports Watch Pro 2. Watch 3 Pro shows an unavailable
 message because no compatible patched firmware and loader are configured.
@@ -145,6 +148,10 @@ development. The [community apps repository](https://github.com/fmctools/apps)
 contains sources and publishing instructions.
 
 ### Share a configured session
+
+Opening a configured link starts the watch with those selections. Boot inputs
+are temporarily locked while loading, then become editable. Change the files
+or app list and choose **Apply and restart** to use the new selection.
 
 Catalog selections update the page URL. **Share session** copies a link to the
 selected firmware, loader, apps and watch face. Local uploads cannot be included;

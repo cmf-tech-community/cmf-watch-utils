@@ -137,7 +137,7 @@ export function setupAppPicker(model, changed = () => {}, report = () => {}) {
       get('apps-loader-selection').value = 'Unavailable';
       return;
     }
-    if (dependencies) { render(); return; }
+    if (dependencies) { render(); await loadCatalog(); return; }
     if (pending) return;
     report('Loading compatible firmware and loader…');
     pending = resolvePreload({apps: [], loader: 'bfe60t13x4bgbgc'}, model);
@@ -155,5 +155,23 @@ export function setupAppPicker(model, changed = () => {}, report = () => {}) {
     } finally { pending = undefined; }
   }
   preset.addEventListener('change', update);
-  return {update, prepare, setPlan, hasLocalFiles: () => files.some(file => !ids.has(file)), files: () => [...files], dependencies: () => dependencies};
+  function snapshot() {
+    return {dependencies, files: files.map(file => ({file, id: ids.get(file)}))};
+  }
+  function restore(saved) {
+    dependencies = saved.dependencies;
+    files.splice(0, files.length);
+    for (const entry of saved.files) {
+      files.push(entry.file);
+      if (entry.id) ids.set(entry.file, entry.id);
+    }
+    if (dependencies) {
+      for (const role of ['firmware', 'loader']) {
+        const record = dependencies[role];
+        get(`apps-${role}-selection`).value = `${record.name} · ${record.version}`;
+      }
+    }
+    render();
+  }
+  return {update, prepare, setPlan, snapshot, restore, hasLocalFiles: () => files.some(file => !ids.has(file)), files: () => [...files], dependencies: () => dependencies};
 }

@@ -1,4 +1,5 @@
-import {cachedFetch, preferences} from './persistence.mjs';
+import {cachedFetch, preferences, saveBootDraft, takeBootDraft} from './persistence.mjs';
+import {lockBootControls, captureBootFiles, restoreBootFiles} from './boot-controls.mjs';
 import {setupStorage, restoreSettings} from './storage-controls.mjs';
 import {downloadCatalogFace, setupFaceCatalog} from './catalog.mjs';
 import {fetchFixture} from './fixtures.mjs';
@@ -101,13 +102,10 @@ $('fmc-firmware-catalog').addEventListener('toggle', async () => {
 $('fmc-firmware-use').onclick = async () => {
   const record = firmwareRecords.get($('fmc-firmware-selection').value);
   if (!record) return;
-  if (bootInProgress) {
-    try { await storage.checkpoint(); } catch (error) { status(error.message, true); return; }
-    updateLink({firmware: record.id, loader: null, app: null, preset: null, watchface: null});
-    location.reload();
-    return;
-  }
-  try { await selectCatalogFirmware(record); } catch (error) { status(error.message, true); }
+  try {
+    await selectCatalogFirmware(record);
+    if (bootInProgress) await restartSelection();
+  } catch (error) { status(error.message, true); }
 };
 const builtInPresets = new Map();
 if (document.body.hasAttribute('data-demo-ready')) {
@@ -119,6 +117,8 @@ if (document.body.hasAttribute('data-bad-apple-ready')) {
 }
 const needsBaseFiles = hosted && !bundledStock;
 let bootInProgress = false;
+let bootBusy = false;
+const bootDraftKey = `${faceModel}-boot-draft`;
 let stockPowerReady = false;
 let bootedCatalogFace;
 let nextFace;
@@ -133,11 +133,11 @@ const faceCatalog = setupFaceCatalog($('face-catalog'), nextFace, face => {
   updateLink({watchface: face?.id});
   if (bootInProgress) {
     if (bootPreset.value === 'apps') {
-      $('image-error').textContent = 'Stop the watch before changing the app session’s watch face.';
+      restartSelection();
       return;
     }
     if (needsBaseFiles) {
-      $('image-error').textContent = 'Stop the watch and select the base files again before applying a face.';
+      restartSelection();
       return;
     }
     restartFor('stock', face);
@@ -205,6 +205,32 @@ async function restartFor(preset, face) {
   if (face?.id) url.searchParams.set('watchface', face.id);
   if (preset !== 'stock' && !builtInPresets.has(preset)) url.searchParams.set('idle', '1');
   location.replace(url.href);
+}
+
+async function restartSelection() {
+  if (bootBusy) return;
+  bootBusy = true;
+  const unlock = lockBootControls($('boot-images'));
+  try {
+    await storage.checkpoint();
+    const token = crypto.randomUUID();
+    const value = {
+      preset: bootPreset.value,
+      files: captureBootFiles($('boot-images')),
+      apps: bootPreset.value === 'apps' ? appPicker.snapshot() : undefined,
+      face: faceCatalog.selected(),
+      firmware: {value: $('fmc-firmware-selection').value,
+        label: $('fmc-firmware-selection').selectedOptions[0]?.textContent},
+    };
+    await saveBootDraft(faceModel, token, value);
+    sessionStorage.setItem(bootDraftKey, token);
+    status('Restarting with the selected files…', false, 'loading');
+    location.reload();
+  } catch (error) {
+    status(`Could not apply the selection: ${error.message}`, true);
+    bootBusy = false;
+    unlock();
+  }
 }
 
 async function bootStock() {
@@ -599,13 +625,10 @@ function updateBootOptions() {
     'Select app.bin, compat.bin, nor.bin, nand-defaults.bin and nand-id.bin. The texture index is optional.';
   if (hosted) document.querySelector('.wordmark').href = '../';
   bootPreset.onchange = () => {
-    if (bootInProgress || builtInPresets.has(bootPreset.value)) {
-      restartFor(bootPreset.value);
-      return;
-    }
     if (bootPreset.value !== 'apps') updateLink({preset: bootPreset.value, firmware: null, loader: null, app: null});
     updateBootOptions();
     $('image-error').textContent = '';
+    if (bootInProgress) status('Selection changed. Choose Apply and restart to use it.', false, 'notice');
   };
   loadFrame();
 }
@@ -1239,14 +1262,15 @@ $('stop').onclick=async()=>{
   location.replace(url);
 };
 $('start').onclick=async()=>{
+  if (bootBusy) return;
+  if (bootInProgress) return restartSelection();
+  bootBusy = true;
   bootInProgress = true;
   $('start').disabled=true;
+  const unlock = lockBootControls($('boot-images'));
   try {
     if(!crossOriginIsolated)throw Error('Cross-origin isolation is required. Start the supplied local server.');
     $('image-error').textContent = '';
-    const pickers = [...['stock-files', 'firmware-file', 'app-file', 'sdfs-file', 'face-file', 'nand-file'].map($),
-      ...document.querySelectorAll('#apps-profile input, #apps-profile select, #apps-profile button')];
-    for (const picker of pickers) picker.disabled = true;
     if ($('firmware-file').files.length) status('Checking firmware package...', false, 'loading');
     let overrides, files;
     try {
@@ -1262,7 +1286,6 @@ $('start').onclick=async()=>{
       }
     } catch (error) {
       $('image-error').textContent = error.message;
-      for (const picker of pickers) picker.disabled = false;
       bootInProgress = false;
       if (watch3) status(error.message, true);
       else status('Ready');
@@ -1346,7 +1369,13 @@ $('start').onclick=async()=>{
     }
     timer = requestAnimationFrame(render);
   }catch(error){log(error.stack);guestStopped(error.message);}
+  finally {
+    bootBusy = false;
+    unlock();
+    $('apply-boot').textContent = bootInProgress ? 'Apply and restart' : 'Boot selection';
+  }
 };
+$('apply-boot').onclick = () => $('start').onclick();
 
 
 const bootUrl = new URL(location.href);
@@ -1385,25 +1414,47 @@ if (builtInPresets.has(requestedPreset)) {
   bootPreset.value = requestedPreset;
 }
 updateBootOptions();
-await appPicker.update();
 let preloadFailed = false;
 try {
-  const plan = parsePreload(bootUrl.search);
-  if (plan.apps.length || plan.loader) {
-    await appPicker.setPlan(plan);
-    if (plan.watchface) {
-      faceCatalog.select(appPicker.dependencies().watchface);
+  let draft;
+  const draftToken = sessionStorage.getItem(bootDraftKey);
+  if (draftToken && crossOriginIsolated) {
+    draft = await takeBootDraft(faceModel, draftToken);
+    sessionStorage.removeItem(bootDraftKey);
+    if (!draft) throw Error('The selected files could not be restored. Select them again before booting.');
+  }
+  if (draft) {
+    const selectedUrl = location.href;
+    bootPreset.value = draft.preset;
+    restoreBootFiles(draft.files, $);
+    if (draft.apps) appPicker.restore(draft.apps);
+    if (draft.face) faceCatalog.select(draft.face);
+    if (draft.firmware.value) {
+      $('fmc-firmware-selection').add(new Option(draft.firmware.label, draft.firmware.value));
+      $('fmc-firmware-selection').value = draft.firmware.value;
+    }
+    history.replaceState(null, '', selectedUrl);
+    updateBootOptions();
+    await appPicker.update();
+  } else {
+    await appPicker.update();
+    const plan = parsePreload(bootUrl.search);
+    if (plan.apps.length || plan.loader) {
+      await appPicker.setPlan(plan);
+      if (plan.watchface) {
+        faceCatalog.select(appPicker.dependencies().watchface);
+        $('face-catalog').open = true;
+      }
+      updateBootOptions();
+    } else if (plan.firmware) {
+      const record = await catalogRecord(plan.firmware, faceModel, 'firmware');
+      await selectCatalogFirmware(record);
+      if (plan.watchface) throw Error('Load the selected firmware first, then choose a watch face.');
+    } else if (plan.watchface) {
+      const face = await catalogRecord(plan.watchface, faceModel, 'watchface');
+      faceCatalog.select(face);
       $('face-catalog').open = true;
     }
-    updateBootOptions();
-  } else if (plan.firmware) {
-    const record = await catalogRecord(plan.firmware, faceModel, 'firmware');
-    await selectCatalogFirmware(record);
-    if (plan.watchface) throw Error('Load the selected firmware first, then choose a watch face.');
-  } else if (plan.watchface) {
-    const face = await catalogRecord(plan.watchface, faceModel, 'watchface');
-    faceCatalog.select(face);
-    $('face-catalog').open = true;
   }
 } catch (error) {
   $('image-error').textContent = error.message;

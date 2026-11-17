@@ -160,6 +160,29 @@ export async function clearWatch(key) {
   await store('watches', 'readwrite', s => s.delete(key));
 }
 
+export async function saveBootDraft(model, token, value) {
+  await store('watches', 'readwrite', s => {
+    const cursor = s.openCursor(IDBKeyRange.bound(`${model}:draft:`, `${model}:draft:\uffff`));
+    cursor.onsuccess = () => {
+      const entry = cursor.result;
+      if (!entry) return;
+      if (entry.value.saved < Date.now() - 86400000) entry.delete();
+      entry.continue();
+    };
+    s.put({value, saved: Date.now()}, `${model}:draft:${token}`);
+  });
+}
+
+export async function takeBootDraft(model, token) {
+  const key = `${model}:draft:${token}`;
+  let entry;
+  await store('watches', 'readwrite', s => {
+    const request = s.get(key);
+    request.onsuccess = () => { entry = request.result; s.delete(key); };
+  });
+  return entry?.saved > Date.now() - 86400000 ? entry.value : undefined;
+}
+
 export function restoreSettings(model, root) {
   if (preferences().remember === false) return;
   const saved = preferences()[model] || {};
