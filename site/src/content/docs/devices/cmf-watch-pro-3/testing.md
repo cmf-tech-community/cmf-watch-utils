@@ -27,13 +27,13 @@ is measuring; merely changing a host control does not prove that stock read it.
 | Orientation and gyro | Level, tilt or angular values should follow the supplied motion. |
 | Ambient light | The light test should respond to a changed lux value. Lux measures illumination. |
 | GPS | Start a stock mode using the receiver, then compare the displayed fix with the supplied coordinates. |
-| Battery and charger | Check whether stock reports the connection change. Voltage and displayed percentage need not change together immediately. |
+| Battery and charger | Set **Battery level** in the browser and compare it with the stock percentage. Toggle the charger separately and check the charging indicator. |
 | Optical samples | Enable raw samples and worn state, then start a stock measurement. |
 
-For optical tests in the browser, enable **Feed raw optical samples** and
+For optical tests in the browser, enable **Simulate optical sensor signals** and
 **Watch is worn** under **Optical sensors**. Open Heart rate or Blood oxygen
 and allow stock to calculate a result. Check the history screen separately.
-**Simulate readings** supplies values directly for display tests, which does
+**Set measurement results** supplies values directly for display tests, which does
 not test the raw-sample calculation. See [optical interfaces](/devices/cmf-watch-pro-3/hardware/#gh3220-optical-sensor)
 for the driver-level behavior.
 

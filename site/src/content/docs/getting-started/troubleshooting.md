@@ -109,9 +109,20 @@ preset to distinguish a problem with a custom image from one affecting the stock
 firmware too. Restarting or resetting the virtual watch can discard unsaved state.
 
 Audio may require clicking or tapping the page before the browser permits playback.
-Check the watch-sound setting and whether the tab is muted. Slow emulation can
+Check **Watch sound** under **Simulation → Config** and whether the tab is muted. Slow emulation can
 also interrupt audio; a successful browser boot does not guarantee real-time
 playback on every device.
+
+## The browser emulator opens without my saved watch state
+
+Open **Simulation → Config** and check **Automatically save watch storage**.
+Reopen the same model with the same firmware and app selection. Select any
+local uploads again. The status under the switch shows whether a save was
+restored or whether browser storage was unavailable.
+
+If the tab closed before the last checkpoint finished, the emulator restores
+the previous completed save. Clearing saved watch storage or resetting to
+stock can remove the checkpoint. See [Save data in the browser](/emulator/browser-guide/#save-data-in-the-browser).
 
 ## Reporting a problem
 

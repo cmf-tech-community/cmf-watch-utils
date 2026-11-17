@@ -135,7 +135,7 @@ Linux and macOS are build targets whose runtime integration remains unverified.
 
 ## Downloads
 
-Open the browser emulator for [Watch Pro 2](https://cmf.arnv.dev/emulator/watch-pro-2/) or [Watch 3 Pro](https://cmf.arnv.dev/emulator/watch-pro-3/). For native builds, see the [emulator build guide](emulator/README.md).
+Open the browser emulator for [Watch Pro 2](https://cmf.arnv.dev/emulator/watch-pro-2/) or [Watch 3 Pro](https://cmf.arnv.dev/emulator/watch-pro-3/). Both cache downloads and restore saved watch storage by default. The [browser guide](https://cmf.arnv.dev/emulator/browser-guide/) covers FMC catalogs, supported apps, share links and reset controls. For native builds, see the [emulator build guide](emulator/README.md).
 
 The repository stores images with Git LFS. Use Git LFS to fetch them from a checkout or download
 individual files below.

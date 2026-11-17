@@ -26,6 +26,8 @@ uv run --locked --with playwright==1.55.0 python emulator/smoke_browser.py wasm-
 
 Both smoke tests generate their own boot images. They need no stock firmware, phone, Bluetooth adapter, or physical watch. For changes to a stock screen, sensor, or watch face, follow [First boot](https://cmf.arnv.dev/emulator/first-boot/) and repeat the interaction with the affected stock profile. For an OTA change, use [virtual OTA and recovery](https://cmf.arnv.dev/emulator/ota-recovery/) and record which stage you verified.
 
+For browser storage changes, start with a fresh browser profile. Wait for an automatic save, close the tab, and reopen the same model and firmware in that profile. Check the reported restore and the stock UI. Repeat on both models when changing shared controls or storage code. See [Save data in the browser](https://cmf.arnv.dev/emulator/browser-guide/#save-data-in-the-browser).
+
 ## Documentation changes
 
 Install Node.js 22.22 or later and pnpm 12. From `site/`, run `pnpm install --frozen-lockfile` and `pnpm dev` to preview changes. Run `pnpm build` before opening a PR. Use the [device documentation map](https://cmf.arnv.dev/about/roadmap/) to place results. Record the model and build, and distinguish offline, emulator and physical evidence.
