@@ -25,6 +25,8 @@ hero:
       variant: minimal
 ---
 
+import InteractiveTools from '../../components/InteractiveTools.astro';
+
 CMF Watch Utils is an unofficial interoperability project. It provides an offline toolkit for the
 firmware containers used by CMF Watch devices, a Python client for the watch's BLE services,
 QEMU emulators for Watch Pro 2 and Watch 3 Pro, and the research notes behind them.
@@ -40,6 +42,8 @@ owned and whose loss is acceptable. The device section documents the specific ri
 :::
 
 ## Browser emulator
+
+<InteractiveTools tools={["wp2", "wp3"]} />
 
 Choose [Watch Pro 2](/emulator/watch-pro-2/) or [Watch 3 Pro](/emulator/watch-pro-3/)
 to boot stock firmware. Both open with prepared virtual storage and support

@@ -3,13 +3,17 @@ title: Storage
 description: Verified NAND and NOR capacities, partitions, writable storage, firmware resources and remaining unknowns for Watch Pro 2.
 ---
 
+import InteractiveTools from '../../../../../components/InteractiveTools.astro';
+
+<InteractiveTools tools={["storage"]} />
+
 The examined Watch Pro 2 has **128 MiB of NAND main storage and a separate
 4 MiB NOR chip**. Only part of that capacity is a writable filesystem for files.
 The rest holds firmware, resources, recorded history, diagnostics and flash
 management data.
 
-[Open Storage Explorer](/storage-explorer/watch-pro-2/) to browse the complete
-hierarchy, inspect addresses and evidence, or download the reference as HTML,
+Storage Explorer shows the complete hierarchy, addresses and evidence.
+Download the reference as HTML,
 JSON, Markdown, SVG or PNG. The explorer runs without connecting to a watch.
 
 This reference covers board **JX402**, stock firmware **1.0.0.73**, verified chip
