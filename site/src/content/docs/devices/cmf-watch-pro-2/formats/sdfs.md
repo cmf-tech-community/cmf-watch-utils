@@ -45,15 +45,26 @@ uv run fwkit edit-sdfs dumps/binaries/firmware/JX402_V1.0.0.73.bin res_e.bin 9.a
 
 ## Fixed partition length
 
-`res_e.bin` is a fixed **58,777,088-byte** partition. Replacing a file can change the natural
-SDFS size, so `fwkit.sdfs.pad_to(img, size)` rebuilds the filesystem and pads it back to the
-original partition length, refreshing `total_size` and the body checksum.
+The stock `res_e.bin` **image** is **58,777,088 bytes**. Its physical partition
+reservation is **64 MiB (67,108,864 bytes)**. These are different limits.
 
-This applies whenever the partition is embedded in an AOTA image. Shrinking the partition is
-unsafe unless the way the bootloader maps it is known.
+Preserving the stock image length is the conservative repacking approach.
+Replacing a file can change the natural SDFS size; `fwkit.sdfs.pad_to(img, size)`
+pads to the requested length and refreshes the size and body checksum.
+Packer and SDK inspection do not establish a universal fixed-length rejection
+rule at the stock image size. Larger images have not been verified across the
+shipped updater, resource readers and recovery path. Do not change partition
+boundaries on the assumption that image padding is a partition table.
 
 ## Capacity
 
-The stock `res_e` uses 58,776,014 of 58,777,088 bytes. There is almost no headroom.
-Replacements are planned around the size of the file removed, not the free bytes reported by
-a naive directory listing.
+The 19 stock animation payloads total **58,776,014 bytes**. The **1,074-byte**
+difference from the image length includes headers, directory entries and
+alignment; it is not freely allocatable payload. The **8,331,776 bytes** beyond
+the stock image remain inside the resource reservation and are unvalidated
+for reuse. Neither quantity enlarges the writable FAT filesystem.
+
+For partition ranges, stock image inventory and writable-storage measurements,
+see [Storage](/devices/cmf-watch-pro-2/internals/storage/). The interactive
+[Storage Explorer](/storage-explorer/watch-pro-2/) also provides per-file sizes,
+checksums and downloadable references.

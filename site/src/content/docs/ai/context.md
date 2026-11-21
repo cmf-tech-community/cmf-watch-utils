@@ -58,7 +58,11 @@ dumps/                  manifests, reference binaries via Git LFS and redacted n
 
 - AOTA: 0x400-byte header, 32-byte entries, LZMA chunks, nested partitions.
 - SDFS: `sdfs.bin`, 0x20-byte header, 32-byte entries, 0x40 alignment, `sum32` checksums.
-- `res_e.bin`: fixed **58,777,088 B**; stock uses 58,776,014 B.
+- `res_e.bin`: stock image **58,777,088 B**, named payloads 58,776,014 B;
+  physical reservation **64 MiB**. Metadata/alignment is not free payload,
+  and capacity outside the stock image is unverified for reuse. See
+  [Storage](/devices/cmf-watch-pro-2/internals/storage/) and
+  [Storage Explorer](/storage-explorer/watch-pro-2/).
 - App: `app.bin` at base `0x10000000`, Thumb-2, ACTH header.
 - BLE: MTU 23; frames are AES-CBC, fixed IV, CRC32-LE tail.
 - Auth: `authkey = sha256(r1||r2||secret)[:16]`,

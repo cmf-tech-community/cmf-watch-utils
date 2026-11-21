@@ -74,7 +74,9 @@ docs/dumps/                  manifests and downloadable images
   (`TEMP.bin`, `res.bin`, `fonts.bin`, `res_e.bin`, `sdfs_k.bin`).
 - SDFS: `sdfs.bin` magic, 0x20-byte header, 32-byte entries, 0x40 alignment, `sum32`
   checksums (not CRC32).
-- `res_e.bin` partition length is fixed at **58,777,088 B**; stock usage is 58,776,014 B.
+- Stock `res_e.bin` image length is **58,777,088 B**; named payloads total
+  58,776,014 B. The verified NAND reservation is **64 MiB**. The difference
+  is not writable FAT free space or verified safe expansion capacity.
 - App: `app.bin` at base `0x10000000`, Thumb-2, ACTH header.
 - BLE: MTU 23; payload frames are AES-CBC (fixed IV) with a CRC32-LE tail.
 - Authentication: `authkey = sha256(r1||r2||secret)[:16]`,
@@ -171,3 +173,10 @@ site's OTA and recovery page for the precise boundary.
 
 Documentation changes follow `site/src/content/docs/ai/documentation.md`, including
 reader scenarios, evidence boundaries, link preservation and local verification.
+
+Storage Explorer is generated from reviewed, value-free metadata in
+`tools/storage_explorer/` to `site/public/storage-explorer/watch-pro-2/`.
+Run `python tools/storage_explorer/build.py` after changing its sources or data.
+Normal site builds need no firmware, private dump, device connection or Python
+generation step. Keep partition purpose separate from captured contents and
+clean-stock free-space claims. See the WP2 storage reference for evidence limits.

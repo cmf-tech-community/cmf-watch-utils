@@ -1,0 +1,2324 @@
+{
+  "tree": {
+    "name": "Watch Pro 2",
+    "bytes": 138412032,
+    "kind": "data",
+    "note": "Stock 1.0.0.73 package contents combined with independently verified chip geometry and partition reservations. Not a clean-device dump.",
+    "verification": "Stock reference + hardware evidence",
+    "children": [
+      {
+        "name": "NAND",
+        "bytes": 134217728,
+        "kind": "data",
+        "note": "128 MiB main area, excluding spare/OOB cells.",
+        "verification": "Verified chip geometry",
+        "children": [
+          {
+            "name": "Logical NAND",
+            "bytes": 128974848,
+            "kind": "data",
+            "note": "Driver-exported address space.",
+            "verification": "Verified driver geometry",
+            "children": [
+              {
+                "name": "fw0_temp",
+                "bytes": 3670016,
+                "kind": "metadata",
+                "note": "Temporary staging area for OTA updates.",
+                "verification": "Role verified; factory contents unknown",
+                "offset": 0,
+                "storage": "Logical NAND",
+                "source": "Verified device ACPT partition table / stock contents not supplied",
+                "fileId": 254,
+                "evidence": {
+                  "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. The staged region does not match the stock stored TEMP.bin or its decompressed inner package. A complete AOTA container could not be validated at the region start; historical staging state remains unclassified.",
+                  "Driver and format": "Temporary OTA staging role: stock OTA XML targets fw0_temp, storage ID 2.",
+                  "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+                },
+                "role": "OTA update staging"
+              },
+              {
+                "name": "sdfs_k",
+                "bytes": 1048576,
+                "kind": "resources",
+                "note": "Stock package image contents shown within the verified partition reservation.",
+                "verification": "Stock image + verified boundary",
+                "offset": 3670016,
+                "storage": "Logical NAND",
+                "source": "Verified device ACPT partition table + stock OTA package",
+                "children": [
+                  {
+                    "name": "sdfs_k.bin",
+                    "bytes": 524096,
+                    "kind": "resources",
+                    "note": "Exact decompressed stock SDFS image, with all named file checksums validated.",
+                    "verification": "Verified in stock package",
+                    "children": [
+                      {
+                        "name": "welcome.act",
+                        "bytes": 3200,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3670592,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "1b30a4f16f9fa4b15bd04e3c6feb0ca4fcfffc4bcad5e2b80011e4a9cfd179ff"
+                      },
+                      {
+                        "name": "tst.bin",
+                        "bytes": 4196,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3673792,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "557b1d3de81f70cdca72361a16a8b0ee152db44673758f20a020ac32ccd207ca"
+                      },
+                      {
+                        "name": "sdfs.txt",
+                        "bytes": 10,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3678016,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646"
+                      },
+                      {
+                        "name": "ring5.act",
+                        "bytes": 1162,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3678080,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "9191572ed8712f9c22c6f9eb2160f238f47376be02c456e03c2eab8e8a07d32c"
+                      },
+                      {
+                        "name": "ring4.act",
+                        "bytes": 3520,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3679296,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "24962320ead4cc97b9899368e58c22a4df28d2507e29633ab79c92acf71c570c"
+                      },
+                      {
+                        "name": "ring3.act",
+                        "bytes": 5694,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3682816,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "33579e8be3a5e7fbd05dac67aacb5d56ffb4b4390ba71f3b14ba544a316fbf96"
+                      },
+                      {
+                        "name": "ring2.act",
+                        "bytes": 5164,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3688512,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "ba68194364be3ade6be3665d9aa12d05196a2f8d62447d5f96b5754923d8ea6f"
+                      },
+                      {
+                        "name": "ring1.act",
+                        "bytes": 15556,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3693696,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "41d59961a4c1cb9b17bce94ebd36d35cb18403d5eed6b6bfe3b7d818828c916c"
+                      },
+                      {
+                        "name": "poweroff.act",
+                        "bytes": 3212,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3709312,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "5e28321ee129204a6cd2a847cbbd704617d738d0eb204790215c3293c6c98db6"
+                      },
+                      {
+                        "name": "logo.sty",
+                        "bytes": 204,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3712576,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "e7ca502100f30d19788fa9509dbe53ba752a56c278f44ea969431d385f2ff1c9"
+                      },
+                      {
+                        "name": "logo.res",
+                        "bytes": 15124,
+                        "kind": "artwork",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3712832,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "7a68473fe02e71fa5c6883266e666a9243181bc13157fac3d53ec33087442821"
+                      },
+                      {
+                        "name": "find.act",
+                        "bytes": 6532,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3728000,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "3257b1e8a02fa230c1913921aeac8d4c4b4a36ab05cbfeb60eee7b8b6d30dd6d"
+                      },
+                      {
+                        "name": "fcc.bin",
+                        "bytes": 38352,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3734592,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "b11bc527e70f3513aa02582c5f9789c7b5d41ef9ddb4ab3bc18504273dd21bd6"
+                      },
+                      {
+                        "name": "di.act",
+                        "bytes": 654,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3772992,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "94c12c35766d663189f1850ea3582d06bc63c8c323b737f4beb89bce3863ef9e"
+                      },
+                      {
+                        "name": "alarm.act",
+                        "bytes": 22084,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3773696,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "83189d5c13b0a07efc87dcdf05c87b0f856e75a5dce16a74f55aa13f25aaf83b"
+                      },
+                      {
+                        "name": "aging.act",
+                        "bytes": 7470,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3795840,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "ce964f9d6df660ac2083f1766b866b1ca8569b6e163cee6be0cfb5cbc296a883"
+                      },
+                      {
+                        "name": "admusic.dsp",
+                        "bytes": 390756,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 3803328,
+                        "storage": "Logical NAND",
+                        "source": "sdfs_k.bin / SDFS directory + file checksum",
+                        "sha256": "74c34b87e9679197ad00d6b1abbed64de131d6b8a8bf585508ff23ab942e318b"
+                      },
+                      {
+                        "name": "Image metadata and alignment",
+                        "bytes": 1206,
+                        "kind": "metadata",
+                        "note": "Headers, directory records and alignment bytes inside the supplied image. Not usable filesystem space.",
+                        "verification": "Verified in stock package"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Outside supplied image",
+                    "bytes": 524480,
+                    "kind": "reserved",
+                    "note": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+                    "verification": "Capacity known; contents unverified",
+                    "offset": 4194112,
+                    "storage": "Logical NAND",
+                    "evidence": {
+                      "Device capture": "The interval contains non-FF bytes; it cannot be called erased or free. The preceding stock image is byte-identical to the captured prefix.",
+                      "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+                    }
+                  }
+                ],
+                "fileId": 20,
+                "evidence": {
+                  "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 17 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+                  "Driver and format": "No additional driver binding documented.",
+                  "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+                },
+                "role": "System resources"
+              },
+              {
+                "name": "dstorage",
+                "bytes": 2097152,
+                "kind": "metadata",
+                "note": "Persistent settings and sensor/activity history. Stock firmware defines eleven typed areas; the remaining interval is undocumented.",
+                "verification": "Stock history layout verified; field meanings partial",
+                "offset": 4718592,
+                "storage": "Logical NAND",
+                "source": "Verified device ACPT partition table / stock contents not supplied",
+                "fileId": 249,
+                "children": [
+                  {
+                    "name": "Primary settings object",
+                    "bytes": 32768,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 0: 16,384-byte slots, 13,528-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 4718592,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "Secondary settings object",
+                    "bytes": 24576,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 1: 12,288-byte slots, 4,856-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 4751360,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "Additional persistent state",
+                    "bytes": 8192,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 2: 4,096-byte slots, 2,544-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 4775936,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "Heart-rate history",
+                    "bytes": 32768,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 3: 4,096-byte slots, 2,328-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 4784128,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "Blood-oxygen history",
+                    "bytes": 16384,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 4: 2,048-byte slots, 408-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 4816896,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "Step/activity history",
+                    "bytes": 28672,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 5: 2,048-byte slots, 792-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 4833280,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "Sleep history",
+                    "bytes": 102400,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 6: 2,048-byte slots, 848-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 4861952,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "Workout summaries",
+                    "bytes": 61440,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 7: 4,096-byte slots, 184-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 4964352,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "Workout heart-rate history",
+                    "bytes": 442368,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 8: 2,048-byte slots, 2,024-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 5025792,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "GPS track history",
+                    "bytes": 659456,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 9: 2,048-byte slots, 2,024-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 5468160,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "Stress history",
+                    "bytes": 16384,
+                    "kind": "metadata",
+                    "note": "Stock descriptor type 10: 2,048-byte slots, 408-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+                    "verification": "Stock descriptor verified; fields partial",
+                    "offset": 6127616,
+                    "storage": "Logical NAND",
+                    "source": "Stock app table at CPU 0x101F2C78 + matching captured code"
+                  },
+                  {
+                    "name": "Outside decoded history areas",
+                    "bytes": 671744,
+                    "kind": "unknown",
+                    "note": "Not covered by the 11 verified type reservations. May be reserved or used by other storage logic; contents and ownership are not documented.",
+                    "verification": "Purpose unresolved",
+                    "offset": 6144000,
+                    "storage": "Logical NAND"
+                  }
+                ],
+                "evidence": {
+                  "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data.",
+                  "Driver and format": "All 11 history descriptors (396 table bytes) and their pointed-to object-size descriptors match exactly between stock 1.0.0.73 and the captured app. Typed offsets and reservations derive directly from stock code; field semantics are only partially decoded.",
+                  "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+                },
+                "role": "Settings and recorded history"
+              },
+              {
+                "name": "font",
+                "bytes": 12582912,
+                "kind": "resources",
+                "note": "Stock package image contents shown within the verified partition reservation.",
+                "verification": "Stock image + verified boundary",
+                "offset": 6815744,
+                "storage": "Logical NAND",
+                "source": "Verified device ACPT partition table + stock OTA package",
+                "children": [
+                  {
+                    "name": "fonts.bin",
+                    "bytes": 9513344,
+                    "kind": "resources",
+                    "note": "Exact decompressed stock SDFS image, with all named file checksums validated.",
+                    "verification": "Verified in stock package",
+                    "children": [
+                      {
+                        "name": "test.font",
+                        "bytes": 72022,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 6816064,
+                        "storage": "Logical NAND",
+                        "source": "fonts.bin / SDFS directory + file checksum",
+                        "sha256": "8a33d836a226e2cb5ce4ed3efde50b8cb3c6938b10a153f6ccb339c9d2955daf"
+                      },
+                      {
+                        "name": "sans32.font",
+                        "bytes": 5320508,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 6888128,
+                        "storage": "Logical NAND",
+                        "source": "fonts.bin / SDFS directory + file checksum",
+                        "sha256": "416fe976f3c9fa7e758ac156e4de27d82c01361d772a9a4ee88f36a91fc11e7e"
+                      },
+                      {
+                        "name": "local280.wfc",
+                        "bytes": 145865,
+                        "kind": "faces",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 12208640,
+                        "storage": "Logical NAND",
+                        "source": "fonts.bin / SDFS directory + file checksum",
+                        "sha256": "9bf31c94d3564c21af66878ae9f6a1c59fbff1f12eb575b7829a956e1ff9cce6"
+                      },
+                      {
+                        "name": "local277.wfc",
+                        "bytes": 3021359,
+                        "kind": "faces",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 12354560,
+                        "storage": "Logical NAND",
+                        "source": "fonts.bin / SDFS directory + file checksum",
+                        "sha256": "18eed6e415626523593ddf30d2968effc9d868698c02f079d8af57857ea6a834"
+                      },
+                      {
+                        "name": "local276.wfc",
+                        "bytes": 120480,
+                        "kind": "faces",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 15375936,
+                        "storage": "Logical NAND",
+                        "source": "fonts.bin / SDFS directory + file checksum",
+                        "sha256": "6b85cf8dd1c68fd625d04d3f62da18b0710ac32aa1bc198482eed6fbe25e9356"
+                      },
+                      {
+                        "name": "local275.wfc",
+                        "bytes": 213607,
+                        "kind": "faces",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 15496448,
+                        "storage": "Logical NAND",
+                        "source": "fonts.bin / SDFS directory + file checksum",
+                        "sha256": "fc48e4c6d8da33c0ad4d827ac261545390c730dfc5af488f260a154d1132d181"
+                      },
+                      {
+                        "name": "local274.wfc",
+                        "bytes": 405659,
+                        "kind": "faces",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 15710080,
+                        "storage": "Logical NAND",
+                        "source": "fonts.bin / SDFS directory + file checksum",
+                        "sha256": "1b356d63f07daf35cf140ff39926ce34b3ae86b17b3e38cc54e6aebd4f5ba090"
+                      },
+                      {
+                        "name": "local273.wfc",
+                        "bytes": 72022,
+                        "kind": "faces",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 16115776,
+                        "storage": "Logical NAND",
+                        "source": "fonts.bin / SDFS directory + file checksum",
+                        "sha256": "8a33d836a226e2cb5ce4ed3efde50b8cb3c6938b10a153f6ccb339c9d2955daf"
+                      },
+                      {
+                        "name": "emoji28.font",
+                        "bytes": 141248,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 16187840,
+                        "storage": "Logical NAND",
+                        "source": "fonts.bin / SDFS directory + file checksum",
+                        "sha256": "b3826f09061d86f14e34311ec10e6ba52335a3f4b72c21e82d2404392b31df3c"
+                      },
+                      {
+                        "name": "Image metadata and alignment",
+                        "bytes": 574,
+                        "kind": "metadata",
+                        "note": "Headers, directory records and alignment bytes inside the supplied image. Not usable filesystem space.",
+                        "verification": "Verified in stock package"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Outside supplied image",
+                    "bytes": 3069568,
+                    "kind": "reserved",
+                    "note": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+                    "verification": "Capacity known; contents unverified",
+                    "offset": 16329088,
+                    "storage": "Logical NAND",
+                    "evidence": {
+                      "Device capture": "The interval contains non-FF bytes; it cannot be called erased or free. The preceding stock image is byte-identical to the captured prefix.",
+                      "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+                    }
+                  }
+                ],
+                "fileId": 12,
+                "evidence": {
+                  "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 9 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+                  "Driver and format": "No additional driver binding documented.",
+                  "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+                },
+                "role": "Fonts and built-in watch faces"
+              },
+              {
+                "name": "res_a",
+                "bytes": 10485760,
+                "kind": "resources",
+                "note": "Stock package image contents shown within the verified partition reservation.",
+                "verification": "Stock image + verified boundary",
+                "offset": 19398656,
+                "storage": "Logical NAND",
+                "source": "Verified device ACPT partition table + stock OTA package",
+                "children": [
+                  {
+                    "name": "res.bin",
+                    "bytes": 10137792,
+                    "kind": "resources",
+                    "note": "Exact decompressed stock SDFS image, with all named file checksums validated.",
+                    "verification": "Verified in stock package",
+                    "children": [
+                      {
+                        "name": "tiger.svg",
+                        "bytes": 101129,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19401344,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "f12f73b2e08889652567a5310f1fc2dbce85cc404c1baef4dab4fa4af41c495b"
+                      },
+                      {
+                        "name": "num88e.font",
+                        "bytes": 15504,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19502528,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "59b7d28c164ea70cfbc3443976c654daa27c29e2cd05710aa88c9419b0eec9dd"
+                      },
+                      {
+                        "name": "num80m.font",
+                        "bytes": 14964,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19518080,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "2a7703d36567d96ef3c5013694e55495c85126d58b4b59595dc1e9114392c1ef"
+                      },
+                      {
+                        "name": "num74m.font",
+                        "bytes": 12812,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19533056,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "2c0f499a41fdba910784a5d240e8cdd78ec384d90a8d36d24a3a177f6984376f"
+                      },
+                      {
+                        "name": "num74b.font",
+                        "bytes": 8484,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19545920,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "cd28c8a95b8e2e2496f62700ffa491c87959e819d4c8839be54c5eddc1da0f6f"
+                      },
+                      {
+                        "name": "num72el.font",
+                        "bytes": 10636,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19554432,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "b9969ff0ddd19fa4fa0b6514c96973fea6310127f6bc956b0d49cb24c7379889"
+                      },
+                      {
+                        "name": "num72e.font",
+                        "bytes": 10636,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19565120,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "b9969ff0ddd19fa4fa0b6514c96973fea6310127f6bc956b0d49cb24c7379889"
+                      },
+                      {
+                        "name": "num70m.font",
+                        "bytes": 11672,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19575808,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "b70c0c3cd0e44dabc94f20e3fc7ec0cecc0ab7cea9079aa91f6f316008a30c06"
+                      },
+                      {
+                        "name": "num64el.font",
+                        "bytes": 8416,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19587520,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "6ce6ec5fa477a1fe4436153d3786bc5c9efcfa541f1f50ad206b71e80e301dce"
+                      },
+                      {
+                        "name": "num58m.font",
+                        "bytes": 8012,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19595968,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "33c3386824fed9fb3de5d81c34ea080b6ff54a37146eae6a80e42e3e06b17229"
+                      },
+                      {
+                        "name": "num56el.font",
+                        "bytes": 6612,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19604032,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "d199cc06c617efca6bb225a44c28b8d990712e74c66fbc1e05fe3b44dadd6a4d"
+                      },
+                      {
+                        "name": "num56e.font",
+                        "bytes": 6612,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19610688,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "d199cc06c617efca6bb225a44c28b8d990712e74c66fbc1e05fe3b44dadd6a4d"
+                      },
+                      {
+                        "name": "num48m.font",
+                        "bytes": 5688,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19617344,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "33f6544ba24a494f6213a627e5f64988afef1ad5e450ec3d1703ec81f51b5450"
+                      },
+                      {
+                        "name": "num46m.font",
+                        "bytes": 5184,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19623040,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "3e0eafb4cfe4e411f20e9a3652d91250987c6484ea2e67d611358cdf63838b80"
+                      },
+                      {
+                        "name": "num44m.font",
+                        "bytes": 4676,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19628224,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "693f3dd2069aa44032b66d434727495a16c2d38f0acb33b5a331674397c91208"
+                      },
+                      {
+                        "name": "num42m.font",
+                        "bytes": 4240,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19632960,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "9e7c0c2b1ea3f30103433baa14ac3caf5d2cebc856ec17da192cf2e1089bd3af"
+                      },
+                      {
+                        "name": "num40m.font",
+                        "bytes": 3904,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19637248,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "fba2eb58a36040d82067c8373a9412d1cf0e7b8df140a84992a4a5154d2ba6f5"
+                      },
+                      {
+                        "name": "num38m.font",
+                        "bytes": 3564,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19641152,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "f31e48c9e052ae05338b8a6cd05a26a27e7c51b5fb71d5ac51533a5c37f3d43c"
+                      },
+                      {
+                        "name": "num36r.font",
+                        "bytes": 3244,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19644736,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "3331cbe30e5bba4a8ccbaa3200951370ed6ce1321fc08e82cbe800cf54387cf0"
+                      },
+                      {
+                        "name": "num36m.font",
+                        "bytes": 3492,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19648000,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "543e763df21f8c101cde1bac923fe40ba126daf8b7ea321f90a78c87d2c1da5e"
+                      },
+                      {
+                        "name": "num36l.font",
+                        "bytes": 2984,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19651520,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "eab47827ed28a997bdf7329eb2bae8c78916ee3947e5bb55d186d5c346c733a7"
+                      },
+                      {
+                        "name": "num34m.font",
+                        "bytes": 3316,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19654528,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "bfb0f3172f7db857648190e09fe1a5132e7db4892801ad882e7d05e9579e9df8"
+                      },
+                      {
+                        "name": "num32m.font",
+                        "bytes": 3236,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19657856,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "880d02cd58889171781fdb06218850788f4eabdc5cc6a9c3b470d3a77775f140"
+                      },
+                      {
+                        "name": "num28m.font",
+                        "bytes": 2660,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19661120,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "dcf85fd6cf821209a51de61afa273d8ef73fd405a3c689ad4a3aaab4ffc47fab"
+                      },
+                      {
+                        "name": "num26m.font",
+                        "bytes": 2020,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19663808,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "24059cd6ad78e2d5951f3b7adf2abaaf099ad472b2eb453d70094a939567a300"
+                      },
+                      {
+                        "name": "num24r.font",
+                        "bytes": 1608,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19665856,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "2318c47ce8cfd79406771c895516d08cd00e4b5f99b789abce9624cb95ce9ce5"
+                      },
+                      {
+                        "name": "num24m.font",
+                        "bytes": 1656,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19667520,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "ef9f5cb18770332566d57e583b58e26431188909c83f078a4d46835949fad619"
+                      },
+                      {
+                        "name": "num20m.font",
+                        "bytes": 1148,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19669184,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "89714a68c6b896405af79acd4460078a390e6250735885104f67dcb017b32ff9"
+                      },
+                      {
+                        "name": "num18m.font",
+                        "bytes": 996,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19670336,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "99f976ca92eac28a2f034ac8eaa31951030009298fd46cccb0ec636867e4e9b6"
+                      },
+                      {
+                        "name": "nm48n.font",
+                        "bytes": 7792,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19671360,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "31fc9c691eeefe9c9b87a0b9c39428786b3ba3c2485bd85c258f6497ef6c379c"
+                      },
+                      {
+                        "name": "nm36n.font",
+                        "bytes": 3760,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19679168,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "6f69b5c68f7ffff1a380bd458f393b38623457137200844fc3923aadae6a51d1"
+                      },
+                      {
+                        "name": "nm120nb.font",
+                        "bytes": 34468,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19682944,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "3eea50cacfce094d952188c9b4ffe46bd0fe449a244b848b220e3e1f21e87fdf"
+                      },
+                      {
+                        "name": "nm104n.font",
+                        "bytes": 34340,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19717440,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "17b91c32ea72479a9dde6b6243b28196bd4df0cef97470cb46ac714906f21cde"
+                      },
+                      {
+                        "name": "font48r.font",
+                        "bytes": 18056,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19751808,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "19775f78c638764973ba2b701dd1641a20198ac67a31d6725018670d33e5a0d1"
+                      },
+                      {
+                        "name": "font48m.font",
+                        "bytes": 44392,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19769920,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "26516b234e7359748de657edb8a2204f5d0bad2d3ff708fc10ac3e008661fe73"
+                      },
+                      {
+                        "name": "font44l.font",
+                        "bytes": 23020,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19814336,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "070a76b314351a4344addefa494450b50c82e5db45a9241331eca0e0c7302aeb"
+                      },
+                      {
+                        "name": "font40r.font",
+                        "bytes": 13844,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19837376,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "7594e77a987003ef5f188f272e439d7cf37cbd93afc398ae954caf5e65d61eea"
+                      },
+                      {
+                        "name": "font38r.font",
+                        "bytes": 34444,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19851264,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "c4a6cda469b3e2c2ded30d0389d1b66e01a1f36a248f11a4e8eec0a31ebd13cd"
+                      },
+                      {
+                        "name": "font38m.font",
+                        "bytes": 13232,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19885760,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "e28e4d99b015396434ae30a74e0716e61a61c138e5cd069732cfb4e09b072874"
+                      },
+                      {
+                        "name": "font36r.font",
+                        "bytes": 43256,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19899008,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "da03b65f4ae5578301b228b722f8c5d35d5ed9d20719ee65ae74ca7866c00b7b"
+                      },
+                      {
+                        "name": "font36n.font",
+                        "bytes": 13284,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19942272,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "d6ade219bef1415f1b8b4958d95c13cc7798aa4cc1caeb7d83cfbd871cea5156"
+                      },
+                      {
+                        "name": "font36m.font",
+                        "bytes": 262424,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 19955584,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "7410dd51afad933c9871d5a781a6b3f8a8dfc02138c1cbcb7b71621242ef77ee"
+                      },
+                      {
+                        "name": "font36l.font",
+                        "bytes": 13352,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 20218048,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "ffbfefe7ff3b2af798407c70df6482bc0db2a331ef940b58c46748d342c1e296"
+                      },
+                      {
+                        "name": "font34r.font",
+                        "bytes": 140992,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 20231424,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "05d9786cefb627faa20d1b8092eb4c59263e91a4be096882b2936f6359952491"
+                      },
+                      {
+                        "name": "font34m.font",
+                        "bytes": 11596,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 20372416,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "20759f7ece4ef7ec9270c92f6e936f1891fc43f5ffce90416ae9b57baad653fe"
+                      },
+                      {
+                        "name": "font32r.font",
+                        "bytes": 307672,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 20384064,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "1830da5d558fd56fb24a2f7f832f2582406f1bcae6782c5491e0b565487723e2"
+                      },
+                      {
+                        "name": "font32m.font",
+                        "bytes": 519912,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 20691776,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "8b9312d818185853065187f1f01ead448f89678b97da89c8f76a830212d32395"
+                      },
+                      {
+                        "name": "font32l.font",
+                        "bytes": 9640,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21211712,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "9b720246411c07d102a5fea346931ed2d474900a698f837080f6cbc9b098be75"
+                      },
+                      {
+                        "name": "font30r.font",
+                        "bytes": 9492,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21221376,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "90a63aa91a628a6502ae4b9209a4b9545e85fd4b6617a8f0cb036c64772b6475"
+                      },
+                      {
+                        "name": "font28r.font",
+                        "bytes": 57320,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21230912,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "4f1b44fb1859120b2bedc1de972911a30e25b5fa0304faa3df6bfbedabe56243"
+                      },
+                      {
+                        "name": "font28m.font",
+                        "bytes": 242116,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21288256,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "adb7984623ee2d21be05042826896ecf10955f3f6b46dc1af080a56b031f1913"
+                      },
+                      {
+                        "name": "font26r.font",
+                        "bytes": 9280,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21530432,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "7dcd9f6dac58affc203be00fc45f443501234fcf498fade72fd44cc379f05195"
+                      },
+                      {
+                        "name": "font24r.font",
+                        "bytes": 18148,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21539712,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "d6a3b5e6d1a807edeaf3aaa96237b03239f2bc5b5066a31491003d599281919c"
+                      },
+                      {
+                        "name": "font24m.font",
+                        "bytes": 175552,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21557888,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "ff4c8606b76dfcb3dfda48a2fb9b9cbf5b44af8cd201ab1f4ef7ce7de579bc55"
+                      },
+                      {
+                        "name": "font24l.font",
+                        "bytes": 30192,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21733440,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "852b909852a94851d1c327e2d86268d880fee0366aa09d83b439006ae3fba589"
+                      },
+                      {
+                        "name": "font20r.font",
+                        "bytes": 9976,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21763648,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "6d0b8916d1db28fa1b3df251e4233019cd2c175d71b9a44103a20615e280b048"
+                      },
+                      {
+                        "name": "font18m.font",
+                        "bytes": 31036,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21773632,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "352a11d87617140f1468c2c2c264eb4e00ecad1a6848034833a1b741b1f0a671"
+                      },
+                      {
+                        "name": "fnt56el.font",
+                        "bytes": 20352,
+                        "kind": "fonts",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21804672,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "d47b6d1e9f6fbc007c99ab3ab439c15dd1b717f201dfcefb795edda77636dbe6"
+                      },
+                      {
+                        "name": "bt_watch.zht",
+                        "bytes": 28897,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21825024,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "dae8ae14336a99332b0f0258947385ba9412b27c2bff3b91911bdd6a5932173c"
+                      },
+                      {
+                        "name": "bt_watch.zhc",
+                        "bytes": 29182,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21853952,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "55feb0d7387cabfb9043633f753cee246a5d662d2ad37b2af2f8e11f6bbf47f4"
+                      },
+                      {
+                        "name": "bt_watch.th",
+                        "bytes": 59195,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21883136,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "6c3ada69b4d9b7612e5f959659c7bb2865ca1be5ab59d3da457be64aa9efb27a"
+                      },
+                      {
+                        "name": "bt_watch.sty",
+                        "bytes": 197368,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 21942336,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "7f4bf1a85b89d3c7d4238f247760a5fdd845f22965754573e96d993cbaae017e"
+                      },
+                      {
+                        "name": "bt_watch.sk",
+                        "bytes": 33493,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 22139712,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "f57306abd917ca267d19282fce9a8fc3e22cb9420046bd9d7da59eb800ff4066"
+                      },
+                      {
+                        "name": "bt_watch.ru",
+                        "bytes": 48089,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 22173248,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "b4c195221042ed6f7c42eadc2479673adfe4a7a1557ad770aa169b146758f614"
+                      },
+                      {
+                        "name": "bt_watch.ro",
+                        "bytes": 34640,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 22221376,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "71288e1068c6ef8e9ba659761ff6bd4fea2e59c672d4fab9e9ebeea0a4d30177"
+                      },
+                      {
+                        "name": "bt_watch.res",
+                        "bytes": 6682132,
+                        "kind": "artwork",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 22256064,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "35e849efb33418c96f9a33ecc17232692c1ffe962ef5f8109e3493cdad2f426d"
+                      },
+                      {
+                        "name": "bt_watch.pt",
+                        "bytes": 33795,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 28938240,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "bd7f2847f35f2f120b83d46781df8091f8b4b420e465ed78349eab3f67c2f965"
+                      },
+                      {
+                        "name": "bt_watch.pl",
+                        "bytes": 33782,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 28972096,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "0e1638beb79f4ceba29dfe85e2eeb6870b88b653795d176d1566bf90065c0b3f"
+                      },
+                      {
+                        "name": "bt_watch.ko",
+                        "bytes": 33310,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29005888,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "17df138e8c37040d174b3bc55b88011b2a749d626f54a5e23b7a55ab3e0951e8"
+                      },
+                      {
+                        "name": "bt_watch.ja",
+                        "bytes": 37190,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29039232,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "eaacd13214ee643bb18cae6028ae24e103b80b109c7422831f13f515834a5243"
+                      },
+                      {
+                        "name": "bt_watch.it",
+                        "bytes": 34305,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29076480,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "c57e14ce6821bb8f006ca807a4c03b0a68265c8d214a8db88d9fcc2352308d8c"
+                      },
+                      {
+                        "name": "bt_watch.in",
+                        "bytes": 53904,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29110848,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "743769355ce4296016f57e5457fb69ae238bbe101dccde51b9a0d2bde812eff2"
+                      },
+                      {
+                        "name": "bt_watch.id",
+                        "bytes": 32530,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29164800,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "0f23c2ac183ce3bf247eda4606c18b317b6765392487037371ec037effabc73b"
+                      },
+                      {
+                        "name": "bt_watch.he",
+                        "bytes": 37620,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29197376,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "42e84012ca46723da6a75e91a9c7dd28f9fccfbed3caaa0df58df03699eb7777"
+                      },
+                      {
+                        "name": "bt_watch.fr",
+                        "bytes": 35474,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29235008,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "0c58898689b23491ece436ec724a799bfc6c58f4bf9491c74b85f604dd958796"
+                      },
+                      {
+                        "name": "bt_watch.fil",
+                        "bytes": 33828,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29270528,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "b2f1fab0b78630db7b790aeb4c7fc197d77d1312fde3b712b4232dbf6fee6f75"
+                      },
+                      {
+                        "name": "bt_watch.es",
+                        "bytes": 34511,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29304384,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "17e86c625fba3a8d1ce84b852a690a7c04979c9516c5d60c19f7250fa4e6c329"
+                      },
+                      {
+                        "name": "bt_watch.eng",
+                        "bytes": 30834,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29338944,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "2f369dfd817f0d4b7cdb0c15cfaff502608a9f95b2f52130b34ab02961c8fe41"
+                      },
+                      {
+                        "name": "bt_watch.de",
+                        "bytes": 34392,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29369792,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "90f769830ca2f075df2983aeecf279c82fe814d7bfcfac84f1eabb1cbd2e73d7"
+                      },
+                      {
+                        "name": "bt_watch.cz",
+                        "bytes": 33398,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29404224,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "dfb39334dcec0af73578cd7fe901f1e04cafcd8a960c1cae5d6a46465cf42733"
+                      },
+                      {
+                        "name": "bt_watch.bg",
+                        "bytes": 46729,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29437632,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "a515c38c3d9163080a52942ed9bf04e025d70a980d702b85ef63648425853c4b"
+                      },
+                      {
+                        "name": "bt_watch.ar",
+                        "bytes": 52021,
+                        "kind": "resources",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 29484416,
+                        "storage": "Logical NAND",
+                        "source": "res.bin / SDFS directory + file checksum",
+                        "sha256": "94a90bc86bb0c7ce5896a9c050c202b0af6790301a4f41618b6b94482984ca89"
+                      },
+                      {
+                        "name": "Image metadata and alignment",
+                        "bytes": 5128,
+                        "kind": "metadata",
+                        "note": "Headers, directory records and alignment bytes inside the supplied image. Not usable filesystem space.",
+                        "verification": "Verified in stock package"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Outside supplied image",
+                    "bytes": 347968,
+                    "kind": "reserved",
+                    "note": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+                    "verification": "Capacity known; contents unverified",
+                    "offset": 29536448,
+                    "storage": "Logical NAND",
+                    "evidence": {
+                      "Device capture": "The interval contains non-FF bytes; it cannot be called erased or free. The captured image differs from stock, so the stock boundary is not evidence of the captured image end.",
+                      "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+                    }
+                  }
+                ],
+                "fileId": 10,
+                "evidence": {
+                  "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 82 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+                  "Driver and format": "No additional driver binding documented.",
+                  "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+                },
+                "role": "UI resources"
+              },
+              {
+                "name": "res_b",
+                "bytes": 8388608,
+                "kind": "resources",
+                "note": "Resource partition without an image in this stock OTA. The device capture contains an empty SDFS directory.",
+                "verification": "Captured SDFS has zero directory entries; body checksum fails",
+                "offset": 29884416,
+                "storage": "Logical NAND",
+                "source": "Verified device ACPT partition table / stock contents not supplied",
+                "fileId": 11,
+                "evidence": {
+                  "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 0 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+                  "Driver and format": "No additional driver binding documented.",
+                  "Verification limits": "Empty SDFS directory does not mean the reservation is blank. Its previously audited body-checksum mismatch remains unresolved. Factory contents and subsequent use are not documented by this device observation."
+                },
+                "role": "Resource partition"
+              },
+              {
+                "name": "res_e",
+                "bytes": 67108864,
+                "kind": "resources",
+                "note": "Stock package image contents shown within the verified partition reservation.",
+                "verification": "Stock image + verified boundary",
+                "offset": 38273024,
+                "storage": "Logical NAND",
+                "source": "Verified device ACPT partition table + stock OTA package",
+                "children": [
+                  {
+                    "name": "res_e.bin",
+                    "bytes": 58777088,
+                    "kind": "resources",
+                    "note": "Exact decompressed stock SDFS image, with all named file checksums validated.",
+                    "verification": "Verified in stock package",
+                    "children": [
+                      {
+                        "name": "9.ajs",
+                        "bytes": 4795064,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 38273664,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "5e93c6a93dead7ebed428b7564e534c90a1d2968cc5fbc561c3985cdd5196a1f"
+                      },
+                      {
+                        "name": "8.ajs",
+                        "bytes": 1886654,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 43068736,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "d3b713c8950ba5046abf0ba40b9d5003a2a69d10fcfdcb20fa77454956a67f6b"
+                      },
+                      {
+                        "name": "7.ajs",
+                        "bytes": 1893750,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 44955392,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "4e4be5fef7f3c063d0a76c151542c16e14c281db6d0597756337eb9f8d2477a4"
+                      },
+                      {
+                        "name": "6.ajs",
+                        "bytes": 3190239,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 46849152,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "ce2a588f52579b4827f25958f0447a7628e72c540df480afd2d7117ad8f6af4c"
+                      },
+                      {
+                        "name": "5.ajs",
+                        "bytes": 2795159,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 50039424,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "0a39bc3cab5a4c46cf0fb555b874108405e5ab51cbc6f8db11f31d15a649fedb"
+                      },
+                      {
+                        "name": "4.ajs",
+                        "bytes": 2816699,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 52834624,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "eb05b2f7cb2d78f9e9db34d3907896d8ab1fe7c301ca44490e548db906370348"
+                      },
+                      {
+                        "name": "3.ajs",
+                        "bytes": 2636212,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 55651328,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "3493eef460a8cbf5fc8b0c627d0734dbc68243bf609bcded6c94dc259c9fea36"
+                      },
+                      {
+                        "name": "2.ajs",
+                        "bytes": 2031214,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 58287552,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "6f54c005a4731993a56fc09f0701ec79c337810ccfdb8d1522890c052dac236c"
+                      },
+                      {
+                        "name": "19.ajs",
+                        "bytes": 2964415,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 60318784,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "aa9ecf35f0152d56603b9dd57a3534becca39816270613ede52c71716cc9575d"
+                      },
+                      {
+                        "name": "18.ajs",
+                        "bytes": 4105949,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 63283200,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "f7f0f067b3af2d2f6176e165d2a351bb916d45779dc235b36d5df0c7f82632a5"
+                      },
+                      {
+                        "name": "17.ajs",
+                        "bytes": 3988068,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 67389184,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "17aadc9b5911ebafb15b3a34307f2a14e2466da99c476c90ca7b793b23c9f9e8"
+                      },
+                      {
+                        "name": "16.ajs",
+                        "bytes": 6075165,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 71377280,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "1fc6028ff8c2f450dd7e8736d26437419ea82ef1a7d2de0b95c71069126f0645"
+                      },
+                      {
+                        "name": "15.ajs",
+                        "bytes": 3466369,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 77452480,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "736a9788e2eb38c083129a419b7220376d25ad9af8e8f2ce642d4010fb1332f7"
+                      },
+                      {
+                        "name": "14.ajs",
+                        "bytes": 3305983,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 80918912,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "3df69686e9f56dd1fca33f935ac9414baf401e70634700caa12211ba412200e8"
+                      },
+                      {
+                        "name": "13.ajs",
+                        "bytes": 2974369,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 84224896,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "12a85041c757d7445c2301f8b216975b729616b28246bde64a6ce96f119efb24"
+                      },
+                      {
+                        "name": "12.ajs",
+                        "bytes": 3180079,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 87199296,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "650acdcb7ab84f812702ec622e7433ad1ddb7a8344e245523c3aa88d1efa50f7"
+                      },
+                      {
+                        "name": "11.ajs",
+                        "bytes": 1841390,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 90379392,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "bab9c195b4a3ca4441cd7bb361bbc7ba2df438e0450905ea47fcdaad47883e0c"
+                      },
+                      {
+                        "name": "10.ajs",
+                        "bytes": 2814323,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 92220800,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "51b4251adb9b0f01638fd27927a90d7df16439cc2be1bc8708d30037d289ea76"
+                      },
+                      {
+                        "name": "1.ajs",
+                        "bytes": 2014913,
+                        "kind": "animations",
+                        "note": "File included in stock firmware 1.0.0.73.",
+                        "verification": "Verified in stock package",
+                        "offset": 95035136,
+                        "storage": "Logical NAND",
+                        "source": "res_e.bin / SDFS directory + file checksum",
+                        "sha256": "7bab27dabb60f24764998585552057635a0d93e23bcabfa8d6dfdcf057729f22"
+                      },
+                      {
+                        "name": "Image metadata and alignment",
+                        "bytes": 1074,
+                        "kind": "metadata",
+                        "note": "Headers, directory records and alignment bytes inside the supplied image. Not usable filesystem space.",
+                        "verification": "Verified in stock package"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Outside supplied image",
+                    "bytes": 8331776,
+                    "kind": "reserved",
+                    "note": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+                    "verification": "Capacity known; contents unverified",
+                    "offset": 97050112,
+                    "storage": "Logical NAND",
+                    "evidence": {
+                      "Device capture": "Entire interval was FF. The captured image differs from stock, so the stock boundary is not evidence of the captured image end.",
+                      "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+                    }
+                  }
+                ],
+                "fileId": 14,
+                "evidence": {
+                  "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 19 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+                  "Driver and format": "No additional driver binding documented.",
+                  "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+                },
+                "role": "Watch-face resources"
+              },
+              {
+                "name": "runtimel",
+                "bytes": 2097152,
+                "kind": "metadata",
+                "note": "Persistent runtime diagnostics. This is separate from the flash translation layer\u2019s internal update-log blocks.",
+                "verification": "Role verified; factory contents unknown",
+                "offset": 105381888,
+                "storage": "Logical NAND",
+                "source": "Verified device ACPT partition table / stock contents not supplied",
+                "fileId": 250,
+                "evidence": {
+                  "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data.",
+                  "Driver and format": "Runtime diagnostic log role: ACPT file ID 0xFA matches the SDK runtime-log identifier.",
+                  "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+                },
+                "role": "Runtime diagnostic logs"
+              },
+              {
+                "name": "udisk",
+                "bytes": 10485760,
+                "kind": "filesystem",
+                "note": "Writable file storage used for custom apps and other files. The partition reserves 10 MiB; the captured FAT16 format provides 10,426,368 bytes of file-data capacity. Clean-stock free space has not been measured. Installed apps and their usage are excluded from this reference.",
+                "verification": "Writable filesystem verified; captured FAT16 format verified; clean-stock free space not measured",
+                "offset": 107479040,
+                "storage": "Logical NAND",
+                "source": "Verified device ACPT partition table / stock contents not supplied",
+                "fileId": 40,
+                "evidence": {
+                  "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Observed FAT16 format: 512-byte sectors, 1024-byte clusters, two identical FAT copies. 59,392 bytes of format overhead leave 10,426,368 bytes of file-data capacity. These describe the captured format, not verified factory formatting or available space.",
+                  "Driver and format": "ACPT file ID 40 matches PARTITION_FILE_ID_UDISK in the Actions SDK partition header. Filesystem geometry comes from the captured boot sector and allocation-table equality; installed files and their free-space counts are excluded.",
+                  "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+                },
+                "role": "Writable file storage (FAT16 observed)"
+              },
+              {
+                "name": "Unpartitioned logical tail",
+                "bytes": 11010048,
+                "kind": "reserved",
+                "note": "Logical NAND interval not assigned by the partition table. The stock OTA does not specify its contents or subsequent ownership.",
+                "verification": "Boundary verified; stock contents unknown",
+                "offset": 117964800,
+                "storage": "Logical NAND",
+                "evidence": {
+                  "Device capture": "All 11,010,048 bytes are FF; a prior independent full-tail read agreed.",
+                  "Verification limits": "Factory state, future OTA ownership, successful writes and subsequent use remain undocumented."
+                },
+                "role": "Outside the partition table; reuse unverified"
+              }
+            ]
+          },
+          {
+            "name": "NAND management",
+            "bytes": 5242880,
+            "kind": "metadata",
+            "note": "Capacity managed internally by the flash translation layer: mapping tables, update-log blocks and the block allocation pool.",
+            "verification": "Capacity and roles verified; stock allocation unknown",
+            "storage": "Physical NAND",
+            "source": "Chip geometry + driver trace + live metadata; no physical content dump",
+            "evidence": {
+              "Driver and format": "1024 physical blocks minus 984 logical blocks = 40 blocks (5 MiB). Physical-page reader and mapping/log/pool handling were traced.",
+              "Device capture": "Two live RAM metadata captures accounted for 8 update-log blocks, 31 allocation-pool blocks and 1 zone-table block. Two physical blocks exchanged roles; these counts are observations, not a factory baseline.",
+              "Verification limits": "Raw physical contents, full OOB, per-block health and factory role assignments remain unverified. Pool membership does not imply erased pages."
+            },
+            "role": "Flash translation and block management"
+          }
+        ]
+      },
+      {
+        "name": "NOR",
+        "bytes": 4194304,
+        "kind": "firmware",
+        "note": "Separate 4 MiB NOR chip. Unknown regions remain explicit.",
+        "verification": "Verified chip geometry",
+        "children": [
+          {
+            "name": "fw0_boot",
+            "bytes": 4096,
+            "kind": "firmware",
+            "note": "Primary bootloader reservation.",
+            "verification": "Captured image validated; stock identity unknown",
+            "offset": 0,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 1,
+            "evidence": {
+              "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured firmware image: 3,816 bytes (56-byte header and 3,760-byte payload); both ACTH checksums pass. Stock identity is not established for this captured image.",
+              "Driver and format": "No additional driver binding documented.",
+              "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Primary bootloader"
+          },
+          {
+            "name": "fw0_para",
+            "bytes": 4096,
+            "kind": "metadata",
+            "note": "Active partition table: chip selection, offsets, sizes and firmware file identifiers.",
+            "verification": "Captured ACPT verified; factory state unknown",
+            "offset": 4096,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 2,
+            "evidence": {
+              "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. The 744-byte active ACPT table passes CRC32 and exactly matches all 22 recorded partition boundaries.",
+              "Driver and format": "No additional driver binding documented.",
+              "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Active partition table"
+          },
+          {
+            "name": "fw1_boot",
+            "bytes": 4096,
+            "kind": "firmware",
+            "note": "Secondary bootloader reservation.",
+            "verification": "Boundary verified; contents unknown",
+            "offset": 8192,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 1,
+            "evidence": {
+              "Device capture": "Entire reservation was FF in the device capture. This does not prove a factory default or ownership of the interval.",
+              "Driver and format": "No additional driver binding documented.",
+              "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Secondary bootloader reservation"
+          },
+          {
+            "name": "fw1_para",
+            "bytes": 4096,
+            "kind": "metadata",
+            "note": "Secondary partition-table reservation.",
+            "verification": "Boundary verified; contents unknown",
+            "offset": 12288,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 2,
+            "evidence": {
+              "Device capture": "Entire reservation was FF in the device capture. This does not prove a factory default or ownership of the interval.",
+              "Driver and format": "No additional driver binding documented.",
+              "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Secondary partition-table reservation"
+          },
+          {
+            "name": "fw0_rec",
+            "bytes": 131072,
+            "kind": "firmware",
+            "note": "Recovery firmware reservation.",
+            "verification": "Captured image validated; stock identity unknown",
+            "offset": 16384,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 3,
+            "evidence": {
+              "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured firmware image: 95,844 bytes (512-byte header and 95,332-byte payload); both ACTH checksums pass. Stock identity is not established for this captured image.",
+              "Driver and format": "No additional driver binding documented.",
+              "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Recovery firmware"
+          },
+          {
+            "name": "fw0_sys",
+            "bytes": 3452928,
+            "kind": "firmware",
+            "note": "Main application firmware. The image breakdown uses stock firmware 1.0.0.73.",
+            "verification": "Stock image + verified boundary",
+            "offset": 147456,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table + stock OTA package",
+            "children": [
+              {
+                "name": "Stock app.bin",
+                "bytes": 2465920,
+                "kind": "firmware",
+                "note": "Unmodified application from the nested stock OTA.",
+                "verification": "Verified in stock package",
+                "children": [
+                  {
+                    "name": "Firmware header",
+                    "bytes": 512,
+                    "kind": "metadata",
+                    "note": "Stock ACTH header checksum passes.",
+                    "verification": "Verified in stock package"
+                  },
+                  {
+                    "name": "Application code and embedded data",
+                    "bytes": 2464828,
+                    "kind": "firmware",
+                    "note": "Stock application payload checksum passes. Internal code and data are not fully classified here.",
+                    "verification": "Verified in stock package"
+                  },
+                  {
+                    "name": "Packaged image padding",
+                    "bytes": 580,
+                    "kind": "metadata",
+                    "note": "Bytes included in stock app.bin beyond its declared ACTH payload.",
+                    "verification": "Verified in stock package"
+                  }
+                ]
+              },
+              {
+                "name": "Outside supplied application",
+                "bytes": 987008,
+                "kind": "reserved",
+                "note": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+                "verification": "Capacity known; contents unverified",
+                "offset": 2613376,
+                "storage": "NOR",
+                "evidence": {
+                  "Device capture": "The interval contains non-FF bytes; it cannot be called erased or free. The captured image differs from stock, so the stock boundary is not evidence of the captured image end.",
+                  "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+                }
+              }
+            ],
+            "fileId": 4,
+            "evidence": {
+              "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured firmware image: 2,482,320 bytes (512-byte header and 2,481,808-byte payload); both ACTH checksums pass. Stock identity is not established for this captured image.",
+              "Driver and format": "No additional driver binding documented.",
+              "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Main application firmware"
+          },
+          {
+            "name": "reserved",
+            "bytes": 409600,
+            "kind": "reserved",
+            "note": "Reserved NOR interval between the application and resource partitions. No payload is documented.",
+            "verification": "Boundary verified; contents unknown",
+            "offset": 3600384,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 248,
+            "evidence": {
+              "Device capture": "Entire reservation was FF in the device capture. This does not prove a factory default or ownership of the interval.",
+              "Driver and format": "No additional driver binding documented.",
+              "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Reserved NOR interval"
+          },
+          {
+            "name": "fw0_sdfs",
+            "bytes": 65536,
+            "kind": "resources",
+            "note": "Stock package image contents shown within the verified partition reservation.",
+            "verification": "Stock image + verified boundary",
+            "offset": 4009984,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table + stock OTA package",
+            "children": [
+              {
+                "name": "sdfs.bin",
+                "bytes": 24512,
+                "kind": "resources",
+                "note": "Exact decompressed stock SDFS image, with all named file checksums validated.",
+                "verification": "Verified in stock package",
+                "children": [
+                  {
+                    "name": "usrcfg.bin",
+                    "bytes": 16,
+                    "kind": "resources",
+                    "note": "File included in stock firmware 1.0.0.73.",
+                    "verification": "Verified in stock package",
+                    "offset": 4010304,
+                    "storage": "NOR",
+                    "source": "sdfs.bin / SDFS directory + file checksum",
+                    "sha256": "3d0f78e02a367be9462e9ca45a46075c500896fd3b371b9dc744ed92ffdda2e5"
+                  },
+                  {
+                    "name": "sdfs.txt",
+                    "bytes": 10,
+                    "kind": "resources",
+                    "note": "File included in stock firmware 1.0.0.73.",
+                    "verification": "Verified in stock package",
+                    "offset": 4010368,
+                    "storage": "NOR",
+                    "source": "sdfs.bin / SDFS directory + file checksum",
+                    "sha256": "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646"
+                  },
+                  {
+                    "name": "extcfg.bin",
+                    "bytes": 16,
+                    "kind": "resources",
+                    "note": "File included in stock firmware 1.0.0.73.",
+                    "verification": "Verified in stock package",
+                    "offset": 4010432,
+                    "storage": "NOR",
+                    "source": "sdfs.bin / SDFS directory + file checksum",
+                    "sha256": "3d0f78e02a367be9462e9ca45a46075c500896fd3b371b9dc744ed92ffdda2e5"
+                  },
+                  {
+                    "name": "defcfg.bin",
+                    "bytes": 205,
+                    "kind": "resources",
+                    "note": "File included in stock firmware 1.0.0.73.",
+                    "verification": "Verified in stock package",
+                    "offset": 4010496,
+                    "storage": "NOR",
+                    "source": "sdfs.bin / SDFS directory + file checksum",
+                    "sha256": "8a9adf88208e8332e4905c02151b914bff4dad5b986fd9d4fc54c4787e42382f"
+                  },
+                  {
+                    "name": "cfg_mic.bin",
+                    "bytes": 528,
+                    "kind": "resources",
+                    "note": "File included in stock firmware 1.0.0.73.",
+                    "verification": "Verified in stock package",
+                    "offset": 4010752,
+                    "storage": "NOR",
+                    "source": "sdfs.bin / SDFS directory + file checksum",
+                    "sha256": "8d563abb385aeab96fd7ae22560856b625ac01ff6471f92c4be2d9a1c9c4e6f9"
+                  },
+                  {
+                    "name": "bt_rf.bin",
+                    "bytes": 2896,
+                    "kind": "resources",
+                    "note": "File included in stock firmware 1.0.0.73.",
+                    "verification": "Verified in stock package",
+                    "offset": 4011328,
+                    "storage": "NOR",
+                    "source": "sdfs.bin / SDFS directory + file checksum",
+                    "sha256": "1893b3e95843b6759a56b64a89bbaa579fe647d87926fcf0fa929dfdbe040a49"
+                  },
+                  {
+                    "name": "bt_pth.bin",
+                    "bytes": 14976,
+                    "kind": "resources",
+                    "note": "File included in stock firmware 1.0.0.73.",
+                    "verification": "Verified in stock package",
+                    "offset": 4014272,
+                    "storage": "NOR",
+                    "source": "sdfs.bin / SDFS directory + file checksum",
+                    "sha256": "24f07e58c50b72ae74db990a487ae8768baeee17f36b5a407f65640ae21d5a87"
+                  },
+                  {
+                    "name": "bttbl.bin",
+                    "bytes": 3306,
+                    "kind": "resources",
+                    "note": "File included in stock firmware 1.0.0.73.",
+                    "verification": "Verified in stock package",
+                    "offset": 4029248,
+                    "storage": "NOR",
+                    "source": "sdfs.bin / SDFS directory + file checksum",
+                    "sha256": "4e7d4001714f0dcba28512e31af0bd50bcf2fbb0d0d40e7978f4bcb6cb8ca2eb"
+                  },
+                  {
+                    "name": "alcfg.bin",
+                    "bytes": 1860,
+                    "kind": "resources",
+                    "note": "File included in stock firmware 1.0.0.73.",
+                    "verification": "Verified in stock package",
+                    "offset": 4032576,
+                    "storage": "NOR",
+                    "source": "sdfs.bin / SDFS directory + file checksum",
+                    "sha256": "1dde759f84c245fc2920ac58d21bf5450f1ff3d13a1775979dbd951d11a7c686"
+                  },
+                  {
+                    "name": "Image metadata and alignment",
+                    "bytes": 699,
+                    "kind": "metadata",
+                    "note": "Headers, directory records and alignment bytes inside the supplied image. Not usable filesystem space.",
+                    "verification": "Verified in stock package"
+                  }
+                ]
+              },
+              {
+                "name": "Outside supplied image",
+                "bytes": 41024,
+                "kind": "reserved",
+                "note": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+                "verification": "Capacity known; contents unverified",
+                "offset": 4034496,
+                "storage": "NOR",
+                "evidence": {
+                  "Device capture": "Entire interval was FF. The preceding stock image is byte-identical to the captured prefix.",
+                  "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+                }
+              }
+            ],
+            "fileId": 5,
+            "evidence": {
+              "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 9 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+              "Driver and format": "No additional driver binding documented.",
+              "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Firmware resources"
+          },
+          {
+            "name": "nvram_fa",
+            "bytes": 4096,
+            "kind": "metadata",
+            "note": "Factory configuration property store.",
+            "verification": "Role verified; factory contents unknown",
+            "offset": 4075520,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 6,
+            "evidence": {
+              "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. 1 CRC-valid segment headers and 11 CRC-valid item records. Property names and values are excluded.",
+              "Driver and format": "NVRAM factory role: ACPT file ID 6 matches the SDK partition constant and nvram_config_init lookup.",
+              "Verification limits": "Current-versus-obsolete record ownership and every property field are not fully classified; recorded bytes are not a factory usage figure. Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Factory configuration"
+          },
+          {
+            "name": "nvram_fa",
+            "bytes": 8192,
+            "kind": "metadata",
+            "note": "Writable factory configuration property store.",
+            "verification": "Role verified; factory contents unknown",
+            "offset": 4079616,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 7,
+            "evidence": {
+              "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. 1 CRC-valid segment headers and 17 CRC-valid item records. Property names and values are excluded.",
+              "Driver and format": "Writable factory NVRAM role: ACPT file ID 7 matches the SDK constant and nvram_config_init lookup.",
+              "Verification limits": "Current-versus-obsolete record ownership and every property field are not fully classified; recorded bytes are not a factory usage figure. Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Writable factory configuration"
+          },
+          {
+            "name": "nvram_us",
+            "bytes": 8192,
+            "kind": "metadata",
+            "note": "User configuration property store.",
+            "verification": "Role verified; factory contents unknown",
+            "offset": 4087808,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 8,
+            "evidence": {
+              "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. 2 CRC-valid segment headers and 120 CRC-valid item records. Property names and values are excluded.",
+              "Driver and format": "User NVRAM role: ACPT file ID 8 matches the SDK constant and nvram_config_init lookup.",
+              "Verification limits": "Current-versus-obsolete record ownership and every property field are not fully classified; recorded bytes are not a factory usage figure. Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "User configuration"
+          },
+          {
+            "name": "logbuf",
+            "bytes": 16384,
+            "kind": "metadata",
+            "note": "Diagnostic log storage used by the Actions logging backend.",
+            "verification": "Role verified; factory contents unknown",
+            "offset": 4096000,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 251,
+            "evidence": {
+              "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data.",
+              "Driver and format": "Diagnostic log role: ACPT file ID 0xFB matches the SDK identifier and act_log flash-buffer lookup.",
+              "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Diagnostic log buffer"
+          },
+          {
+            "name": "coredump",
+            "bytes": 81920,
+            "kind": "metadata",
+            "note": "Crash diagnostics, including processor state and selected memory blocks.",
+            "verification": "Role verified; factory contents unknown",
+            "offset": 4112384,
+            "storage": "NOR",
+            "source": "Verified device ACPT partition table / stock contents not supplied",
+            "fileId": 253,
+            "evidence": {
+              "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Checksum-valid 19,934-byte crash payload, parsed to its exact end: 1 architecture block and 3 memory blocks. Registers and RAM contents are excluded.",
+              "Driver and format": "Crash storage role: ACPT file ID 0xFD matches the SDK coredump backend lookup.",
+              "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+            },
+            "role": "Crash diagnostics"
+          }
+        ]
+      }
+    ]
+  },
+  "captured": "21 Nov 2026",
+  "nodes": 196,
+  "view": "Stock 1.0.0.73 reference; not a factory dump",
+  "stockPackage": {
+    "file": "JX402_V1.0.0.73.bin",
+    "sha256": "30903fc8ce6db4f8860bb554366635db3d2bcbb2d43827b3b50fbbac22b59353",
+    "aotaChecksumsValid": true
+  },
+  "loaderContext": "Stock firmware 1.0.0.73 reference; capture observations are not factory-state measurements",
+  "verifiedImages": [
+    {
+      "partition": "fw0_sys",
+      "image": "app.bin",
+      "bytes": 2465920,
+      "sha256": "30e7978c39d8fb79b825c7ebf69b4377d214e9cc6739a52f06dbb5ff7f13b490",
+      "acthChecksumsValid": true
+    },
+    {
+      "partition": "fw0_sdfs",
+      "image": "sdfs.bin",
+      "bytes": 24512,
+      "sha256": "8c8ed5fdafd91b820312514dd561e17f298badf9351c5b94195a9ccee75f023c",
+      "files": 9,
+      "allFileChecksumsValid": true
+    },
+    {
+      "partition": "sdfs_k",
+      "image": "sdfs_k.bin",
+      "bytes": 524096,
+      "sha256": "31e16bf2b4a64d7f79d125d5b9a14086c47187b5531e48703218dd808f53274f",
+      "files": 17,
+      "allFileChecksumsValid": true
+    },
+    {
+      "partition": "font",
+      "image": "fonts.bin",
+      "bytes": 9513344,
+      "sha256": "f36c502dc0d35be63be0aa5037a5f53d5ca85f44da57efe86859790efa14b01f",
+      "files": 9,
+      "allFileChecksumsValid": true
+    },
+    {
+      "partition": "res_a",
+      "image": "res.bin",
+      "bytes": 10137792,
+      "sha256": "b73ae1b5e797f7bb09b8952bcd791edb4a211fe577715dfc402d4b5dfde10b5f",
+      "files": 82,
+      "allFileChecksumsValid": true
+    },
+    {
+      "partition": "res_e",
+      "image": "res_e.bin",
+      "bytes": 58777088,
+      "sha256": "e4a61afa62692ce6bd2ad0b8adcc129e283b31a147e26236b9173bd1ee27c7ff",
+      "files": 19,
+      "allFileChecksumsValid": true
+    }
+  ],
+  "regionAudit": {
+    "partitionRegionsCrosschecked": 22,
+    "stockHistoryDescriptorsVerified": 11,
+    "dumpHashesRechecked": true,
+    "observationsAreNotStockBaseline": true,
+    "personalValuesIncluded": false,
+    "installedAppsIncluded": false
+  }
+}

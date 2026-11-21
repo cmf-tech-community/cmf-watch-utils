@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FMC storage reference v1",
+  "description": "Byte sizes and provenance for a storage-reference hierarchy. Cross-node sums, range bounds and parent links are additional semantic invariants checked by the generator.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "schemaVersion",
+    "model",
+    "analysisDate",
+    "units",
+    "physicalMainCapacityBytes",
+    "addressSpaces",
+    "interpretation",
+    "scope",
+    "rootId",
+    "nodes"
+  ],
+  "properties": {
+    "format": {
+      "const": "fmc-storage-reference"
+    },
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "model": {
+      "type": "object",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "analysisDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "units": {
+      "type": "object",
+      "properties": {
+        "sizes": {
+          "const": "bytes"
+        },
+        "offsets": {
+          "const": "bytes"
+        },
+        "MiB": {
+          "const": 1048576
+        }
+      }
+    },
+    "physicalMainCapacityBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "addressSpaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "sizeBytes",
+          "note"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "interpretation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stockFirmware",
+        "stockPackageSha256",
+        "rawDumpsIncluded",
+        "personalValuesIncluded",
+        "installedAppsIncluded",
+        "factoryFreeSpaceVerified",
+        "captureIsAtomic"
+      ],
+      "properties": {
+        "stockFirmware": {
+          "type": "string"
+        },
+        "stockPackageSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "rawDumpsIncluded": {
+          "const": false
+        },
+        "personalValuesIncluded": {
+          "const": false
+        },
+        "installedAppsIncluded": {
+          "const": false
+        },
+        "factoryFreeSpaceVerified": {
+          "const": false
+        },
+        "captureIsAtomic": {
+          "const": false
+        }
+      }
+    },
+    "rootId": {
+      "type": "string"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "parentId",
+          "name",
+          "path",
+          "sizeBytes",
+          "category",
+          "description",
+          "verification",
+          "addressSpace",
+          "range",
+          "source",
+          "evidence",
+          "children"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^wp2-[0-9a-f]{16}$"
+          },
+          "parentId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "verification": {
+            "type": "string"
+          },
+          "addressSpace": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "nand-logical",
+              "nand-physical",
+              "nor-physical",
+              null
+            ]
+          },
+          "range": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "startByte",
+                  "endByteExclusive"
+                ],
+                "properties": {
+                  "startByte": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "endByteExclusive": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "role": {
+            "type": "string",
+            "description": "Documented purpose, separate from content verification."
+          },
+          "partitionFileId": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "contentSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  }
+}
