@@ -1,0 +1,5284 @@
+{
+  "format": "fmc-storage-reference",
+  "schemaVersion": "1.0.0",
+  "model": {
+    "id": "cmf-watch-pro-2",
+    "name": "CMF Watch Pro 2"
+  },
+  "analysisDate": "2026-11-21",
+  "units": {
+    "sizes": "bytes",
+    "offsets": "bytes",
+    "MiB": 1048576
+  },
+  "physicalMainCapacityBytes": 138412032,
+  "addressSpaces": [
+    {
+      "id": "nand-physical",
+      "sizeBytes": 134217728,
+      "note": "Physical main area; raw FTL content not acquired."
+    },
+    {
+      "id": "nand-logical",
+      "sizeBytes": 128974848,
+      "note": "Translated view of NAND; not additional physical capacity."
+    },
+    {
+      "id": "nor-physical",
+      "sizeBytes": 4194304,
+      "note": "Separate NOR chip."
+    }
+  ],
+  "interpretation": [
+    "Hierarchy is a capacity/file view, not a physical adjacency map.",
+    "Only nodes with explicit range values have a documented contiguous byte range. Aggregate nodes may combine disjoint metadata or padding.",
+    "NAND logical offsets cannot be interpreted as physical NAND offsets.",
+    "Child sizes sum to the parent, but child ranges may use different address spaces.",
+    "No stock free-space figure is established. FF bytes and partition headroom are not classified as usable filesystem space.",
+    "Device-capture evidence is not a factory-state measurement.",
+    "Package checksums establish consistency, not publisher cryptographic authenticity."
+  ],
+  "scope": {
+    "stockFirmware": "1.0.0.73",
+    "stockPackageSha256": "30903fc8ce6db4f8860bb554366635db3d2bcbb2d43827b3b50fbbac22b59353",
+    "rawDumpsIncluded": false,
+    "personalValuesIncluded": false,
+    "installedAppsIncluded": false,
+    "factoryFreeSpaceVerified": false,
+    "captureIsAtomic": false
+  },
+  "rootId": "wp2-33607e1d955de933",
+  "nodes": [
+    {
+      "id": "wp2-33607e1d955de933",
+      "parentId": null,
+      "name": "Watch Pro 2",
+      "path": [
+        "Watch Pro 2"
+      ],
+      "sizeBytes": 138412032,
+      "category": "data",
+      "description": "Stock 1.0.0.73 package contents combined with independently verified chip geometry and partition reservations. Not a clean-device dump.",
+      "verification": "Stock reference + hardware evidence",
+      "addressSpace": null,
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": [
+        "wp2-4b571776136dc237",
+        "wp2-611fc901bc5cef0a"
+      ]
+    },
+    {
+      "id": "wp2-4b571776136dc237",
+      "parentId": "wp2-33607e1d955de933",
+      "name": "NAND",
+      "path": [
+        "Watch Pro 2",
+        "NAND"
+      ],
+      "sizeBytes": 134217728,
+      "category": "data",
+      "description": "128 MiB main area, excluding spare/OOB cells.",
+      "verification": "Verified chip geometry",
+      "addressSpace": "nand-physical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": [
+        "wp2-dc50bb1d2928d697",
+        "wp2-e887a498bda7086c"
+      ]
+    },
+    {
+      "id": "wp2-dc50bb1d2928d697",
+      "parentId": "wp2-4b571776136dc237",
+      "name": "Logical NAND",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND"
+      ],
+      "sizeBytes": 128974848,
+      "category": "data",
+      "description": "Driver-exported address space.",
+      "verification": "Verified driver geometry",
+      "addressSpace": "nand-logical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": [
+        "wp2-117aa3fc91a04765",
+        "wp2-87db1f46715d0ab0",
+        "wp2-c036ad1d1312f39c",
+        "wp2-14c1d379c5ac65cc",
+        "wp2-00bc7f16ea91b7fb",
+        "wp2-e729e7799acc8748",
+        "wp2-027d690ae1b16151",
+        "wp2-90796311bda0a528",
+        "wp2-abc06531e4aba7eb",
+        "wp2-73b9c33487635b90"
+      ]
+    },
+    {
+      "id": "wp2-117aa3fc91a04765",
+      "parentId": "wp2-dc50bb1d2928d697",
+      "name": "fw0_temp",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "fw0_temp"
+      ],
+      "sizeBytes": 3670016,
+      "category": "metadata",
+      "description": "Temporary staging area for OTA updates.",
+      "verification": "Role verified; factory contents unknown",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 0,
+        "endByteExclusive": 3670016
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. The staged region does not match the stock stored TEMP.bin or its decompressed inner package. A complete AOTA container could not be validated at the region start; historical staging state remains unclassified.",
+        "Driver and format": "Temporary OTA staging role: stock OTA XML targets fw0_temp, storage ID 2.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "OTA update staging",
+      "partitionFileId": 254
+    },
+    {
+      "id": "wp2-87db1f46715d0ab0",
+      "parentId": "wp2-dc50bb1d2928d697",
+      "name": "sdfs_k",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k"
+      ],
+      "sizeBytes": 1048576,
+      "category": "resources",
+      "description": "Stock package image contents shown within the verified partition reservation.",
+      "verification": "Stock image + verified boundary",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3670016,
+        "endByteExclusive": 4718592
+      },
+      "source": "Verified device ACPT partition table + stock OTA package",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 17 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [
+        "wp2-7b598a804b5385ce",
+        "wp2-8fb7db5e6c89e75d"
+      ],
+      "role": "System resources",
+      "partitionFileId": 20
+    },
+    {
+      "id": "wp2-7b598a804b5385ce",
+      "parentId": "wp2-87db1f46715d0ab0",
+      "name": "sdfs_k.bin",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin"
+      ],
+      "sizeBytes": 524096,
+      "category": "resources",
+      "description": "Exact decompressed stock SDFS image, with all named file checksums validated.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": [
+        "wp2-cc81e54930110391",
+        "wp2-c16ff04d27ec38c4",
+        "wp2-49f198367eda669d",
+        "wp2-02db83fbd2334406",
+        "wp2-919975bc2915359e",
+        "wp2-87540f1ea2e31879",
+        "wp2-cb01cc92c5a462cf",
+        "wp2-691094ccd9957fb9",
+        "wp2-b938ac061fb3d943",
+        "wp2-63acd73a2ac05ca7",
+        "wp2-8109849dc270beb5",
+        "wp2-29cc6b6597057085",
+        "wp2-a94b7c43de82a19b",
+        "wp2-13710e7cab2fb2b0",
+        "wp2-1fc8ae80eebf0104",
+        "wp2-6d14c8c4664093aa",
+        "wp2-b7b49ebfb6f20a83",
+        "wp2-f87560376691e17d"
+      ]
+    },
+    {
+      "id": "wp2-cc81e54930110391",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "welcome.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "welcome.act"
+      ],
+      "sizeBytes": 3200,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3670592,
+        "endByteExclusive": 3673792
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "1b30a4f16f9fa4b15bd04e3c6feb0ca4fcfffc4bcad5e2b80011e4a9cfd179ff"
+    },
+    {
+      "id": "wp2-c16ff04d27ec38c4",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "tst.bin",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "tst.bin"
+      ],
+      "sizeBytes": 4196,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3673792,
+        "endByteExclusive": 3677988
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "557b1d3de81f70cdca72361a16a8b0ee152db44673758f20a020ac32ccd207ca"
+    },
+    {
+      "id": "wp2-49f198367eda669d",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "sdfs.txt",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "sdfs.txt"
+      ],
+      "sizeBytes": 10,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3678016,
+        "endByteExclusive": 3678026
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646"
+    },
+    {
+      "id": "wp2-02db83fbd2334406",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "ring5.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "ring5.act"
+      ],
+      "sizeBytes": 1162,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3678080,
+        "endByteExclusive": 3679242
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "9191572ed8712f9c22c6f9eb2160f238f47376be02c456e03c2eab8e8a07d32c"
+    },
+    {
+      "id": "wp2-919975bc2915359e",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "ring4.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "ring4.act"
+      ],
+      "sizeBytes": 3520,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3679296,
+        "endByteExclusive": 3682816
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "24962320ead4cc97b9899368e58c22a4df28d2507e29633ab79c92acf71c570c"
+    },
+    {
+      "id": "wp2-87540f1ea2e31879",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "ring3.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "ring3.act"
+      ],
+      "sizeBytes": 5694,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3682816,
+        "endByteExclusive": 3688510
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "33579e8be3a5e7fbd05dac67aacb5d56ffb4b4390ba71f3b14ba544a316fbf96"
+    },
+    {
+      "id": "wp2-cb01cc92c5a462cf",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "ring2.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "ring2.act"
+      ],
+      "sizeBytes": 5164,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3688512,
+        "endByteExclusive": 3693676
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "ba68194364be3ade6be3665d9aa12d05196a2f8d62447d5f96b5754923d8ea6f"
+    },
+    {
+      "id": "wp2-691094ccd9957fb9",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "ring1.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "ring1.act"
+      ],
+      "sizeBytes": 15556,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3693696,
+        "endByteExclusive": 3709252
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "41d59961a4c1cb9b17bce94ebd36d35cb18403d5eed6b6bfe3b7d818828c916c"
+    },
+    {
+      "id": "wp2-b938ac061fb3d943",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "poweroff.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "poweroff.act"
+      ],
+      "sizeBytes": 3212,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3709312,
+        "endByteExclusive": 3712524
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "5e28321ee129204a6cd2a847cbbd704617d738d0eb204790215c3293c6c98db6"
+    },
+    {
+      "id": "wp2-63acd73a2ac05ca7",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "logo.sty",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "logo.sty"
+      ],
+      "sizeBytes": 204,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3712576,
+        "endByteExclusive": 3712780
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "e7ca502100f30d19788fa9509dbe53ba752a56c278f44ea969431d385f2ff1c9"
+    },
+    {
+      "id": "wp2-8109849dc270beb5",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "logo.res",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "logo.res"
+      ],
+      "sizeBytes": 15124,
+      "category": "artwork",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3712832,
+        "endByteExclusive": 3727956
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "7a68473fe02e71fa5c6883266e666a9243181bc13157fac3d53ec33087442821"
+    },
+    {
+      "id": "wp2-29cc6b6597057085",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "find.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "find.act"
+      ],
+      "sizeBytes": 6532,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3728000,
+        "endByteExclusive": 3734532
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "3257b1e8a02fa230c1913921aeac8d4c4b4a36ab05cbfeb60eee7b8b6d30dd6d"
+    },
+    {
+      "id": "wp2-a94b7c43de82a19b",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "fcc.bin",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "fcc.bin"
+      ],
+      "sizeBytes": 38352,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3734592,
+        "endByteExclusive": 3772944
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "b11bc527e70f3513aa02582c5f9789c7b5d41ef9ddb4ab3bc18504273dd21bd6"
+    },
+    {
+      "id": "wp2-13710e7cab2fb2b0",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "di.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "di.act"
+      ],
+      "sizeBytes": 654,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3772992,
+        "endByteExclusive": 3773646
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "94c12c35766d663189f1850ea3582d06bc63c8c323b737f4beb89bce3863ef9e"
+    },
+    {
+      "id": "wp2-1fc8ae80eebf0104",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "alarm.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "alarm.act"
+      ],
+      "sizeBytes": 22084,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3773696,
+        "endByteExclusive": 3795780
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "83189d5c13b0a07efc87dcdf05c87b0f856e75a5dce16a74f55aa13f25aaf83b"
+    },
+    {
+      "id": "wp2-6d14c8c4664093aa",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "aging.act",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "aging.act"
+      ],
+      "sizeBytes": 7470,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3795840,
+        "endByteExclusive": 3803310
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "ce964f9d6df660ac2083f1766b866b1ca8569b6e163cee6be0cfb5cbc296a883"
+    },
+    {
+      "id": "wp2-b7b49ebfb6f20a83",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "admusic.dsp",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "admusic.dsp"
+      ],
+      "sizeBytes": 390756,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 3803328,
+        "endByteExclusive": 4194084
+      },
+      "source": "sdfs_k.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "74c34b87e9679197ad00d6b1abbed64de131d6b8a8bf585508ff23ab942e318b"
+    },
+    {
+      "id": "wp2-f87560376691e17d",
+      "parentId": "wp2-7b598a804b5385ce",
+      "name": "Image metadata and alignment",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "sdfs_k.bin",
+        "Image metadata and alignment"
+      ],
+      "sizeBytes": 1206,
+      "category": "metadata",
+      "description": "Headers, directory records and alignment bytes inside the supplied image. Not usable filesystem space.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-8fb7db5e6c89e75d",
+      "parentId": "wp2-87db1f46715d0ab0",
+      "name": "Outside supplied image",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "sdfs_k",
+        "Outside supplied image"
+      ],
+      "sizeBytes": 524480,
+      "category": "reserved",
+      "description": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+      "verification": "Capacity known; contents unverified",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 4194112,
+        "endByteExclusive": 4718592
+      },
+      "source": null,
+      "evidence": {
+        "Device capture": "The interval contains non-FF bytes; it cannot be called erased or free. The preceding stock image is byte-identical to the captured prefix.",
+        "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+      },
+      "children": []
+    },
+    {
+      "id": "wp2-c036ad1d1312f39c",
+      "parentId": "wp2-dc50bb1d2928d697",
+      "name": "dstorage",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage"
+      ],
+      "sizeBytes": 2097152,
+      "category": "metadata",
+      "description": "Persistent settings and sensor/activity history. Stock firmware defines eleven typed areas; the remaining interval is undocumented.",
+      "verification": "Stock history layout verified; field meanings partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 4718592,
+        "endByteExclusive": 6815744
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data.",
+        "Driver and format": "All 11 history descriptors (396 table bytes) and their pointed-to object-size descriptors match exactly between stock 1.0.0.73 and the captured app. Typed offsets and reservations derive directly from stock code; field semantics are only partially decoded.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [
+        "wp2-44a47f63ae73c8c4",
+        "wp2-f2247996c4a9f578",
+        "wp2-ecec806047709b06",
+        "wp2-a4fcf22e327c413c",
+        "wp2-49148c79db0cc0f5",
+        "wp2-e730aa2bc51544b3",
+        "wp2-c07ab01b3b6a3ecb",
+        "wp2-26a18d7129fd8fa2",
+        "wp2-3a7291ae71e243ba",
+        "wp2-39bf35fe690ad706",
+        "wp2-b194cd25cfd917f8",
+        "wp2-e7d21616d6f20025"
+      ],
+      "role": "Settings and recorded history",
+      "partitionFileId": 249
+    },
+    {
+      "id": "wp2-44a47f63ae73c8c4",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Primary settings object",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Primary settings object"
+      ],
+      "sizeBytes": 32768,
+      "category": "metadata",
+      "description": "Stock descriptor type 0: 16,384-byte slots, 13,528-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 4718592,
+        "endByteExclusive": 4751360
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-f2247996c4a9f578",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Secondary settings object",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Secondary settings object"
+      ],
+      "sizeBytes": 24576,
+      "category": "metadata",
+      "description": "Stock descriptor type 1: 12,288-byte slots, 4,856-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 4751360,
+        "endByteExclusive": 4775936
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-ecec806047709b06",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Additional persistent state",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Additional persistent state"
+      ],
+      "sizeBytes": 8192,
+      "category": "metadata",
+      "description": "Stock descriptor type 2: 4,096-byte slots, 2,544-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 4775936,
+        "endByteExclusive": 4784128
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-a4fcf22e327c413c",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Heart-rate history",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Heart-rate history"
+      ],
+      "sizeBytes": 32768,
+      "category": "metadata",
+      "description": "Stock descriptor type 3: 4,096-byte slots, 2,328-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 4784128,
+        "endByteExclusive": 4816896
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-49148c79db0cc0f5",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Blood-oxygen history",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Blood-oxygen history"
+      ],
+      "sizeBytes": 16384,
+      "category": "metadata",
+      "description": "Stock descriptor type 4: 2,048-byte slots, 408-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 4816896,
+        "endByteExclusive": 4833280
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-e730aa2bc51544b3",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Step/activity history",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Step/activity history"
+      ],
+      "sizeBytes": 28672,
+      "category": "metadata",
+      "description": "Stock descriptor type 5: 2,048-byte slots, 792-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 4833280,
+        "endByteExclusive": 4861952
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-c07ab01b3b6a3ecb",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Sleep history",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Sleep history"
+      ],
+      "sizeBytes": 102400,
+      "category": "metadata",
+      "description": "Stock descriptor type 6: 2,048-byte slots, 848-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 4861952,
+        "endByteExclusive": 4964352
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-26a18d7129fd8fa2",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Workout summaries",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Workout summaries"
+      ],
+      "sizeBytes": 61440,
+      "category": "metadata",
+      "description": "Stock descriptor type 7: 4,096-byte slots, 184-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 4964352,
+        "endByteExclusive": 5025792
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-3a7291ae71e243ba",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Workout heart-rate history",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Workout heart-rate history"
+      ],
+      "sizeBytes": 442368,
+      "category": "metadata",
+      "description": "Stock descriptor type 8: 2,048-byte slots, 2,024-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 5025792,
+        "endByteExclusive": 5468160
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-39bf35fe690ad706",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "GPS track history",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "GPS track history"
+      ],
+      "sizeBytes": 659456,
+      "category": "metadata",
+      "description": "Stock descriptor type 9: 2,048-byte slots, 2,024-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 5468160,
+        "endByteExclusive": 6127616
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-b194cd25cfd917f8",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Stress history",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Stress history"
+      ],
+      "sizeBytes": 16384,
+      "category": "metadata",
+      "description": "Stock descriptor type 10: 2,048-byte slots, 408-byte objects. Reservation is not a measure of populated records. Exact field semantics and factory contents remain incomplete.",
+      "verification": "Stock descriptor verified; fields partial",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 6127616,
+        "endByteExclusive": 6144000
+      },
+      "source": "Stock app table at CPU 0x101F2C78 + matching captured code",
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-e7d21616d6f20025",
+      "parentId": "wp2-c036ad1d1312f39c",
+      "name": "Outside decoded history areas",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "dstorage",
+        "Outside decoded history areas"
+      ],
+      "sizeBytes": 671744,
+      "category": "unknown",
+      "description": "Not covered by the 11 verified type reservations. May be reserved or used by other storage logic; contents and ownership are not documented.",
+      "verification": "Purpose unresolved",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 6144000,
+        "endByteExclusive": 6815744
+      },
+      "source": null,
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-14c1d379c5ac65cc",
+      "parentId": "wp2-dc50bb1d2928d697",
+      "name": "font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font"
+      ],
+      "sizeBytes": 12582912,
+      "category": "resources",
+      "description": "Stock package image contents shown within the verified partition reservation.",
+      "verification": "Stock image + verified boundary",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 6815744,
+        "endByteExclusive": 19398656
+      },
+      "source": "Verified device ACPT partition table + stock OTA package",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 9 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [
+        "wp2-0b27bc44bb059eea",
+        "wp2-af6d283cc98e03f4"
+      ],
+      "role": "Fonts and built-in watch faces",
+      "partitionFileId": 12
+    },
+    {
+      "id": "wp2-0b27bc44bb059eea",
+      "parentId": "wp2-14c1d379c5ac65cc",
+      "name": "fonts.bin",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin"
+      ],
+      "sizeBytes": 9513344,
+      "category": "resources",
+      "description": "Exact decompressed stock SDFS image, with all named file checksums validated.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": [
+        "wp2-b4b0c914a8e66899",
+        "wp2-a4484728e9d248ce",
+        "wp2-5377b08a902f9040",
+        "wp2-f72239fad46e4ef0",
+        "wp2-20149c702de9123d",
+        "wp2-8d1a6da3b7f2bc85",
+        "wp2-3f45e10305c91e10",
+        "wp2-bf8a9891895272dc",
+        "wp2-5e95c0b9b203c044",
+        "wp2-f279dbe877842793"
+      ]
+    },
+    {
+      "id": "wp2-b4b0c914a8e66899",
+      "parentId": "wp2-0b27bc44bb059eea",
+      "name": "test.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin",
+        "test.font"
+      ],
+      "sizeBytes": 72022,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 6816064,
+        "endByteExclusive": 6888086
+      },
+      "source": "fonts.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "8a33d836a226e2cb5ce4ed3efde50b8cb3c6938b10a153f6ccb339c9d2955daf"
+    },
+    {
+      "id": "wp2-a4484728e9d248ce",
+      "parentId": "wp2-0b27bc44bb059eea",
+      "name": "sans32.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin",
+        "sans32.font"
+      ],
+      "sizeBytes": 5320508,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 6888128,
+        "endByteExclusive": 12208636
+      },
+      "source": "fonts.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "416fe976f3c9fa7e758ac156e4de27d82c01361d772a9a4ee88f36a91fc11e7e"
+    },
+    {
+      "id": "wp2-5377b08a902f9040",
+      "parentId": "wp2-0b27bc44bb059eea",
+      "name": "local280.wfc",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin",
+        "local280.wfc"
+      ],
+      "sizeBytes": 145865,
+      "category": "faces",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 12208640,
+        "endByteExclusive": 12354505
+      },
+      "source": "fonts.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "9bf31c94d3564c21af66878ae9f6a1c59fbff1f12eb575b7829a956e1ff9cce6"
+    },
+    {
+      "id": "wp2-f72239fad46e4ef0",
+      "parentId": "wp2-0b27bc44bb059eea",
+      "name": "local277.wfc",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin",
+        "local277.wfc"
+      ],
+      "sizeBytes": 3021359,
+      "category": "faces",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 12354560,
+        "endByteExclusive": 15375919
+      },
+      "source": "fonts.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "18eed6e415626523593ddf30d2968effc9d868698c02f079d8af57857ea6a834"
+    },
+    {
+      "id": "wp2-20149c702de9123d",
+      "parentId": "wp2-0b27bc44bb059eea",
+      "name": "local276.wfc",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin",
+        "local276.wfc"
+      ],
+      "sizeBytes": 120480,
+      "category": "faces",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 15375936,
+        "endByteExclusive": 15496416
+      },
+      "source": "fonts.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "6b85cf8dd1c68fd625d04d3f62da18b0710ac32aa1bc198482eed6fbe25e9356"
+    },
+    {
+      "id": "wp2-8d1a6da3b7f2bc85",
+      "parentId": "wp2-0b27bc44bb059eea",
+      "name": "local275.wfc",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin",
+        "local275.wfc"
+      ],
+      "sizeBytes": 213607,
+      "category": "faces",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 15496448,
+        "endByteExclusive": 15710055
+      },
+      "source": "fonts.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "fc48e4c6d8da33c0ad4d827ac261545390c730dfc5af488f260a154d1132d181"
+    },
+    {
+      "id": "wp2-3f45e10305c91e10",
+      "parentId": "wp2-0b27bc44bb059eea",
+      "name": "local274.wfc",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin",
+        "local274.wfc"
+      ],
+      "sizeBytes": 405659,
+      "category": "faces",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 15710080,
+        "endByteExclusive": 16115739
+      },
+      "source": "fonts.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "1b356d63f07daf35cf140ff39926ce34b3ae86b17b3e38cc54e6aebd4f5ba090"
+    },
+    {
+      "id": "wp2-bf8a9891895272dc",
+      "parentId": "wp2-0b27bc44bb059eea",
+      "name": "local273.wfc",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin",
+        "local273.wfc"
+      ],
+      "sizeBytes": 72022,
+      "category": "faces",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 16115776,
+        "endByteExclusive": 16187798
+      },
+      "source": "fonts.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "8a33d836a226e2cb5ce4ed3efde50b8cb3c6938b10a153f6ccb339c9d2955daf"
+    },
+    {
+      "id": "wp2-5e95c0b9b203c044",
+      "parentId": "wp2-0b27bc44bb059eea",
+      "name": "emoji28.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin",
+        "emoji28.font"
+      ],
+      "sizeBytes": 141248,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 16187840,
+        "endByteExclusive": 16329088
+      },
+      "source": "fonts.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "b3826f09061d86f14e34311ec10e6ba52335a3f4b72c21e82d2404392b31df3c"
+    },
+    {
+      "id": "wp2-f279dbe877842793",
+      "parentId": "wp2-0b27bc44bb059eea",
+      "name": "Image metadata and alignment",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "fonts.bin",
+        "Image metadata and alignment"
+      ],
+      "sizeBytes": 574,
+      "category": "metadata",
+      "description": "Headers, directory records and alignment bytes inside the supplied image. Not usable filesystem space.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-af6d283cc98e03f4",
+      "parentId": "wp2-14c1d379c5ac65cc",
+      "name": "Outside supplied image",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "font",
+        "Outside supplied image"
+      ],
+      "sizeBytes": 3069568,
+      "category": "reserved",
+      "description": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+      "verification": "Capacity known; contents unverified",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 16329088,
+        "endByteExclusive": 19398656
+      },
+      "source": null,
+      "evidence": {
+        "Device capture": "The interval contains non-FF bytes; it cannot be called erased or free. The preceding stock image is byte-identical to the captured prefix.",
+        "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+      },
+      "children": []
+    },
+    {
+      "id": "wp2-00bc7f16ea91b7fb",
+      "parentId": "wp2-dc50bb1d2928d697",
+      "name": "res_a",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a"
+      ],
+      "sizeBytes": 10485760,
+      "category": "resources",
+      "description": "Stock package image contents shown within the verified partition reservation.",
+      "verification": "Stock image + verified boundary",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19398656,
+        "endByteExclusive": 29884416
+      },
+      "source": "Verified device ACPT partition table + stock OTA package",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 82 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [
+        "wp2-7618d2e9632fab87",
+        "wp2-e554a2d1ee18044d"
+      ],
+      "role": "UI resources",
+      "partitionFileId": 10
+    },
+    {
+      "id": "wp2-7618d2e9632fab87",
+      "parentId": "wp2-00bc7f16ea91b7fb",
+      "name": "res.bin",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin"
+      ],
+      "sizeBytes": 10137792,
+      "category": "resources",
+      "description": "Exact decompressed stock SDFS image, with all named file checksums validated.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": [
+        "wp2-e81cd0520189e20a",
+        "wp2-ba0db9af7367d0bc",
+        "wp2-3d0676a4b928ce0f",
+        "wp2-37e12a7947056850",
+        "wp2-239ad896c042942f",
+        "wp2-cc23b66c620cd734",
+        "wp2-4cfc870861e0186c",
+        "wp2-2533a9476788c2ab",
+        "wp2-424196e605b49e72",
+        "wp2-d91ea980f4d13c01",
+        "wp2-3adec7f4922c1655",
+        "wp2-1db8bccfadb7c4ac",
+        "wp2-f66d0a998c159012",
+        "wp2-1a0e92d5966a2602",
+        "wp2-cedcc37ce7e444b2",
+        "wp2-876bfd5b5f373d61",
+        "wp2-8b54b6d914eef106",
+        "wp2-d382176c4d16ef31",
+        "wp2-ae7692eaf8be9503",
+        "wp2-c814d9b9714af7e8",
+        "wp2-28f00f340c1fe25a",
+        "wp2-059cb70c031dab96",
+        "wp2-dd698e50875fcaf3",
+        "wp2-eb0e989644e7edbf",
+        "wp2-71053ec2869d4b22",
+        "wp2-6c09955befefb2a6",
+        "wp2-18fbdc9b3a5cf6b6",
+        "wp2-0a2603dc9b3492ff",
+        "wp2-d00ec119b2df5798",
+        "wp2-7d08fa5ad5616c91",
+        "wp2-fb10464b20d6b772",
+        "wp2-98fee1564aeb1b86",
+        "wp2-4230b79ce822ad0c",
+        "wp2-40e78e39381e5e71",
+        "wp2-4fb24b8a8316b36f",
+        "wp2-af4f9987407600d7",
+        "wp2-a207958c7969db8e",
+        "wp2-fe65c9d6735e1082",
+        "wp2-c01d1b6f2ec39061",
+        "wp2-f03eaab8ad6261e9",
+        "wp2-0762f805ac63e521",
+        "wp2-28dd8614231dd819",
+        "wp2-43ff227a4fbc50be",
+        "wp2-759d9552abf9654f",
+        "wp2-fc35dfdcc593b685",
+        "wp2-cc521a26c4a5dc5b",
+        "wp2-4b5835af502dbaf1",
+        "wp2-54ef90e8c49df8f7",
+        "wp2-5d7fb00c212611b0",
+        "wp2-a6e7d1d04cb74998",
+        "wp2-9baf107f7247bd25",
+        "wp2-95d58fe527b960b1",
+        "wp2-ad960b64dacfaff9",
+        "wp2-8740f8cfefbbc9fd",
+        "wp2-ac81cde338d8acd4",
+        "wp2-dec7412c2b9a333a",
+        "wp2-8d5d3dc129627ea2",
+        "wp2-182212d459ba5bd1",
+        "wp2-17eda667e3073530",
+        "wp2-cf679b30ade0812d",
+        "wp2-9163eae7cede626e",
+        "wp2-0e8358bf00ec049b",
+        "wp2-ac5d55b6de485bcb",
+        "wp2-e42ee09cd1b17651",
+        "wp2-464171941cb18bb6",
+        "wp2-0928389e7846d86f",
+        "wp2-34006bd5bbc8aa8c",
+        "wp2-79948c6c97472439",
+        "wp2-d324bd4495e7f3e4",
+        "wp2-a5cd2e46d43f8527",
+        "wp2-8836b0ad4f3e7c79",
+        "wp2-00b6548b38df2b41",
+        "wp2-2d11d8e0b7f5c965",
+        "wp2-d6624e1376274419",
+        "wp2-65dfcc574707105f",
+        "wp2-84aae9f8953d9189",
+        "wp2-5a09d183149e9dab",
+        "wp2-857afa6a260140a1",
+        "wp2-72c4452f7d85cb36",
+        "wp2-d5fd1db0d13df54f",
+        "wp2-02034cc1e02171a3",
+        "wp2-301da254c97e2d54",
+        "wp2-956e8b966eeed418"
+      ]
+    },
+    {
+      "id": "wp2-e81cd0520189e20a",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "tiger.svg",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "tiger.svg"
+      ],
+      "sizeBytes": 101129,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19401344,
+        "endByteExclusive": 19502473
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "f12f73b2e08889652567a5310f1fc2dbce85cc404c1baef4dab4fa4af41c495b"
+    },
+    {
+      "id": "wp2-ba0db9af7367d0bc",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num88e.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num88e.font"
+      ],
+      "sizeBytes": 15504,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19502528,
+        "endByteExclusive": 19518032
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "59b7d28c164ea70cfbc3443976c654daa27c29e2cd05710aa88c9419b0eec9dd"
+    },
+    {
+      "id": "wp2-3d0676a4b928ce0f",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num80m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num80m.font"
+      ],
+      "sizeBytes": 14964,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19518080,
+        "endByteExclusive": 19533044
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "2a7703d36567d96ef3c5013694e55495c85126d58b4b59595dc1e9114392c1ef"
+    },
+    {
+      "id": "wp2-37e12a7947056850",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num74m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num74m.font"
+      ],
+      "sizeBytes": 12812,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19533056,
+        "endByteExclusive": 19545868
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "2c0f499a41fdba910784a5d240e8cdd78ec384d90a8d36d24a3a177f6984376f"
+    },
+    {
+      "id": "wp2-239ad896c042942f",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num74b.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num74b.font"
+      ],
+      "sizeBytes": 8484,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19545920,
+        "endByteExclusive": 19554404
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "cd28c8a95b8e2e2496f62700ffa491c87959e819d4c8839be54c5eddc1da0f6f"
+    },
+    {
+      "id": "wp2-cc23b66c620cd734",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num72el.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num72el.font"
+      ],
+      "sizeBytes": 10636,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19554432,
+        "endByteExclusive": 19565068
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "b9969ff0ddd19fa4fa0b6514c96973fea6310127f6bc956b0d49cb24c7379889"
+    },
+    {
+      "id": "wp2-4cfc870861e0186c",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num72e.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num72e.font"
+      ],
+      "sizeBytes": 10636,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19565120,
+        "endByteExclusive": 19575756
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "b9969ff0ddd19fa4fa0b6514c96973fea6310127f6bc956b0d49cb24c7379889"
+    },
+    {
+      "id": "wp2-2533a9476788c2ab",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num70m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num70m.font"
+      ],
+      "sizeBytes": 11672,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19575808,
+        "endByteExclusive": 19587480
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "b70c0c3cd0e44dabc94f20e3fc7ec0cecc0ab7cea9079aa91f6f316008a30c06"
+    },
+    {
+      "id": "wp2-424196e605b49e72",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num64el.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num64el.font"
+      ],
+      "sizeBytes": 8416,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19587520,
+        "endByteExclusive": 19595936
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "6ce6ec5fa477a1fe4436153d3786bc5c9efcfa541f1f50ad206b71e80e301dce"
+    },
+    {
+      "id": "wp2-d91ea980f4d13c01",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num58m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num58m.font"
+      ],
+      "sizeBytes": 8012,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19595968,
+        "endByteExclusive": 19603980
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "33c3386824fed9fb3de5d81c34ea080b6ff54a37146eae6a80e42e3e06b17229"
+    },
+    {
+      "id": "wp2-3adec7f4922c1655",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num56el.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num56el.font"
+      ],
+      "sizeBytes": 6612,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19604032,
+        "endByteExclusive": 19610644
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "d199cc06c617efca6bb225a44c28b8d990712e74c66fbc1e05fe3b44dadd6a4d"
+    },
+    {
+      "id": "wp2-1db8bccfadb7c4ac",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num56e.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num56e.font"
+      ],
+      "sizeBytes": 6612,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19610688,
+        "endByteExclusive": 19617300
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "d199cc06c617efca6bb225a44c28b8d990712e74c66fbc1e05fe3b44dadd6a4d"
+    },
+    {
+      "id": "wp2-f66d0a998c159012",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num48m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num48m.font"
+      ],
+      "sizeBytes": 5688,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19617344,
+        "endByteExclusive": 19623032
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "33f6544ba24a494f6213a627e5f64988afef1ad5e450ec3d1703ec81f51b5450"
+    },
+    {
+      "id": "wp2-1a0e92d5966a2602",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num46m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num46m.font"
+      ],
+      "sizeBytes": 5184,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19623040,
+        "endByteExclusive": 19628224
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "3e0eafb4cfe4e411f20e9a3652d91250987c6484ea2e67d611358cdf63838b80"
+    },
+    {
+      "id": "wp2-cedcc37ce7e444b2",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num44m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num44m.font"
+      ],
+      "sizeBytes": 4676,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19628224,
+        "endByteExclusive": 19632900
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "693f3dd2069aa44032b66d434727495a16c2d38f0acb33b5a331674397c91208"
+    },
+    {
+      "id": "wp2-876bfd5b5f373d61",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num42m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num42m.font"
+      ],
+      "sizeBytes": 4240,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19632960,
+        "endByteExclusive": 19637200
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "9e7c0c2b1ea3f30103433baa14ac3caf5d2cebc856ec17da192cf2e1089bd3af"
+    },
+    {
+      "id": "wp2-8b54b6d914eef106",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num40m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num40m.font"
+      ],
+      "sizeBytes": 3904,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19637248,
+        "endByteExclusive": 19641152
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "fba2eb58a36040d82067c8373a9412d1cf0e7b8df140a84992a4a5154d2ba6f5"
+    },
+    {
+      "id": "wp2-d382176c4d16ef31",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num38m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num38m.font"
+      ],
+      "sizeBytes": 3564,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19641152,
+        "endByteExclusive": 19644716
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "f31e48c9e052ae05338b8a6cd05a26a27e7c51b5fb71d5ac51533a5c37f3d43c"
+    },
+    {
+      "id": "wp2-ae7692eaf8be9503",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num36r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num36r.font"
+      ],
+      "sizeBytes": 3244,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19644736,
+        "endByteExclusive": 19647980
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "3331cbe30e5bba4a8ccbaa3200951370ed6ce1321fc08e82cbe800cf54387cf0"
+    },
+    {
+      "id": "wp2-c814d9b9714af7e8",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num36m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num36m.font"
+      ],
+      "sizeBytes": 3492,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19648000,
+        "endByteExclusive": 19651492
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "543e763df21f8c101cde1bac923fe40ba126daf8b7ea321f90a78c87d2c1da5e"
+    },
+    {
+      "id": "wp2-28f00f340c1fe25a",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num36l.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num36l.font"
+      ],
+      "sizeBytes": 2984,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19651520,
+        "endByteExclusive": 19654504
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "eab47827ed28a997bdf7329eb2bae8c78916ee3947e5bb55d186d5c346c733a7"
+    },
+    {
+      "id": "wp2-059cb70c031dab96",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num34m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num34m.font"
+      ],
+      "sizeBytes": 3316,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19654528,
+        "endByteExclusive": 19657844
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "bfb0f3172f7db857648190e09fe1a5132e7db4892801ad882e7d05e9579e9df8"
+    },
+    {
+      "id": "wp2-dd698e50875fcaf3",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num32m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num32m.font"
+      ],
+      "sizeBytes": 3236,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19657856,
+        "endByteExclusive": 19661092
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "880d02cd58889171781fdb06218850788f4eabdc5cc6a9c3b470d3a77775f140"
+    },
+    {
+      "id": "wp2-eb0e989644e7edbf",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num28m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num28m.font"
+      ],
+      "sizeBytes": 2660,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19661120,
+        "endByteExclusive": 19663780
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "dcf85fd6cf821209a51de61afa273d8ef73fd405a3c689ad4a3aaab4ffc47fab"
+    },
+    {
+      "id": "wp2-71053ec2869d4b22",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num26m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num26m.font"
+      ],
+      "sizeBytes": 2020,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19663808,
+        "endByteExclusive": 19665828
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "24059cd6ad78e2d5951f3b7adf2abaaf099ad472b2eb453d70094a939567a300"
+    },
+    {
+      "id": "wp2-6c09955befefb2a6",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num24r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num24r.font"
+      ],
+      "sizeBytes": 1608,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19665856,
+        "endByteExclusive": 19667464
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "2318c47ce8cfd79406771c895516d08cd00e4b5f99b789abce9624cb95ce9ce5"
+    },
+    {
+      "id": "wp2-18fbdc9b3a5cf6b6",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num24m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num24m.font"
+      ],
+      "sizeBytes": 1656,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19667520,
+        "endByteExclusive": 19669176
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "ef9f5cb18770332566d57e583b58e26431188909c83f078a4d46835949fad619"
+    },
+    {
+      "id": "wp2-0a2603dc9b3492ff",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num20m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num20m.font"
+      ],
+      "sizeBytes": 1148,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19669184,
+        "endByteExclusive": 19670332
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "89714a68c6b896405af79acd4460078a390e6250735885104f67dcb017b32ff9"
+    },
+    {
+      "id": "wp2-d00ec119b2df5798",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "num18m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "num18m.font"
+      ],
+      "sizeBytes": 996,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19670336,
+        "endByteExclusive": 19671332
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "99f976ca92eac28a2f034ac8eaa31951030009298fd46cccb0ec636867e4e9b6"
+    },
+    {
+      "id": "wp2-7d08fa5ad5616c91",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "nm48n.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "nm48n.font"
+      ],
+      "sizeBytes": 7792,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19671360,
+        "endByteExclusive": 19679152
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "31fc9c691eeefe9c9b87a0b9c39428786b3ba3c2485bd85c258f6497ef6c379c"
+    },
+    {
+      "id": "wp2-fb10464b20d6b772",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "nm36n.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "nm36n.font"
+      ],
+      "sizeBytes": 3760,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19679168,
+        "endByteExclusive": 19682928
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "6f69b5c68f7ffff1a380bd458f393b38623457137200844fc3923aadae6a51d1"
+    },
+    {
+      "id": "wp2-98fee1564aeb1b86",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "nm120nb.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "nm120nb.font"
+      ],
+      "sizeBytes": 34468,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19682944,
+        "endByteExclusive": 19717412
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "3eea50cacfce094d952188c9b4ffe46bd0fe449a244b848b220e3e1f21e87fdf"
+    },
+    {
+      "id": "wp2-4230b79ce822ad0c",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "nm104n.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "nm104n.font"
+      ],
+      "sizeBytes": 34340,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19717440,
+        "endByteExclusive": 19751780
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "17b91c32ea72479a9dde6b6243b28196bd4df0cef97470cb46ac714906f21cde"
+    },
+    {
+      "id": "wp2-40e78e39381e5e71",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font48r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font48r.font"
+      ],
+      "sizeBytes": 18056,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19751808,
+        "endByteExclusive": 19769864
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "19775f78c638764973ba2b701dd1641a20198ac67a31d6725018670d33e5a0d1"
+    },
+    {
+      "id": "wp2-4fb24b8a8316b36f",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font48m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font48m.font"
+      ],
+      "sizeBytes": 44392,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19769920,
+        "endByteExclusive": 19814312
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "26516b234e7359748de657edb8a2204f5d0bad2d3ff708fc10ac3e008661fe73"
+    },
+    {
+      "id": "wp2-af4f9987407600d7",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font44l.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font44l.font"
+      ],
+      "sizeBytes": 23020,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19814336,
+        "endByteExclusive": 19837356
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "070a76b314351a4344addefa494450b50c82e5db45a9241331eca0e0c7302aeb"
+    },
+    {
+      "id": "wp2-a207958c7969db8e",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font40r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font40r.font"
+      ],
+      "sizeBytes": 13844,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19837376,
+        "endByteExclusive": 19851220
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "7594e77a987003ef5f188f272e439d7cf37cbd93afc398ae954caf5e65d61eea"
+    },
+    {
+      "id": "wp2-fe65c9d6735e1082",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font38r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font38r.font"
+      ],
+      "sizeBytes": 34444,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19851264,
+        "endByteExclusive": 19885708
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "c4a6cda469b3e2c2ded30d0389d1b66e01a1f36a248f11a4e8eec0a31ebd13cd"
+    },
+    {
+      "id": "wp2-c01d1b6f2ec39061",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font38m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font38m.font"
+      ],
+      "sizeBytes": 13232,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19885760,
+        "endByteExclusive": 19898992
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "e28e4d99b015396434ae30a74e0716e61a61c138e5cd069732cfb4e09b072874"
+    },
+    {
+      "id": "wp2-f03eaab8ad6261e9",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font36r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font36r.font"
+      ],
+      "sizeBytes": 43256,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19899008,
+        "endByteExclusive": 19942264
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "da03b65f4ae5578301b228b722f8c5d35d5ed9d20719ee65ae74ca7866c00b7b"
+    },
+    {
+      "id": "wp2-0762f805ac63e521",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font36n.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font36n.font"
+      ],
+      "sizeBytes": 13284,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19942272,
+        "endByteExclusive": 19955556
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "d6ade219bef1415f1b8b4958d95c13cc7798aa4cc1caeb7d83cfbd871cea5156"
+    },
+    {
+      "id": "wp2-28dd8614231dd819",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font36m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font36m.font"
+      ],
+      "sizeBytes": 262424,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 19955584,
+        "endByteExclusive": 20218008
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "7410dd51afad933c9871d5a781a6b3f8a8dfc02138c1cbcb7b71621242ef77ee"
+    },
+    {
+      "id": "wp2-43ff227a4fbc50be",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font36l.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font36l.font"
+      ],
+      "sizeBytes": 13352,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 20218048,
+        "endByteExclusive": 20231400
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "ffbfefe7ff3b2af798407c70df6482bc0db2a331ef940b58c46748d342c1e296"
+    },
+    {
+      "id": "wp2-759d9552abf9654f",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font34r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font34r.font"
+      ],
+      "sizeBytes": 140992,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 20231424,
+        "endByteExclusive": 20372416
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "05d9786cefb627faa20d1b8092eb4c59263e91a4be096882b2936f6359952491"
+    },
+    {
+      "id": "wp2-fc35dfdcc593b685",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font34m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font34m.font"
+      ],
+      "sizeBytes": 11596,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 20372416,
+        "endByteExclusive": 20384012
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "20759f7ece4ef7ec9270c92f6e936f1891fc43f5ffce90416ae9b57baad653fe"
+    },
+    {
+      "id": "wp2-cc521a26c4a5dc5b",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font32r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font32r.font"
+      ],
+      "sizeBytes": 307672,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 20384064,
+        "endByteExclusive": 20691736
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "1830da5d558fd56fb24a2f7f832f2582406f1bcae6782c5491e0b565487723e2"
+    },
+    {
+      "id": "wp2-4b5835af502dbaf1",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font32m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font32m.font"
+      ],
+      "sizeBytes": 519912,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 20691776,
+        "endByteExclusive": 21211688
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "8b9312d818185853065187f1f01ead448f89678b97da89c8f76a830212d32395"
+    },
+    {
+      "id": "wp2-54ef90e8c49df8f7",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font32l.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font32l.font"
+      ],
+      "sizeBytes": 9640,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21211712,
+        "endByteExclusive": 21221352
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "9b720246411c07d102a5fea346931ed2d474900a698f837080f6cbc9b098be75"
+    },
+    {
+      "id": "wp2-5d7fb00c212611b0",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font30r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font30r.font"
+      ],
+      "sizeBytes": 9492,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21221376,
+        "endByteExclusive": 21230868
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "90a63aa91a628a6502ae4b9209a4b9545e85fd4b6617a8f0cb036c64772b6475"
+    },
+    {
+      "id": "wp2-a6e7d1d04cb74998",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font28r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font28r.font"
+      ],
+      "sizeBytes": 57320,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21230912,
+        "endByteExclusive": 21288232
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "4f1b44fb1859120b2bedc1de972911a30e25b5fa0304faa3df6bfbedabe56243"
+    },
+    {
+      "id": "wp2-9baf107f7247bd25",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font28m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font28m.font"
+      ],
+      "sizeBytes": 242116,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21288256,
+        "endByteExclusive": 21530372
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "adb7984623ee2d21be05042826896ecf10955f3f6b46dc1af080a56b031f1913"
+    },
+    {
+      "id": "wp2-95d58fe527b960b1",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font26r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font26r.font"
+      ],
+      "sizeBytes": 9280,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21530432,
+        "endByteExclusive": 21539712
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "7dcd9f6dac58affc203be00fc45f443501234fcf498fade72fd44cc379f05195"
+    },
+    {
+      "id": "wp2-ad960b64dacfaff9",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font24r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font24r.font"
+      ],
+      "sizeBytes": 18148,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21539712,
+        "endByteExclusive": 21557860
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "d6a3b5e6d1a807edeaf3aaa96237b03239f2bc5b5066a31491003d599281919c"
+    },
+    {
+      "id": "wp2-8740f8cfefbbc9fd",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font24m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font24m.font"
+      ],
+      "sizeBytes": 175552,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21557888,
+        "endByteExclusive": 21733440
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "ff4c8606b76dfcb3dfda48a2fb9b9cbf5b44af8cd201ab1f4ef7ce7de579bc55"
+    },
+    {
+      "id": "wp2-ac81cde338d8acd4",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font24l.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font24l.font"
+      ],
+      "sizeBytes": 30192,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21733440,
+        "endByteExclusive": 21763632
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "852b909852a94851d1c327e2d86268d880fee0366aa09d83b439006ae3fba589"
+    },
+    {
+      "id": "wp2-dec7412c2b9a333a",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font20r.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font20r.font"
+      ],
+      "sizeBytes": 9976,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21763648,
+        "endByteExclusive": 21773624
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "6d0b8916d1db28fa1b3df251e4233019cd2c175d71b9a44103a20615e280b048"
+    },
+    {
+      "id": "wp2-8d5d3dc129627ea2",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "font18m.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "font18m.font"
+      ],
+      "sizeBytes": 31036,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21773632,
+        "endByteExclusive": 21804668
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "352a11d87617140f1468c2c2c264eb4e00ecad1a6848034833a1b741b1f0a671"
+    },
+    {
+      "id": "wp2-182212d459ba5bd1",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "fnt56el.font",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "fnt56el.font"
+      ],
+      "sizeBytes": 20352,
+      "category": "fonts",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21804672,
+        "endByteExclusive": 21825024
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "d47b6d1e9f6fbc007c99ab3ab439c15dd1b717f201dfcefb795edda77636dbe6"
+    },
+    {
+      "id": "wp2-17eda667e3073530",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.zht",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.zht"
+      ],
+      "sizeBytes": 28897,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21825024,
+        "endByteExclusive": 21853921
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "dae8ae14336a99332b0f0258947385ba9412b27c2bff3b91911bdd6a5932173c"
+    },
+    {
+      "id": "wp2-cf679b30ade0812d",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.zhc",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.zhc"
+      ],
+      "sizeBytes": 29182,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21853952,
+        "endByteExclusive": 21883134
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "55feb0d7387cabfb9043633f753cee246a5d662d2ad37b2af2f8e11f6bbf47f4"
+    },
+    {
+      "id": "wp2-9163eae7cede626e",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.th",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.th"
+      ],
+      "sizeBytes": 59195,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21883136,
+        "endByteExclusive": 21942331
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "6c3ada69b4d9b7612e5f959659c7bb2865ca1be5ab59d3da457be64aa9efb27a"
+    },
+    {
+      "id": "wp2-0e8358bf00ec049b",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.sty",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.sty"
+      ],
+      "sizeBytes": 197368,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 21942336,
+        "endByteExclusive": 22139704
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "7f4bf1a85b89d3c7d4238f247760a5fdd845f22965754573e96d993cbaae017e"
+    },
+    {
+      "id": "wp2-ac5d55b6de485bcb",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.sk",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.sk"
+      ],
+      "sizeBytes": 33493,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 22139712,
+        "endByteExclusive": 22173205
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "f57306abd917ca267d19282fce9a8fc3e22cb9420046bd9d7da59eb800ff4066"
+    },
+    {
+      "id": "wp2-e42ee09cd1b17651",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.ru",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.ru"
+      ],
+      "sizeBytes": 48089,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 22173248,
+        "endByteExclusive": 22221337
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "b4c195221042ed6f7c42eadc2479673adfe4a7a1557ad770aa169b146758f614"
+    },
+    {
+      "id": "wp2-464171941cb18bb6",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.ro",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.ro"
+      ],
+      "sizeBytes": 34640,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 22221376,
+        "endByteExclusive": 22256016
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "71288e1068c6ef8e9ba659761ff6bd4fea2e59c672d4fab9e9ebeea0a4d30177"
+    },
+    {
+      "id": "wp2-0928389e7846d86f",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.res",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.res"
+      ],
+      "sizeBytes": 6682132,
+      "category": "artwork",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 22256064,
+        "endByteExclusive": 28938196
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "35e849efb33418c96f9a33ecc17232692c1ffe962ef5f8109e3493cdad2f426d"
+    },
+    {
+      "id": "wp2-34006bd5bbc8aa8c",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.pt",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.pt"
+      ],
+      "sizeBytes": 33795,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 28938240,
+        "endByteExclusive": 28972035
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "bd7f2847f35f2f120b83d46781df8091f8b4b420e465ed78349eab3f67c2f965"
+    },
+    {
+      "id": "wp2-79948c6c97472439",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.pl",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.pl"
+      ],
+      "sizeBytes": 33782,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 28972096,
+        "endByteExclusive": 29005878
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "0e1638beb79f4ceba29dfe85e2eeb6870b88b653795d176d1566bf90065c0b3f"
+    },
+    {
+      "id": "wp2-d324bd4495e7f3e4",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.ko",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.ko"
+      ],
+      "sizeBytes": 33310,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29005888,
+        "endByteExclusive": 29039198
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "17df138e8c37040d174b3bc55b88011b2a749d626f54a5e23b7a55ab3e0951e8"
+    },
+    {
+      "id": "wp2-a5cd2e46d43f8527",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.ja",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.ja"
+      ],
+      "sizeBytes": 37190,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29039232,
+        "endByteExclusive": 29076422
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "eaacd13214ee643bb18cae6028ae24e103b80b109c7422831f13f515834a5243"
+    },
+    {
+      "id": "wp2-8836b0ad4f3e7c79",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.it",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.it"
+      ],
+      "sizeBytes": 34305,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29076480,
+        "endByteExclusive": 29110785
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "c57e14ce6821bb8f006ca807a4c03b0a68265c8d214a8db88d9fcc2352308d8c"
+    },
+    {
+      "id": "wp2-00b6548b38df2b41",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.in",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.in"
+      ],
+      "sizeBytes": 53904,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29110848,
+        "endByteExclusive": 29164752
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "743769355ce4296016f57e5457fb69ae238bbe101dccde51b9a0d2bde812eff2"
+    },
+    {
+      "id": "wp2-2d11d8e0b7f5c965",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.id",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.id"
+      ],
+      "sizeBytes": 32530,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29164800,
+        "endByteExclusive": 29197330
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "0f23c2ac183ce3bf247eda4606c18b317b6765392487037371ec037effabc73b"
+    },
+    {
+      "id": "wp2-d6624e1376274419",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.he",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.he"
+      ],
+      "sizeBytes": 37620,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29197376,
+        "endByteExclusive": 29234996
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "42e84012ca46723da6a75e91a9c7dd28f9fccfbed3caaa0df58df03699eb7777"
+    },
+    {
+      "id": "wp2-65dfcc574707105f",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.fr",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.fr"
+      ],
+      "sizeBytes": 35474,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29235008,
+        "endByteExclusive": 29270482
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "0c58898689b23491ece436ec724a799bfc6c58f4bf9491c74b85f604dd958796"
+    },
+    {
+      "id": "wp2-84aae9f8953d9189",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.fil",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.fil"
+      ],
+      "sizeBytes": 33828,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29270528,
+        "endByteExclusive": 29304356
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "b2f1fab0b78630db7b790aeb4c7fc197d77d1312fde3b712b4232dbf6fee6f75"
+    },
+    {
+      "id": "wp2-5a09d183149e9dab",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.es",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.es"
+      ],
+      "sizeBytes": 34511,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29304384,
+        "endByteExclusive": 29338895
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "17e86c625fba3a8d1ce84b852a690a7c04979c9516c5d60c19f7250fa4e6c329"
+    },
+    {
+      "id": "wp2-857afa6a260140a1",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.eng",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.eng"
+      ],
+      "sizeBytes": 30834,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29338944,
+        "endByteExclusive": 29369778
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "2f369dfd817f0d4b7cdb0c15cfaff502608a9f95b2f52130b34ab02961c8fe41"
+    },
+    {
+      "id": "wp2-72c4452f7d85cb36",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.de",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.de"
+      ],
+      "sizeBytes": 34392,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29369792,
+        "endByteExclusive": 29404184
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "90f769830ca2f075df2983aeecf279c82fe814d7bfcfac84f1eabb1cbd2e73d7"
+    },
+    {
+      "id": "wp2-d5fd1db0d13df54f",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.cz",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.cz"
+      ],
+      "sizeBytes": 33398,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29404224,
+        "endByteExclusive": 29437622
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "dfb39334dcec0af73578cd7fe901f1e04cafcd8a960c1cae5d6a46465cf42733"
+    },
+    {
+      "id": "wp2-02034cc1e02171a3",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.bg",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.bg"
+      ],
+      "sizeBytes": 46729,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29437632,
+        "endByteExclusive": 29484361
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "a515c38c3d9163080a52942ed9bf04e025d70a980d702b85ef63648425853c4b"
+    },
+    {
+      "id": "wp2-301da254c97e2d54",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "bt_watch.ar",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "bt_watch.ar"
+      ],
+      "sizeBytes": 52021,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29484416,
+        "endByteExclusive": 29536437
+      },
+      "source": "res.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "94a90bc86bb0c7ce5896a9c050c202b0af6790301a4f41618b6b94482984ca89"
+    },
+    {
+      "id": "wp2-956e8b966eeed418",
+      "parentId": "wp2-7618d2e9632fab87",
+      "name": "Image metadata and alignment",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "res.bin",
+        "Image metadata and alignment"
+      ],
+      "sizeBytes": 5128,
+      "category": "metadata",
+      "description": "Headers, directory records and alignment bytes inside the supplied image. Not usable filesystem space.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-e554a2d1ee18044d",
+      "parentId": "wp2-00bc7f16ea91b7fb",
+      "name": "Outside supplied image",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_a",
+        "Outside supplied image"
+      ],
+      "sizeBytes": 347968,
+      "category": "reserved",
+      "description": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+      "verification": "Capacity known; contents unverified",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29536448,
+        "endByteExclusive": 29884416
+      },
+      "source": null,
+      "evidence": {
+        "Device capture": "The interval contains non-FF bytes; it cannot be called erased or free. The captured image differs from stock, so the stock boundary is not evidence of the captured image end.",
+        "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+      },
+      "children": []
+    },
+    {
+      "id": "wp2-e729e7799acc8748",
+      "parentId": "wp2-dc50bb1d2928d697",
+      "name": "res_b",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_b"
+      ],
+      "sizeBytes": 8388608,
+      "category": "resources",
+      "description": "Resource partition without an image in this stock OTA. The device capture contains an empty SDFS directory.",
+      "verification": "Captured SDFS has zero directory entries; body checksum fails",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 29884416,
+        "endByteExclusive": 38273024
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 0 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Empty SDFS directory does not mean the reservation is blank. Its previously audited body-checksum mismatch remains unresolved. Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Resource partition",
+      "partitionFileId": 11
+    },
+    {
+      "id": "wp2-027d690ae1b16151",
+      "parentId": "wp2-dc50bb1d2928d697",
+      "name": "res_e",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e"
+      ],
+      "sizeBytes": 67108864,
+      "category": "resources",
+      "description": "Stock package image contents shown within the verified partition reservation.",
+      "verification": "Stock image + verified boundary",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 38273024,
+        "endByteExclusive": 105381888
+      },
+      "source": "Verified device ACPT partition table + stock OTA package",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 19 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [
+        "wp2-ce667df17823618d",
+        "wp2-8aa1f4541a581cd0"
+      ],
+      "role": "Watch-face resources",
+      "partitionFileId": 14
+    },
+    {
+      "id": "wp2-ce667df17823618d",
+      "parentId": "wp2-027d690ae1b16151",
+      "name": "res_e.bin",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin"
+      ],
+      "sizeBytes": 58777088,
+      "category": "resources",
+      "description": "Exact decompressed stock SDFS image, with all named file checksums validated.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": [
+        "wp2-f127c8e0c28db8df",
+        "wp2-792a6ba0a089e3c5",
+        "wp2-46ab700db57e40c3",
+        "wp2-4fbee5e523d7edb4",
+        "wp2-a0f4b3a8c35e4a89",
+        "wp2-34b395d326ba8b19",
+        "wp2-bd3bb15e2ae0292a",
+        "wp2-e02e689d1eba489a",
+        "wp2-389d29a9de32a026",
+        "wp2-bd35d6749c3cefe4",
+        "wp2-94fe168084544312",
+        "wp2-76b36f0f9ef3e9a8",
+        "wp2-9c589fcefe514d6b",
+        "wp2-13e11eb39ee2b089",
+        "wp2-8b7215928de55def",
+        "wp2-6a13701efdd91bb8",
+        "wp2-29cafc0bb007c6bf",
+        "wp2-7007ad50bb721b57",
+        "wp2-e42deb4146e4498b",
+        "wp2-1bfa1cb609906fcc"
+      ]
+    },
+    {
+      "id": "wp2-f127c8e0c28db8df",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "9.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "9.ajs"
+      ],
+      "sizeBytes": 4795064,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 38273664,
+        "endByteExclusive": 43068728
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "5e93c6a93dead7ebed428b7564e534c90a1d2968cc5fbc561c3985cdd5196a1f"
+    },
+    {
+      "id": "wp2-792a6ba0a089e3c5",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "8.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "8.ajs"
+      ],
+      "sizeBytes": 1886654,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 43068736,
+        "endByteExclusive": 44955390
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "d3b713c8950ba5046abf0ba40b9d5003a2a69d10fcfdcb20fa77454956a67f6b"
+    },
+    {
+      "id": "wp2-46ab700db57e40c3",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "7.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "7.ajs"
+      ],
+      "sizeBytes": 1893750,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 44955392,
+        "endByteExclusive": 46849142
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "4e4be5fef7f3c063d0a76c151542c16e14c281db6d0597756337eb9f8d2477a4"
+    },
+    {
+      "id": "wp2-4fbee5e523d7edb4",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "6.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "6.ajs"
+      ],
+      "sizeBytes": 3190239,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 46849152,
+        "endByteExclusive": 50039391
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "ce2a588f52579b4827f25958f0447a7628e72c540df480afd2d7117ad8f6af4c"
+    },
+    {
+      "id": "wp2-a0f4b3a8c35e4a89",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "5.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "5.ajs"
+      ],
+      "sizeBytes": 2795159,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 50039424,
+        "endByteExclusive": 52834583
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "0a39bc3cab5a4c46cf0fb555b874108405e5ab51cbc6f8db11f31d15a649fedb"
+    },
+    {
+      "id": "wp2-34b395d326ba8b19",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "4.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "4.ajs"
+      ],
+      "sizeBytes": 2816699,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 52834624,
+        "endByteExclusive": 55651323
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "eb05b2f7cb2d78f9e9db34d3907896d8ab1fe7c301ca44490e548db906370348"
+    },
+    {
+      "id": "wp2-bd3bb15e2ae0292a",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "3.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "3.ajs"
+      ],
+      "sizeBytes": 2636212,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 55651328,
+        "endByteExclusive": 58287540
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "3493eef460a8cbf5fc8b0c627d0734dbc68243bf609bcded6c94dc259c9fea36"
+    },
+    {
+      "id": "wp2-e02e689d1eba489a",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "2.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "2.ajs"
+      ],
+      "sizeBytes": 2031214,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 58287552,
+        "endByteExclusive": 60318766
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "6f54c005a4731993a56fc09f0701ec79c337810ccfdb8d1522890c052dac236c"
+    },
+    {
+      "id": "wp2-389d29a9de32a026",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "19.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "19.ajs"
+      ],
+      "sizeBytes": 2964415,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 60318784,
+        "endByteExclusive": 63283199
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "aa9ecf35f0152d56603b9dd57a3534becca39816270613ede52c71716cc9575d"
+    },
+    {
+      "id": "wp2-bd35d6749c3cefe4",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "18.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "18.ajs"
+      ],
+      "sizeBytes": 4105949,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 63283200,
+        "endByteExclusive": 67389149
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "f7f0f067b3af2d2f6176e165d2a351bb916d45779dc235b36d5df0c7f82632a5"
+    },
+    {
+      "id": "wp2-94fe168084544312",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "17.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "17.ajs"
+      ],
+      "sizeBytes": 3988068,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 67389184,
+        "endByteExclusive": 71377252
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "17aadc9b5911ebafb15b3a34307f2a14e2466da99c476c90ca7b793b23c9f9e8"
+    },
+    {
+      "id": "wp2-76b36f0f9ef3e9a8",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "16.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "16.ajs"
+      ],
+      "sizeBytes": 6075165,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 71377280,
+        "endByteExclusive": 77452445
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "1fc6028ff8c2f450dd7e8736d26437419ea82ef1a7d2de0b95c71069126f0645"
+    },
+    {
+      "id": "wp2-9c589fcefe514d6b",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "15.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "15.ajs"
+      ],
+      "sizeBytes": 3466369,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 77452480,
+        "endByteExclusive": 80918849
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "736a9788e2eb38c083129a419b7220376d25ad9af8e8f2ce642d4010fb1332f7"
+    },
+    {
+      "id": "wp2-13e11eb39ee2b089",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "14.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "14.ajs"
+      ],
+      "sizeBytes": 3305983,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 80918912,
+        "endByteExclusive": 84224895
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "3df69686e9f56dd1fca33f935ac9414baf401e70634700caa12211ba412200e8"
+    },
+    {
+      "id": "wp2-8b7215928de55def",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "13.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "13.ajs"
+      ],
+      "sizeBytes": 2974369,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 84224896,
+        "endByteExclusive": 87199265
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "12a85041c757d7445c2301f8b216975b729616b28246bde64a6ce96f119efb24"
+    },
+    {
+      "id": "wp2-6a13701efdd91bb8",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "12.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "12.ajs"
+      ],
+      "sizeBytes": 3180079,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 87199296,
+        "endByteExclusive": 90379375
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "650acdcb7ab84f812702ec622e7433ad1ddb7a8344e245523c3aa88d1efa50f7"
+    },
+    {
+      "id": "wp2-29cafc0bb007c6bf",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "11.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "11.ajs"
+      ],
+      "sizeBytes": 1841390,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 90379392,
+        "endByteExclusive": 92220782
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "bab9c195b4a3ca4441cd7bb361bbc7ba2df438e0450905ea47fcdaad47883e0c"
+    },
+    {
+      "id": "wp2-7007ad50bb721b57",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "10.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "10.ajs"
+      ],
+      "sizeBytes": 2814323,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 92220800,
+        "endByteExclusive": 95035123
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "51b4251adb9b0f01638fd27927a90d7df16439cc2be1bc8708d30037d289ea76"
+    },
+    {
+      "id": "wp2-e42deb4146e4498b",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "1.ajs",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "1.ajs"
+      ],
+      "sizeBytes": 2014913,
+      "category": "animations",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 95035136,
+        "endByteExclusive": 97050049
+      },
+      "source": "res_e.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "7bab27dabb60f24764998585552057635a0d93e23bcabfa8d6dfdcf057729f22"
+    },
+    {
+      "id": "wp2-1bfa1cb609906fcc",
+      "parentId": "wp2-ce667df17823618d",
+      "name": "Image metadata and alignment",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "res_e.bin",
+        "Image metadata and alignment"
+      ],
+      "sizeBytes": 1074,
+      "category": "metadata",
+      "description": "Headers, directory records and alignment bytes inside the supplied image. Not usable filesystem space.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nand-logical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-8aa1f4541a581cd0",
+      "parentId": "wp2-027d690ae1b16151",
+      "name": "Outside supplied image",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "res_e",
+        "Outside supplied image"
+      ],
+      "sizeBytes": 8331776,
+      "category": "reserved",
+      "description": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+      "verification": "Capacity known; contents unverified",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 97050112,
+        "endByteExclusive": 105381888
+      },
+      "source": null,
+      "evidence": {
+        "Device capture": "Entire interval was FF. The captured image differs from stock, so the stock boundary is not evidence of the captured image end.",
+        "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+      },
+      "children": []
+    },
+    {
+      "id": "wp2-90796311bda0a528",
+      "parentId": "wp2-dc50bb1d2928d697",
+      "name": "runtimel",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "runtimel"
+      ],
+      "sizeBytes": 2097152,
+      "category": "metadata",
+      "description": "Persistent runtime diagnostics. This is separate from the flash translation layer\u2019s internal update-log blocks.",
+      "verification": "Role verified; factory contents unknown",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 105381888,
+        "endByteExclusive": 107479040
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data.",
+        "Driver and format": "Runtime diagnostic log role: ACPT file ID 0xFA matches the SDK runtime-log identifier.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Runtime diagnostic logs",
+      "partitionFileId": 250
+    },
+    {
+      "id": "wp2-abc06531e4aba7eb",
+      "parentId": "wp2-dc50bb1d2928d697",
+      "name": "udisk",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "udisk"
+      ],
+      "sizeBytes": 10485760,
+      "category": "filesystem",
+      "description": "Writable file storage used for custom apps and other files. The partition reserves 10 MiB; the captured FAT16 format provides 10,426,368 bytes of file-data capacity. Clean-stock free space has not been measured. Installed apps and their usage are excluded from this reference.",
+      "verification": "Writable filesystem verified; captured FAT16 format verified; clean-stock free space not measured",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 107479040,
+        "endByteExclusive": 117964800
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Observed FAT16 format: 512-byte sectors, 1024-byte clusters, two identical FAT copies. 59,392 bytes of format overhead leave 10,426,368 bytes of file-data capacity. These describe the captured format, not verified factory formatting or available space.",
+        "Driver and format": "ACPT file ID 40 matches PARTITION_FILE_ID_UDISK in the Actions SDK partition header. Filesystem geometry comes from the captured boot sector and allocation-table equality; installed files and their free-space counts are excluded.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Writable file storage (FAT16 observed)",
+      "partitionFileId": 40
+    },
+    {
+      "id": "wp2-73b9c33487635b90",
+      "parentId": "wp2-dc50bb1d2928d697",
+      "name": "Unpartitioned logical tail",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "Logical NAND",
+        "Unpartitioned logical tail"
+      ],
+      "sizeBytes": 11010048,
+      "category": "reserved",
+      "description": "Logical NAND interval not assigned by the partition table. The stock OTA does not specify its contents or subsequent ownership.",
+      "verification": "Boundary verified; stock contents unknown",
+      "addressSpace": "nand-logical",
+      "range": {
+        "startByte": 117964800,
+        "endByteExclusive": 128974848
+      },
+      "source": null,
+      "evidence": {
+        "Device capture": "All 11,010,048 bytes are FF; a prior independent full-tail read agreed.",
+        "Verification limits": "Factory state, future OTA ownership, successful writes and subsequent use remain undocumented."
+      },
+      "children": [],
+      "role": "Outside the partition table; reuse unverified"
+    },
+    {
+      "id": "wp2-e887a498bda7086c",
+      "parentId": "wp2-4b571776136dc237",
+      "name": "NAND management",
+      "path": [
+        "Watch Pro 2",
+        "NAND",
+        "NAND management"
+      ],
+      "sizeBytes": 5242880,
+      "category": "metadata",
+      "description": "Capacity managed internally by the flash translation layer: mapping tables, update-log blocks and the block allocation pool.",
+      "verification": "Capacity and roles verified; stock allocation unknown",
+      "addressSpace": "nand-physical",
+      "range": null,
+      "source": "Chip geometry + driver trace + live metadata; no physical content dump",
+      "evidence": {
+        "Driver and format": "1024 physical blocks minus 984 logical blocks = 40 blocks (5 MiB). Physical-page reader and mapping/log/pool handling were traced.",
+        "Device capture": "Two live RAM metadata captures accounted for 8 update-log blocks, 31 allocation-pool blocks and 1 zone-table block. Two physical blocks exchanged roles; these counts are observations, not a factory baseline.",
+        "Verification limits": "Raw physical contents, full OOB, per-block health and factory role assignments remain unverified. Pool membership does not imply erased pages."
+      },
+      "children": [],
+      "role": "Flash translation and block management"
+    },
+    {
+      "id": "wp2-611fc901bc5cef0a",
+      "parentId": "wp2-33607e1d955de933",
+      "name": "NOR",
+      "path": [
+        "Watch Pro 2",
+        "NOR"
+      ],
+      "sizeBytes": 4194304,
+      "category": "firmware",
+      "description": "Separate 4 MiB NOR chip. Unknown regions remain explicit.",
+      "verification": "Verified chip geometry",
+      "addressSpace": "nor-physical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": [
+        "wp2-9ecce20ce0512ac0",
+        "wp2-ea7f315d3d25a094",
+        "wp2-0fb4dfbdca648409",
+        "wp2-443ec66476b56f18",
+        "wp2-4ab422e3fded8650",
+        "wp2-87c929087a1e21df",
+        "wp2-bbba900808e996f6",
+        "wp2-1441f2f04a053bc0",
+        "wp2-9e4a3cecb16e0681",
+        "wp2-80a0cafae68bb999",
+        "wp2-edef055c1c47f290",
+        "wp2-e218a88d2586662d",
+        "wp2-1e1ed3db5530f4c1"
+      ]
+    },
+    {
+      "id": "wp2-9ecce20ce0512ac0",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "fw0_boot",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_boot"
+      ],
+      "sizeBytes": 4096,
+      "category": "firmware",
+      "description": "Primary bootloader reservation.",
+      "verification": "Captured image validated; stock identity unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 0,
+        "endByteExclusive": 4096
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured firmware image: 3,816 bytes (56-byte header and 3,760-byte payload); both ACTH checksums pass. Stock identity is not established for this captured image.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Primary bootloader",
+      "partitionFileId": 1
+    },
+    {
+      "id": "wp2-ea7f315d3d25a094",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "fw0_para",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_para"
+      ],
+      "sizeBytes": 4096,
+      "category": "metadata",
+      "description": "Active partition table: chip selection, offsets, sizes and firmware file identifiers.",
+      "verification": "Captured ACPT verified; factory state unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4096,
+        "endByteExclusive": 8192
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. The 744-byte active ACPT table passes CRC32 and exactly matches all 22 recorded partition boundaries.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Active partition table",
+      "partitionFileId": 2
+    },
+    {
+      "id": "wp2-0fb4dfbdca648409",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "fw1_boot",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw1_boot"
+      ],
+      "sizeBytes": 4096,
+      "category": "firmware",
+      "description": "Secondary bootloader reservation.",
+      "verification": "Boundary verified; contents unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 8192,
+        "endByteExclusive": 12288
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "Entire reservation was FF in the device capture. This does not prove a factory default or ownership of the interval.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Secondary bootloader reservation",
+      "partitionFileId": 1
+    },
+    {
+      "id": "wp2-443ec66476b56f18",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "fw1_para",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw1_para"
+      ],
+      "sizeBytes": 4096,
+      "category": "metadata",
+      "description": "Secondary partition-table reservation.",
+      "verification": "Boundary verified; contents unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 12288,
+        "endByteExclusive": 16384
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "Entire reservation was FF in the device capture. This does not prove a factory default or ownership of the interval.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Secondary partition-table reservation",
+      "partitionFileId": 2
+    },
+    {
+      "id": "wp2-4ab422e3fded8650",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "fw0_rec",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_rec"
+      ],
+      "sizeBytes": 131072,
+      "category": "firmware",
+      "description": "Recovery firmware reservation.",
+      "verification": "Captured image validated; stock identity unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 16384,
+        "endByteExclusive": 147456
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured firmware image: 95,844 bytes (512-byte header and 95,332-byte payload); both ACTH checksums pass. Stock identity is not established for this captured image.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Recovery firmware",
+      "partitionFileId": 3
+    },
+    {
+      "id": "wp2-87c929087a1e21df",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "fw0_sys",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sys"
+      ],
+      "sizeBytes": 3452928,
+      "category": "firmware",
+      "description": "Main application firmware. The image breakdown uses stock firmware 1.0.0.73.",
+      "verification": "Stock image + verified boundary",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 147456,
+        "endByteExclusive": 3600384
+      },
+      "source": "Verified device ACPT partition table + stock OTA package",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured firmware image: 2,482,320 bytes (512-byte header and 2,481,808-byte payload); both ACTH checksums pass. Stock identity is not established for this captured image.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [
+        "wp2-d62ca194acc1e3f2",
+        "wp2-732f6d1d66e70e15"
+      ],
+      "role": "Main application firmware",
+      "partitionFileId": 4
+    },
+    {
+      "id": "wp2-d62ca194acc1e3f2",
+      "parentId": "wp2-87c929087a1e21df",
+      "name": "Stock app.bin",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sys",
+        "Stock app.bin"
+      ],
+      "sizeBytes": 2465920,
+      "category": "firmware",
+      "description": "Unmodified application from the nested stock OTA.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": [
+        "wp2-1499f17c5528bf5c",
+        "wp2-6ecaf3bab163cbcd",
+        "wp2-4487337495c36726"
+      ]
+    },
+    {
+      "id": "wp2-1499f17c5528bf5c",
+      "parentId": "wp2-d62ca194acc1e3f2",
+      "name": "Firmware header",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sys",
+        "Stock app.bin",
+        "Firmware header"
+      ],
+      "sizeBytes": 512,
+      "category": "metadata",
+      "description": "Stock ACTH header checksum passes.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-6ecaf3bab163cbcd",
+      "parentId": "wp2-d62ca194acc1e3f2",
+      "name": "Application code and embedded data",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sys",
+        "Stock app.bin",
+        "Application code and embedded data"
+      ],
+      "sizeBytes": 2464828,
+      "category": "firmware",
+      "description": "Stock application payload checksum passes. Internal code and data are not fully classified here.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-4487337495c36726",
+      "parentId": "wp2-d62ca194acc1e3f2",
+      "name": "Packaged image padding",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sys",
+        "Stock app.bin",
+        "Packaged image padding"
+      ],
+      "sizeBytes": 580,
+      "category": "metadata",
+      "description": "Bytes included in stock app.bin beyond its declared ACTH payload.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-732f6d1d66e70e15",
+      "parentId": "wp2-87c929087a1e21df",
+      "name": "Outside supplied application",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sys",
+        "Outside supplied application"
+      ],
+      "sizeBytes": 987008,
+      "category": "reserved",
+      "description": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+      "verification": "Capacity known; contents unverified",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 2613376,
+        "endByteExclusive": 3600384
+      },
+      "source": null,
+      "evidence": {
+        "Device capture": "The interval contains non-FF bytes; it cannot be called erased or free. The captured image differs from stock, so the stock boundary is not evidence of the captured image end.",
+        "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+      },
+      "children": []
+    },
+    {
+      "id": "wp2-bbba900808e996f6",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "reserved",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "reserved"
+      ],
+      "sizeBytes": 409600,
+      "category": "reserved",
+      "description": "Reserved NOR interval between the application and resource partitions. No payload is documented.",
+      "verification": "Boundary verified; contents unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 3600384,
+        "endByteExclusive": 4009984
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "Entire reservation was FF in the device capture. This does not prove a factory default or ownership of the interval.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Reserved NOR interval",
+      "partitionFileId": 248
+    },
+    {
+      "id": "wp2-1441f2f04a053bc0",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "fw0_sdfs",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs"
+      ],
+      "sizeBytes": 65536,
+      "category": "resources",
+      "description": "Stock package image contents shown within the verified partition reservation.",
+      "verification": "Stock image + verified boundary",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4009984,
+        "endByteExclusive": 4075520
+      },
+      "source": "Verified device ACPT partition table + stock OTA package",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Captured SDFS directory: 9 named entries; named-file checksums pass for the listed entries (none when the directory is empty). This observation alone does not validate the complete image or establish stock identity.",
+        "Driver and format": "No additional driver binding documented.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [
+        "wp2-4e1ec6db853ad035",
+        "wp2-bc722c4229f73835"
+      ],
+      "role": "Firmware resources",
+      "partitionFileId": 5
+    },
+    {
+      "id": "wp2-4e1ec6db853ad035",
+      "parentId": "wp2-1441f2f04a053bc0",
+      "name": "sdfs.bin",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin"
+      ],
+      "sizeBytes": 24512,
+      "category": "resources",
+      "description": "Exact decompressed stock SDFS image, with all named file checksums validated.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": [
+        "wp2-3ce84ed483702486",
+        "wp2-c78bf18c018e7e3e",
+        "wp2-a04893d7fb9d8f94",
+        "wp2-394c5900662564ba",
+        "wp2-540f315e2367706d",
+        "wp2-62729da24d5b829b",
+        "wp2-853a86fc2d2483f1",
+        "wp2-86e993b2bb5ad42c",
+        "wp2-0af9267b400135ac",
+        "wp2-8ae711b18f5818d4"
+      ]
+    },
+    {
+      "id": "wp2-3ce84ed483702486",
+      "parentId": "wp2-4e1ec6db853ad035",
+      "name": "usrcfg.bin",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin",
+        "usrcfg.bin"
+      ],
+      "sizeBytes": 16,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4010304,
+        "endByteExclusive": 4010320
+      },
+      "source": "sdfs.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "3d0f78e02a367be9462e9ca45a46075c500896fd3b371b9dc744ed92ffdda2e5"
+    },
+    {
+      "id": "wp2-c78bf18c018e7e3e",
+      "parentId": "wp2-4e1ec6db853ad035",
+      "name": "sdfs.txt",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin",
+        "sdfs.txt"
+      ],
+      "sizeBytes": 10,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4010368,
+        "endByteExclusive": 4010378
+      },
+      "source": "sdfs.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646"
+    },
+    {
+      "id": "wp2-a04893d7fb9d8f94",
+      "parentId": "wp2-4e1ec6db853ad035",
+      "name": "extcfg.bin",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin",
+        "extcfg.bin"
+      ],
+      "sizeBytes": 16,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4010432,
+        "endByteExclusive": 4010448
+      },
+      "source": "sdfs.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "3d0f78e02a367be9462e9ca45a46075c500896fd3b371b9dc744ed92ffdda2e5"
+    },
+    {
+      "id": "wp2-394c5900662564ba",
+      "parentId": "wp2-4e1ec6db853ad035",
+      "name": "defcfg.bin",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin",
+        "defcfg.bin"
+      ],
+      "sizeBytes": 205,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4010496,
+        "endByteExclusive": 4010701
+      },
+      "source": "sdfs.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "8a9adf88208e8332e4905c02151b914bff4dad5b986fd9d4fc54c4787e42382f"
+    },
+    {
+      "id": "wp2-540f315e2367706d",
+      "parentId": "wp2-4e1ec6db853ad035",
+      "name": "cfg_mic.bin",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin",
+        "cfg_mic.bin"
+      ],
+      "sizeBytes": 528,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4010752,
+        "endByteExclusive": 4011280
+      },
+      "source": "sdfs.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "8d563abb385aeab96fd7ae22560856b625ac01ff6471f92c4be2d9a1c9c4e6f9"
+    },
+    {
+      "id": "wp2-62729da24d5b829b",
+      "parentId": "wp2-4e1ec6db853ad035",
+      "name": "bt_rf.bin",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin",
+        "bt_rf.bin"
+      ],
+      "sizeBytes": 2896,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4011328,
+        "endByteExclusive": 4014224
+      },
+      "source": "sdfs.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "1893b3e95843b6759a56b64a89bbaa579fe647d87926fcf0fa929dfdbe040a49"
+    },
+    {
+      "id": "wp2-853a86fc2d2483f1",
+      "parentId": "wp2-4e1ec6db853ad035",
+      "name": "bt_pth.bin",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin",
+        "bt_pth.bin"
+      ],
+      "sizeBytes": 14976,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4014272,
+        "endByteExclusive": 4029248
+      },
+      "source": "sdfs.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "24f07e58c50b72ae74db990a487ae8768baeee17f36b5a407f65640ae21d5a87"
+    },
+    {
+      "id": "wp2-86e993b2bb5ad42c",
+      "parentId": "wp2-4e1ec6db853ad035",
+      "name": "bttbl.bin",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin",
+        "bttbl.bin"
+      ],
+      "sizeBytes": 3306,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4029248,
+        "endByteExclusive": 4032554
+      },
+      "source": "sdfs.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "4e7d4001714f0dcba28512e31af0bd50bcf2fbb0d0d40e7978f4bcb6cb8ca2eb"
+    },
+    {
+      "id": "wp2-0af9267b400135ac",
+      "parentId": "wp2-4e1ec6db853ad035",
+      "name": "alcfg.bin",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin",
+        "alcfg.bin"
+      ],
+      "sizeBytes": 1860,
+      "category": "resources",
+      "description": "File included in stock firmware 1.0.0.73.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4032576,
+        "endByteExclusive": 4034436
+      },
+      "source": "sdfs.bin / SDFS directory + file checksum",
+      "evidence": {},
+      "children": [],
+      "contentSha256": "1dde759f84c245fc2920ac58d21bf5450f1ff3d13a1775979dbd951d11a7c686"
+    },
+    {
+      "id": "wp2-8ae711b18f5818d4",
+      "parentId": "wp2-4e1ec6db853ad035",
+      "name": "Image metadata and alignment",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "sdfs.bin",
+        "Image metadata and alignment"
+      ],
+      "sizeBytes": 699,
+      "category": "metadata",
+      "description": "Headers, directory records and alignment bytes inside the supplied image. Not usable filesystem space.",
+      "verification": "Verified in stock package",
+      "addressSpace": "nor-physical",
+      "range": null,
+      "source": null,
+      "evidence": {},
+      "children": []
+    },
+    {
+      "id": "wp2-bc722c4229f73835",
+      "parentId": "wp2-1441f2f04a053bc0",
+      "name": "Outside supplied image",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "fw0_sdfs",
+        "Outside supplied image"
+      ],
+      "sizeBytes": 41024,
+      "category": "reserved",
+      "description": "Remaining partition capacity beyond the supplied stock image. This interval is outside the image file inventory.",
+      "verification": "Capacity known; contents unverified",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4034496,
+        "endByteExclusive": 4075520
+      },
+      "source": null,
+      "evidence": {
+        "Device capture": "Entire interval was FF. The preceding stock image is byte-identical to the captured prefix.",
+        "Verification limits": "Stock installed contents, byte ownership and subsequent use are undocumented."
+      },
+      "children": []
+    },
+    {
+      "id": "wp2-9e4a3cecb16e0681",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "nvram_fa",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "nvram_fa"
+      ],
+      "sizeBytes": 4096,
+      "category": "metadata",
+      "description": "Factory configuration property store.",
+      "verification": "Role verified; factory contents unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4075520,
+        "endByteExclusive": 4079616
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. 1 CRC-valid segment headers and 11 CRC-valid item records. Property names and values are excluded.",
+        "Driver and format": "NVRAM factory role: ACPT file ID 6 matches the SDK partition constant and nvram_config_init lookup.",
+        "Verification limits": "Current-versus-obsolete record ownership and every property field are not fully classified; recorded bytes are not a factory usage figure. Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Factory configuration",
+      "partitionFileId": 6
+    },
+    {
+      "id": "wp2-80a0cafae68bb999",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "nvram_fa",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "nvram_fa"
+      ],
+      "sizeBytes": 8192,
+      "category": "metadata",
+      "description": "Writable factory configuration property store.",
+      "verification": "Role verified; factory contents unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4079616,
+        "endByteExclusive": 4087808
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. 1 CRC-valid segment headers and 17 CRC-valid item records. Property names and values are excluded.",
+        "Driver and format": "Writable factory NVRAM role: ACPT file ID 7 matches the SDK constant and nvram_config_init lookup.",
+        "Verification limits": "Current-versus-obsolete record ownership and every property field are not fully classified; recorded bytes are not a factory usage figure. Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Writable factory configuration",
+      "partitionFileId": 7
+    },
+    {
+      "id": "wp2-edef055c1c47f290",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "nvram_us",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "nvram_us"
+      ],
+      "sizeBytes": 8192,
+      "category": "metadata",
+      "description": "User configuration property store.",
+      "verification": "Role verified; factory contents unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4087808,
+        "endByteExclusive": 4096000
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. 2 CRC-valid segment headers and 120 CRC-valid item records. Property names and values are excluded.",
+        "Driver and format": "User NVRAM role: ACPT file ID 8 matches the SDK constant and nvram_config_init lookup.",
+        "Verification limits": "Current-versus-obsolete record ownership and every property field are not fully classified; recorded bytes are not a factory usage figure. Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "User configuration",
+      "partitionFileId": 8
+    },
+    {
+      "id": "wp2-e218a88d2586662d",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "logbuf",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "logbuf"
+      ],
+      "sizeBytes": 16384,
+      "category": "metadata",
+      "description": "Diagnostic log storage used by the Actions logging backend.",
+      "verification": "Role verified; factory contents unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4096000,
+        "endByteExclusive": 4112384
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data.",
+        "Driver and format": "Diagnostic log role: ACPT file ID 0xFB matches the SDK identifier and act_log flash-buffer lookup.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Diagnostic log buffer",
+      "partitionFileId": 251
+    },
+    {
+      "id": "wp2-1e1ed3db5530f4c1",
+      "parentId": "wp2-611fc901bc5cef0a",
+      "name": "coredump",
+      "path": [
+        "Watch Pro 2",
+        "NOR",
+        "coredump"
+      ],
+      "sizeBytes": 81920,
+      "category": "metadata",
+      "description": "Crash diagnostics, including processor state and selected memory blocks.",
+      "verification": "Role verified; factory contents unknown",
+      "addressSpace": "nor-physical",
+      "range": {
+        "startByte": 4112384,
+        "endByteExclusive": 4194304
+      },
+      "source": "Verified device ACPT partition table / stock contents not supplied",
+      "evidence": {
+        "Device capture": "The captured reservation contains non-FF bytes. Non-FF byte counts are not a measure of active data. Checksum-valid 19,934-byte crash payload, parsed to its exact end: 1 architecture block and 3 memory blocks. Registers and RAM contents are excluded.",
+        "Driver and format": "Crash storage role: ACPT file ID 0xFD matches the SDK coredump backend lookup.",
+        "Verification limits": "Factory contents and subsequent use are not documented by this device observation."
+      },
+      "children": [],
+      "role": "Crash diagnostics",
+      "partitionFileId": 253
+    }
+  ]
+}

@@ -79,5 +79,10 @@ partition after rebuilding, including alignment and padding. See the
 [SDFS format and capacity reference](/devices/cmf-watch-pro-2/formats/sdfs/)
 when building or changing a package.
 
+The [storage reference](/devices/cmf-watch-pro-2/internals/storage/) distinguishes
+physical capacity, partition reservations and writable file storage.
+[Storage Explorer](/storage-explorer/watch-pro-2/) shows the verified layout.
+Unpartitioned or erased-looking regions are not verified expansion space.
+
 For help with connection failures, pairing screens and failed downloads, see
 [Troubleshooting](/getting-started/troubleshooting/).

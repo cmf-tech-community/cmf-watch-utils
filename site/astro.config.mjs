@@ -6,6 +6,12 @@ import legacyDocumentationUrls from './integrations/legacy-urls.mjs';
 export default defineConfig({
   site: 'https://cmf.arnv.dev',
   base: '',
+  redirects: {
+    '/storage-explorer/': {
+      status: 302,
+      destination: '/storage-explorer/watch-pro-2/',
+    },
+  },
   integrations: [
     starlight({
       title: 'CMF Watch Utils',
@@ -101,6 +107,8 @@ export default defineConfig({
               label: 'Internals',
               items: [
                 { label: 'Hardware', slug: 'devices/cmf-watch-pro-2/internals/hardware' },
+                { label: 'Storage', slug: 'devices/cmf-watch-pro-2/internals/storage' },
+                { label: 'Storage Explorer', link: '/storage-explorer/watch-pro-2/' },
                 { label: 'app.bin internals', slug: 'devices/cmf-watch-pro-2/internals/appbin' },
                 { label: 'Recovery & boot modes', slug: 'devices/cmf-watch-pro-2/internals/recovery' },
               ],

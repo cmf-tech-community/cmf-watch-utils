@@ -106,8 +106,9 @@ Player (`simple_video_8` = open/parse, `simple_video_7` = timer tick,
 `simple_video_9` creates `lv_timer_2(cb, 1000 / fps, ...)`; fps 0 is
 coerced to 25.  Observed frame counts: 1.ajs = 500, 8.ajs = 500,
 9.ajs = 1124, 16.ajs = 1397.  Frames are ~1.5–4.9 KB each; all 19 shipped
-files use 240×240 with a single 240×240 tile, and they fill `res_e.bin`
-(58,776,014 of 58,777,088 bytes; only 1,074 bytes free).
+files use 240×240 with a single 240×240 tile. Payloads total 58,776,014 bytes
+inside the 58,777,088-byte `res_e.bin` image. The 1,074-byte difference includes
+filesystem metadata and alignment, not free payload space.
 
 Unlike `bt_watch.res` pictures, which have a 22-byte
 header with `"JPEG"` at `+0x04` and the same 14-byte tile descriptor after
@@ -116,8 +117,11 @@ it, `.ajs` stores the descriptor after a 2-byte `size` field.
 
 ## Capacity
 
-The stock animation partition is almost full. A replacement must fit the space
-released by the original file, including the rebuilt filesystem table and alignment.
+The stock animation image is densely packed. When preserving its original
+length, a replacement must fit the space released by the original file,
+including the rebuilt filesystem table and alignment. The 64 MiB physical
+reservation is larger than the stock image, but that extra capacity is not
+verified as safely reusable. See [Storage](/devices/cmf-watch-pro-2/internals/storage/).
 Measure the encoded replacement and verify the rebuilt package; a clip's duration
 alone does not determine its size. The [SDFS reference](/devices/cmf-watch-pro-2/formats/sdfs/)
 documents the reference partition capacity.

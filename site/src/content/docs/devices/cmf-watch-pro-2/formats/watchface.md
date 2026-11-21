@@ -12,12 +12,19 @@ firmware actually reads; field meanings marked `(?)` are inferred.
 | mount | partition | contents |
 |---|---|---|
 | `/NAND:A` | `res.bin` | `bt_watch.res`, `bt_watch.sty`, `bt_watch.<lang>`, fonts |
-| `/NAND:C` | (user area, not in OTA image) | watch-faces (`albumN.wfdl`), `album.cfg`, user fonts |
+| `/NAND:C` | `font` / `fonts.bin` | Shipped fonts, emoji and six `local*.wfc` built-in watch-face resources |
 | `/NAND:E` | `res_e.bin` | `1.ajs … 19.ajs` animations (SDFS) |
 | `/NAND:K` | `sdfs_k.bin` | `logo.res`, `logo.sty`, sounds, `admusic.dsp` |
 
 `res_e.bin` is a normal SDFS container with 19 entries named
 `N.ajs`; total 58,777,088 B.
+
+`fonts.bin` is included in the stock update. It is incorrect to describe the
+whole `/NAND:C` resource area as absent from OTA. User-uploaded faces and their
+manager paths are a separate concern from that shipped image. See
+[Storage](/devices/cmf-watch-pro-2/internals/storage/#filesystem-paths) for the
+verified mounted-filesystem mapping and
+[Storage Explorer](/storage-explorer/watch-pro-2/) for the stock file inventory.
 
 ## 2. Watch-face package (`*.wfdl` = FMC `.bin`)
 

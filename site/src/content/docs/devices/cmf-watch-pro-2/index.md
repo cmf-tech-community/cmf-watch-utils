@@ -17,7 +17,7 @@ service, a watch-face upload channel and an AOTA firmware update path.
 | Firmware | `1.0.0.73` (AOTA version string `1.00_2509131556`) |
 | Application | `app.bin`, base address `0x10000000`, ACTH header |
 | Display | 466×466 panel. The 240×240 size applies to the AJS animations. |
-| Storage | `/NAND:E` resource partition, fixed 58,777,088 bytes |
+| Storage | Examined unit: 128 MiB NAND main storage and 4 MiB NOR; 10 MiB writable-file reservation |
 | BLE | MTU 23 observed; payload frames are AES-CBC encrypted with a CRC32-LE tail |
 
 ## Verified capabilities
@@ -61,6 +61,8 @@ The detailed result table, with the evidence behind each entry, is on the
 **Internals**
 
 - [Hardware](/devices/cmf-watch-pro-2/internals/hardware/)
+- [Storage](/devices/cmf-watch-pro-2/internals/storage/) — NAND/NOR layout, writable capacity and verification limits
+- [Storage Explorer](/storage-explorer/watch-pro-2/) — interactive hierarchy and downloadable references
 - [app.bin internals](/devices/cmf-watch-pro-2/internals/appbin/)
 - [Recovery & boot modes](/devices/cmf-watch-pro-2/internals/recovery/)
 

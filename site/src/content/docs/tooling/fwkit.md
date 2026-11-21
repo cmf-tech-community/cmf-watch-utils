@@ -32,9 +32,11 @@ spaces. Use `uv run fwkit COMMAND --help` for a command’s complete arguments.
 | `fwkit sdfs-pack <dir> <image>` | Rebuild from a directory |
 | `fwkit edit-sdfs <image> <partition> <name> <input> <out>` | Replace one file inside a partition of an AOTA image |
 
-`fwkit.sdfs.pad_to(image, size)` rebuilds a filesystem and pads it back to a fixed partition
-length while refreshing `total_size` and the body checksum. Partitions embedded in an AOTA
-image keep their original length that way.
+`fwkit.sdfs.pad_to(image, size)` rebuilds an SDFS image and pads it to the
+requested file length while refreshing `total_size` and the body checksum.
+This can preserve the stock image length; it does not resize the physical
+partition. See [SDFS capacity](/devices/cmf-watch-pro-2/formats/sdfs/#capacity)
+for the distinction between payload, image and partition sizes.
 
 ## RES strings and pictures
 
