@@ -1,0 +1,34 @@
+---
+import { LinkButton } from '@astrojs/starlight/components';
+
+type Tool = 'wp2' | 'wp3' | 'storage';
+interface Props {
+  tools: Tool[];
+}
+
+const links = {
+  wp2: { href: '/emulator/watch-pro-2/', label: 'Open Watch Pro 2' },
+  wp3: { href: '/emulator/watch-pro-3/', label: 'Open Watch 3 Pro' },
+  storage: { href: '/storage-explorer/watch-pro-2/', label: 'Open Storage Explorer' },
+};
+---
+
+<nav class="tool-actions" aria-label="Interactive tools">
+  {Astro.props.tools.map((tool) => (
+    <LinkButton href={links[tool].href} icon="right-arrow">{links[tool].label}</LinkButton>
+  ))}
+</nav>
+
+<style>
+  .tool-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-block: 1.25rem;
+  }
+
+  .tool-actions :global(.sl-link-button) {
+    margin: 0;
+    min-block-size: 44px;
+  }
+</style>
